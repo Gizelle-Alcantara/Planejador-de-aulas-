@@ -1,0 +1,29 @@
+{
+  "savedAt": "2026-10-09T02:44:58.054Z",
+  "state": {
+    "cfg": {
+      "aulasDia": 4,
+      "coord": "João",
+      "curso": "Técnico em Eletromecanica",
+      "destinatarios": "",
+      "email": "",
+      "inicio": "2027-02-08",
+      "local": "",
+      "modulo": "I",
+      "termino": "2027-06-18",
+      "turma": "202731",
+      "turno": "Vespertino"
+    },
+    "days": {},
+    "envios": [],
+    "ucs": [
+      {
+        "ch": 40,
+        "docente": "Gizelle",
+        "nome": "Ambientação",
+        "sala": "",
+        "sigla": "AMB"
+      }
+    ]
+  }
+}

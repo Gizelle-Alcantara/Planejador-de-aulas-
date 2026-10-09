@@ -1,0 +1,30 @@
+{
+  "base": "https://claude.ai/artifact/CfTYuZKeRR1fAn42uNdZtZ",
+  "docentes": [
+    {
+      "bloqueios": [],
+      "email": "",
+      "nome": "Leonardo Lins",
+      "semana": []
+    },
+    {
+      "bloqueios": [],
+      "email": "",
+      "nome": "Gizelle",
+      "semana": []
+    },
+    {
+      "bloqueios": [],
+      "email": "",
+      "nome": "Aislan",
+      "semana": []
+    },
+    {
+      "bloqueios": [],
+      "email": "",
+      "nome": "Marcos",
+      "semana": []
+    }
+  ],
+  "savedAt": "2026-10-09T02:44:57.260Z"
+}

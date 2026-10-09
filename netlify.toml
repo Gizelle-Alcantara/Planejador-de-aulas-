@@ -1,0 +1,7 @@
+[build]
+  command = "node scripts/build.js"
+  publish = "public"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"

@@ -1,0 +1,5 @@
+{
+  "buildCommand": "node scripts/build.js",
+  "outputDirectory": "public",
+  "functions": { "api/index.js": { "maxDuration": 15 } }
+}
