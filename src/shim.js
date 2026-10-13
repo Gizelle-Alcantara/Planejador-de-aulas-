@@ -21,7 +21,7 @@
                   window.dispatchEvent(new Event("plan-conflict")); if (poke) poke();
                   const e = new Error("conflict"); e.code = "conflict"; throw e;
                 }
-                if (!r.ok) { const e = new Error("write"); e.code = r.status === 401 ? "invalid_argument" : "error"; throw e; }
+                if (!r.ok) { const j=await r.json().catch(()=>({})); const e = new Error(j.error||"Não foi possível salvar."); e.code = r.status === 401 ? "invalid_argument" : "error"; throw e; }
                 const j = await r.json(); revs[id] = j.rev;
               },
               async delete() { const r = await api({ op: "delete", id }); if (!r.ok) { const e = new Error("write"); e.code = "invalid_argument"; throw e; } delete revs[id]; },

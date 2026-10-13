@@ -469,3 +469,13 @@ test('modelo do docente: exportação autenticada, ano válido e acesso restrito
  const r=await get(query,m.cookie);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/spreadsheetml/);assert.equal(Buffer.from(await r.arrayBuffer()).subarray(0,2).toString(),'PK');
  assert.equal((await get(query,d.cookie)).status,200);assert.equal((await get('?export=docente-xlsx&docente=Outro&ano=2099',d.cookie)).status,403);assert.equal((await get('?export=docente-xlsx&docente=Ana&ano=banana',m.cookie)).status,400);
 });
+
+test('grades por horário são validadas no servidor; turmas sem sobreposição não têm conflito',async()=>{
+ const m=await login({password:'mestre-123'}),date='2099-11-20',make=(code,grade)=>({state:{cfg:{turma:code,curso:'Curso',turno:'Matutino',aulasDia:4,inicio:date,termino:date},ucs:[{sigla:'UC',nome:'UC por horário',docente:'Docente Grade Teste',sala:'Sala Grade Teste',ch:40}],days:{[date]:{s:['UC'],grade}},reg:{}}});
+ assert.equal((await setDoc(m.cookie,'turma-grade-a',make('GA',['UC','UC','','']))).status,200);
+ assert.equal((await setDoc(m.cookie,'turma-grade-b',make('GB',['','','UC','UC']))).status,200);
+ const collision=await setDoc(m.cookie,'turma-grade-b',make('GB',['UC','UC','','']));assert.equal(collision.status,422);assert.match((await collision.json()).error,/Conflito/);
+ const invalid=make('GC',['UC','X','','']);assert.equal((await setDoc(m.cookie,'turma-grade-c',invalid)).status,400);
+ const mismatch=make('GC',['','','','']);assert.equal((await setDoc(m.cookie,'turma-grade-c',mismatch)).status,400);
+ const saved=(await (await get('',m.cookie)).json()).docs.find(d=>d.id==='turma-grade-b').data;assert.deepEqual(saved.state.days[date].grade,['','','UC','UC']);
+});

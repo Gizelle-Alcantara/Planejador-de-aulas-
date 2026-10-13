@@ -16,3 +16,7 @@ Os testes de navegador exigem Node.js 20+. O servidor mantém compatibilidade co
 ## Exportação do calendário
 No cabeçalho, clique em **Exportar calendário** e escolha **Excel no padrão SENAI**, **PDF** ou **HTML**. Se houver lançamentos fora do período, escolha se deseja incluí-los. O botão **Voltar** permite retornar à aba ou ao calendário conforme o perfil.
 Guia: `docs/EXPORTACAO-CALENDARIO.md`.
+
+## Aulas por horário
+
+No Calendário, abra um dia com a ferramenta Editar e escolha a disciplina de cada aula. Guia completo: `docs/HORARIOS-POR-AULA.md`. Os dados antigos não são redistribuídos automaticamente.

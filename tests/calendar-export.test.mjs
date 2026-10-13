@@ -14,7 +14,7 @@ test('exportação Excel mantém o modelo original e preenche cabeçalho, datas,
  assert.match(getCell(sheet,'AD20'),/LOG/); // Fevereiro: linha 20, dia 29 = coluna AD.
  assert.match(getCell(sheet,'AD23'),/Maker/);assert.match(getCell(sheet,'B28'),/LOG/);
  assert.ok(!getCell(sheet,'AE18').includes('<v>')); // Fevereiro não tem dia 30.
- assert.match(getCell(sheet,'AD124'),/COUNTIFS/);assert.match(getCell(sheet,'AD124'),/<v>2<\/v>/);
+ assert.match(getCell(sheet,'AD124'),/SUMIFS/);assert.match(getCell(sheet,'AD124'),/<v>2<\/v>/);
  assert.ok(!sheet.includes('#REF!'));assert.match(strFromU8(result['xl/workbook.xml']),/Encontros/);
  assert.ok(!result['xl/calcChain.xml']);
  const details=strFromU8(result['xl/worksheets/sheet2.xml']);assert.match(details,/Maker/);assert.match(details,/Atividade prática/);

@@ -96,3 +96,7 @@ Calendário mensal preservado em sete colunas, com todos os dias da semana visí
 ## Exportação no modelo anual do docente
 
 Adicionado o modelo `Gizelle Karine Santos Alcantara.xlsx`, com escolha de docente, ano e vínculo. O Excel reúne todas as turmas do docente, preserva a grade mensal por turno e o resumo de disciplinas. Há tratamento de códigos repetidos, conflitos, anos bissextos e turnos que exigem mais linhas. A exportação por turma continua separada. Consulte `docs/EXPORTACAO-DOCENTE.md`.
+
+## Programação por horário de aula
+
+A coordenação pode distribuir várias disciplinas no mesmo dia por aula, com horários e quantidades próprios. A carga horária passa a contar as aulas individuais; conflitos, reservas, avisos e exportações seguem os intervalos da grade. Os lançamentos antigos são preservados até serem redistribuídos. Guia: `docs/HORARIOS-POR-AULA.md`.

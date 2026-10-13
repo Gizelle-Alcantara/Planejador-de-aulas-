@@ -22,3 +22,6 @@ writeFileSync(new URL("../public/index.html", import.meta.url), t);
 copyFileSync(new URL("../src/shim.js", import.meta.url), new URL("../public/shim.js", import.meta.url));
 for (const f of readdirSync(new URL("../src/static/", import.meta.url))) copyFileSync(new URL("../src/static/" + f, import.meta.url), new URL("../public/" + f, import.meta.url));
 console.log("public/index.html gerado (" + Math.round(t.length / 1024) + " KB)");
+
+const schedule=readFileSync(new URL("../lib/schedule.js",import.meta.url),"utf8").replace(/export /g,"");
+writeFileSync(new URL("../public/schedule.js",import.meta.url),`window.SENAI_SCHEDULE=(()=>{${schedule};return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts}})();`);

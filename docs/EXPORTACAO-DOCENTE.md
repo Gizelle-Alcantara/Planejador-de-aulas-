@@ -21,7 +21,7 @@ As aulas do ano escolhido são reunidas de todas as turmas. Aulas marcadas como 
 
 Quando a mesma sigla aparece em turmas diferentes, a exportação cria códigos curtos como `LOG.1` e `LOG.2`; o quadro inferior mostra a turma correspondente. O cadastro do sistema não é alterado.
 
-O sistema registra as disciplinas do dia, sem dividir os horários entre elas. Se o mesmo docente tiver disciplinas simultâneas no mesmo turno, a célula apresenta **CONFLITO** e mantém os códigos e a contagem de todas as aulas. Corrija a distribuição no planejador antes de usar o documento como programação final.
+A grade por horário atribui cada aula a uma disciplina. Duas UCs no mesmo dia, em posições diferentes, não produzem conflito na exportação. Lançamentos antigos sem grade ainda representam o turno inteiro; quando há disciplinas sobrepostas, a célula apresenta **CONFLITO** e conserva os códigos e as contagens. Redistribua esses dias no Calendário antes de usar o documento como programação final. Consulte `HORARIOS-POR-AULA.md`.
 
 O modelo tem cinco linhas de manhã, cinco à tarde e quatro à noite. Se a programação precisar de mais linhas, elas são ampliadas com a mesma estrutura e as referências do resumo são ajustadas. Fevereiro e anos bissextos são tratados sem datas inexistentes.
 
