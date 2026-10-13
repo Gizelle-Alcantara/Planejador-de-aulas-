@@ -1,5 +1,6 @@
 // Teste de integração da interface em banco temporário; nunca toca nos dados enviados.
 import { chromium } from 'playwright';
+import AxeBuilder from '@axe-core/playwright';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdtempSync, rmSync, readFileSync, mkdirSync } from 'node:fs';
@@ -50,5 +51,21 @@ try {
  await dialog.getByRole('button',{name:'Voltar',exact:true}).click();assert.equal(await page.getByRole('dialog',{name:'Exportar calendário',exact:true}).count(),0);
  await page.getByRole('button',{name:'Voltar',exact:true}).click();await page.getByRole('tab',{name:'Ambientes',exact:true}).getAttribute('aria-selected').then(v=>assert.equal(v,'true'));
  await teacher.getByRole('button',{name:'Voltar',exact:true}).click();await teacher.waitForURL('**/#docente-ana');await teacher.getByRole('heading',{name:'Ana',exact:true}).waitFor();
+ await teacher.setViewportSize({width:320,height:780});
+ await teacher.locator('.next-lesson').waitFor();
+ assert.equal(await teacher.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Agenda docente em 320px');
+ for(const theme of ['light','dark']){await teacher.evaluate(t=>document.documentElement.dataset.theme=t,theme);const result=await new AxeBuilder({page:teacher}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(result.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),[],`Acessibilidade docente ${theme}`)}
+ await manager.setViewportSize({width:320,height:780});await manager.locator('.next-lesson').waitFor();assert.equal(await manager.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Agenda aluno em 320px');
+ const studentAxe=await new AxeBuilder({page:manager}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(studentAxe.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),[]);
+ await page.goto(base+'/');await page.getByRole('tab',{name:'Painel',exact:true}).click();await page.locator('#home-month').fill('2099-07');await page.getByRole('button',{name:'Abrir calendário',exact:true}).click();assert.equal(await page.locator('#mjump').inputValue(),'2099-07');
+ await page.getByRole('tab',{name:'Calendário',exact:true}).focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#tab-cronograma').getAttribute('aria-selected'),'true');
+ await page.getByRole('button',{name:'Exportar calendário',exact:true}).click();await page.getByRole('dialog').waitFor();await page.keyboard.press('Shift+Tab');assert.equal(await page.evaluate(()=>document.activeElement.textContent),'Voltar');await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'detached'});assert.equal(await page.getByRole('button',{name:'Exportar calendário',exact:true}).evaluate(e=>e===document.activeElement),true);
+ if(process.env.UI_EVIDENCE_DIR)await teacher.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'acessibilidade-mobile.png'),fullPage:true});
+ assert.equal(await teacher.locator('.read-calendar').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length),1,'Agenda móvel em uma coluna');
+ for(const width of [390,768,1280]){await teacher.setViewportSize({width,height:900});for(const theme of ['light','dark']){await teacher.evaluate(t=>document.documentElement.dataset.theme=t,theme);const audit=await new AxeBuilder({page:teacher}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[],`Docente ${width} ${theme}`)}}
+ await teacher.setViewportSize({width:320,height:780});if(process.env.UI_EVIDENCE_DIR)await teacher.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'acessibilidade-mobile.png'),fullPage:true});
+ await page.getByRole('tab',{name:'Calendário',exact:true}).click();await page.locator('.cal .day:not(.blank)').first().focus();await page.keyboard.press('ArrowRight');assert.equal(await page.evaluate(()=>document.activeElement.dataset.iso),'2099-07-02');
+ const coordAudit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(coordAudit.violations.map(v=>({id:v.id,nodes:v.nodes.map(n=>({target:n.target,summary:n.failureSummary}))})),[]);
+ const publicContext=await browser.newContext(),home=await publicContext.newPage();await home.goto(base+'/');await home.locator('#home-month').fill('2099-07');await home.getByRole('link',{name:'Sou aluno',exact:false}).click();await home.locator('#mjump').waitFor();assert.equal(await home.locator('#mjump').inputValue(),'2099-07');await home.setViewportSize({width:320,height:780});assert.equal(await home.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);for(const theme of ['light','dark']){await home.evaluate(t=>document.documentElement.dataset.theme=t,theme);const audit=await new AxeBuilder({page:home}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>v.id),[])}await publicContext.close();
  assert.deepEqual(errors,[]);console.log('UI aprovada: login, cadastro, vínculo, solicitação, aprovação, revisão, reagendamento, notificações, CSV, impressão, backup, exportação Excel/PDF/HTML, botão Voltar e layout móvel.');
 }catch(e){for(const p of watched)console.error(await p.locator("body").innerText());throw e;}finally{if(browser)await browser.close();if(server.exitCode===null&&server.signalCode===null){const exit=new Promise(r=>server.once('exit',r));server.kill();await exit;}rmSync(temp,{recursive:true,force:true});}

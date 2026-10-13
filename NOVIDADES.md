@@ -80,3 +80,7 @@ Divisão do código em módulos e acessibilidade completa.
 - Opção de incluir lançamentos fora do período, preservando as datas do cadastro.
 - Botão Voltar na gestão de ambientes e na navegação do planejador.
 - 41 testes automatizados, fluxos de navegador e conferência visual/recalculo do Excel aprovados.
+
+## Acessibilidade e celular
+
+Navegação por teclado nas abas e dias, foco das janelas, link para pular ao conteúdo, escolha do mês na entrada, próxima aula destacada e agenda móvel em cartões. Texto das disciplinas com contraste e sem truncamento na agenda. Testes automáticos com axe e teclado documentados em `docs/ACESSIBILIDADE.md`.
