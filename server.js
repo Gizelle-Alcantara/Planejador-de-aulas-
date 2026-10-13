@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
 import { handle, runDaily } from "./lib/core.js";
+if(!process.env.SESSION_SECRET)throw new Error("Configure SESSION_SECRET para iniciar o servidor com segurança.");
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "public");
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".ico": "image/x-icon" };
 http.createServer(async (rq, rs) => {

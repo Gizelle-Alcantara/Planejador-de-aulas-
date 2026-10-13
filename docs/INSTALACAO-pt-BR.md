@@ -26,7 +26,7 @@ Variáveis (`.env`):
 | Variável | Para quê |
 |---|---|
 | `ADMIN_PASSWORD` | senha do coordenador (use uma forte) |
-| `SESSION_SECRET` | texto aleatório longo que assina o login |
+| `SESSION_SECRET` | obrigatório: texto aleatório longo que assina o login, diferente da senha mestre |
 | `TURSO_DATABASE_URL` | URL do passo 1 |
 | `TURSO_AUTH_TOKEN` | token do passo 1 |
 
@@ -78,3 +78,5 @@ Veja `docs/AVISOS-pt-BR.md`: criação das contas no Resend e na Meta, variávei
 
 ## 9. Backup agendado
 Veja `docs/BACKUP-pt-BR.md`: cópia diária no banco, cópia semanal por e-mail (`BACKUP_EMAIL`) e como restaurar.
+
+A versão com correções da auditoria exige ADMIN_PASSWORD e SESSION_SECRET, sem valores padrão. Contas existentes precisam entrar novamente após a atualização. Os identificadores dos docentes e as novas colunas são migrados automaticamente.

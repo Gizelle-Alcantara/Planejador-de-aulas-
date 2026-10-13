@@ -112,3 +112,6 @@ Filtros combinados por docente, disciplina, sala/laboratório e situação, com 
 
 ## Correção da abertura da prévia
 O código da prévia agora acompanha a página principal, evitando depender de um arquivo JavaScript separado. Falhas aparecem na janela de exportação, com opção **Baixar Excel sem prévia**. A prévia mostra o andamento e limita a espera por resposta do servidor.
+
+## Correções da auditoria
+Permissões por docente, privacidade, invalidação de sessões, identificadores permanentes, salvamento em lote com rollback, filtros de cancelamento e ambiente aprovado, e proteção dos CSVs. ADMIN_PASSWORD e SESSION_SECRET são obrigatórios. Após atualizar, entre novamente. Consulte `docs/CORRECOES-AUDITORIA.md`.

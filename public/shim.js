@@ -3,7 +3,7 @@
 (function () {
   let session = null, loading = null; const revs = {}; let poke = null;
   const api = (body) => fetch("/api", body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin", cache: "no-store" });
-  const load = async () => { const r = await api(); if (!r.ok) throw new Error("api " + r.status); return r.json(); };
+  const load = async () => { let r = await api(); if(r.status===401)r=await api(); if (!r.ok) throw new Error("api " + r.status); return r.json(); };
   const keep = (j) => { (j.docs || []).forEach((d) => (revs[d.id] = d.rev)); return j; };
   const first = () => (loading = loading || load().then((j) => (session = keep(j))));
   const BASE = location.origin + "/";
@@ -59,7 +59,13 @@
     },
   };
 
-  window.PLAN = { api: (b) => api(b).then(async (r) => ({ ok: r.ok, status: r.status, ...(await r.json().catch(() => ({}))) })), me: () => first().then((s) => s.user || null) };
+  async function saveDocs(items,deleted){
+    const response=await api({op:'set_many',items:items.map(([id,data])=>({id,data,base:revs[id]||0})),deleted,deleteBases:Object.fromEntries(deleted.map(id=>[id,revs[id]||0]))});
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok){if(response.status===409){window.dispatchEvent(new Event('plan-conflict'));if(poke)poke()}throw new Error(result.error==='conflict'?'Outra pessoa alterou os dados. Recarregue e confira antes de salvar novamente.':result.error||'Não foi possível salvar.');}
+    Object.assign(revs,result.revs||{});for(const id of deleted)delete revs[id];
+  }
+  window.PLAN = {saveDocs, api: (b) => api(b).then(async (r) => ({ ok: r.ok, status: r.status, ...(await r.json().catch(() => ({}))) })), me: () => first().then((s) => s.user || null) };
   window.claude = {
     async use(name) {
       if (name === "db") return db();
