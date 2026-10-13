@@ -26,3 +26,6 @@ Confira a planilha, escolha o mês e ajuste o zoom. Clique em **Baixar Excel** q
 
 ## Cadastro completo do docente
 Formulário com matrícula, contatos, unidade, área, formação, Meu SENAI, vínculo e observações, com validação e preservação dos cadastros existentes. Consulte `docs/CADASTRO-DOCENTE.md`.
+
+## Filtros do calendário
+Filtros combinados por docente, disciplina, sala/laboratório e situação, com contador mensal e limpeza. A agenda do docente também permite turma e turno. Consulte `docs/FILTROS-CALENDARIO.md`.

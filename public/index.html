@@ -241,7 +241,7 @@ function fromDocs(docs){
   return {g,t,legacy:!docs.geral};
 }
 let EXPORT_RESERVAS=[];
-const UI={fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",backTabs:[],month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
+const UI={calFilters:{docente:"",disciplina:"",sala:"",situacao:"",turma:"",turno:""},fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",backTabs:[],month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
 try{const t=localStorage.getItem(KEY+"-tab");if(t&&TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
 
 try{const t=new URLSearchParams(location.search).get("aba");if(TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
@@ -413,6 +413,21 @@ function monthList(a,b){
   return out;
 }
 function shiftMonth(ym,n){let [y,m]=ym.split("-").map(Number);m+=n;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return `${y}-${String(m).padStart(2,"0")}`}
+function calendarMatch(st,iso,sg,conflict=false){
+ const f=UI.calFilters,u=st.ucs.find(u=>u.sigla===sg)||{},r=st.reg?.[iso]||{};
+ const status=r.dado==='nao'?'cancelada':r.dado==='sim'?'realizada':'programada';
+ return (!f.docente||u.docente===f.docente)&&(!f.disciplina||sg===f.disciplina)&&(!f.sala||(u.sala||'')===f.sala)&&(!f.turma||st.cfg.turma===f.turma)&&(!f.turno||st.cfg.turno===f.turno)&&(!f.situacao||(f.situacao==='conflito'?conflict:status===f.situacao));
+}
+function calendarFilters(states=[S],lessons=null){
+ const f=UI.calFilters,active=Object.values(f).some(Boolean);
+ const values=(fn)=>[...new Set(states.flatMap(fn).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+ const fields=[['docente','Docente',values(st=>st.ucs.map(u=>u.docente))],['disciplina','Disciplina',values(st=>st.ucs.map(u=>u.sigla))],['sala','Sala / laboratório',values(st=>st.ucs.map(u=>u.sala))]];
+ if(MODE==='docente')fields.push(['turma','Turma',values(st=>[st.cfg.turma])],['turno','Turno',values(st=>[st.cfg.turno])]);
+ let total=0,shown=0;
+ if(lessons){for(const a of lessons)if(a.iso.startsWith(UI.month)){total++;const st=states.find(st=>st.cfg.turma===a.turma);if(calendarMatch(st,a.iso,a.sig,lessons.some(b=>b!==a&&b.iso===a.iso&&a.inicio<b.fim&&b.inicio<a.fim)))shown++}}
+ else for(const st of states)for(const [iso,e] of Object.entries(st.days||{}))if(iso.startsWith(UI.month)){const conflict=confDay(iso).length>0;for(const sg of e.s||[]){total++;if(calendarMatch(st,iso,sg,conflict))shown++}}
+ return `<div class="calendar-filters" role="group" aria-label="Filtros do calendário"><div class="row">${fields.map(([key,label,opts])=>`<label class="f">${label}<select data-calfilter="${key}" aria-label="Filtrar por ${label.toLowerCase()}"><option value="">Todos</option>${[...new Set([...opts,...(f[key]&&!opts.includes(f[key])?[f[key]]:[])])].map(v=>`<option value="${esc(v)}" ${f[key]===v?'selected':''}>${esc(v)}</option>`).join('')}</select></label>`).join('')}<label class="f">Situação<select data-calfilter="situacao" aria-label="Filtrar por situação"><option value="">Todas</option>${[['programada','Programada'],['realizada','Realizada'],['cancelada','Cancelada / não dada'],['conflito','Com conflito']].map(([v,l])=>`<option value="${v}" ${f.situacao===v?'selected':''}>${l}</option>`).join('')}</select></label><button class="btn" data-act="calfilterclear">Limpar filtros</button></div><p class="small" role="status">${shown} de ${total} lançamentos no mês.${shown===0?' Nenhum resultado para os filtros selecionados.':''}</p>${active?'<p class="small muted">Filtros ativos. As datas continuam visíveis. A edição abre todos os horários do dia; para lançar diretamente, limpe os filtros. Exportações mantêm o calendário completo.</p>':''}</div>`;
+}
 function vCal(){
   if(!UI.month){const t=todayISO().slice(0,7),ml=monthList();UI.month=ml.includes(t)?t:ml[0]}
   const C=calc(),ym=UI.month,[y,m]=ym.split("-").map(Number);
@@ -423,7 +438,7 @@ function vCal(){
     const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso),s=e.s||[];
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(iso<S.cfg.inicio||iso>S.cfg.termino)cl.push("out");if(e.t==="feriado")cl.push("hol");if(e.t==="sem")cl.push("sem");if(iso===t)cl.push("today");
     const cf=confDay(iso).join("; ");
-    const chips=s.map((sg,j)=>{const u=ucOf(sg);return `<span class="chip ${u&&!cf?"":"bad"}" style="--c:${colorOf(sg)}" title="${esc(cf?"Choque: "+cf:(u?u.nome:sg)+" · aula "+C.enc[iso][j])}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
+    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,!!cf))return "";const u=ucOf(sg);return `<span class="chip ${u&&!cf?"":"bad"}" style="--c:${colorOf(sg)}" title="${esc(cf?"Choque: "+cf:(u?u.nome:sg)+" · aula "+C.enc[iso][j])}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
     cells+=`<button class="${cl.join(" ")}" data-act="day" data-iso="${iso}" aria-label="${d} de ${MESES[m-1]}"><span class="dn">${d}</span>${e.h?`<span class="lb">${esc(e.h)}</span>`:""}${chips}</button>`;
   }
   const ml=monthList();
@@ -435,7 +450,7 @@ function vCal(){
     <div class="pal" style="margin-block:12px 4px" role="group" aria-label="Ferramenta">${tools.map(([k,l,v])=>`<button data-act="tool" data-k="${esc(k)}" aria-pressed="${UI.tool===k}"><span class="sw" style="--c:var(${v})"></span>${esc(l)}</button>`).join("")}
       ${UI.tool==="feriado"||UI.tool==="sem"?`<input type="text" id="holName" placeholder="${UI.tool==="feriado"?"Nome do feriado":"Motivo (opcional)"}" value="${esc(UI.holName)}" style="width:200px">`:""}</div>
     <p class="small muted" style="margin:0 0 10px">${UI.tool==="edit"?"Clique em um dia para editar detalhes.":UI.tool.startsWith("uc:")?"Clique nos dias para lançar a aula. Clique de novo para remover.":"Clique nos dias para aplicar."} Cada chip mostra a sigla e o intervalo de aulas.</p>
-    <div class="cal">${cells}</div></section>
+    ${calendarFilters()}<div class="cal">${cells}</div></section>
   <details class="panel"><summary>Lançar várias aulas de uma vez</summary>
     <div class="form" style="margin-top:12px">
       <label class="f">Disciplina<select id="aUc">${S.ucs.map(u=>`<option value="${esc(u.sigla)}">${esc(u.sigla)} · ${esc(u.nome)}</option>`).join("")}</select></label>
@@ -447,7 +462,7 @@ function vCal(){
   </details>`;
 }
 function dayClick(iso){
-  const tool=UI.tool;let e=S.days[iso]||{s:[]};e.s=e.s||[];
+  const tool=UI.tool;if(tool!=="edit"&&Object.values(UI.calFilters).some(Boolean)){toast("Limpe os filtros antes de lançar ou remover aulas diretamente.");return}let e=S.days[iso]||{s:[]};e.s=e.s||[];
   if(tool==="edit"){openDayModal(iso);return}
   if(Array.isArray(e.grade)&&tool.startsWith("uc:")){openDayModal(iso);toast("Este dia tem distribuição por horário. Ajuste as aulas na janela.");return}
   if(tool==="erase"){delete S.days[iso]}
@@ -807,7 +822,7 @@ function roCells(ym,C){
   for(let d=1;d<=dim;d++){
     const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso),s=e.s||[];
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(iso<S.cfg.inicio||iso>S.cfg.termino)cl.push("out");if(e.t==="feriado")cl.push("hol");if(e.t==="sem")cl.push("sem");if(iso===t)cl.push("today");
-    const chips=s.map((sg,j)=>{const u=ucOf(sg);return `<span class="chip" style="--c:${colorOf(sg)};${UI.fUc&&sg!==UI.fUc?"display:none":""}" title="${esc(u?u.nome:sg)}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
+    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,confDay(iso).length>0))return "";const u=ucOf(sg);return `<span class="chip" style="--c:${colorOf(sg)};${UI.fUc&&sg!==UI.fUc?"display:none":""}" title="${esc(u?u.nome:sg)}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
     cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${d}</span>${e.h?`<span class="lb">${esc(e.h)}</span>`:""}${chips}</div>`;
   }
   return cells;
@@ -827,7 +842,7 @@ function renderAluno(){
   const C=calc(),c=S.cfg,t=todayISO();
   hdr.innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)}</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}</div>`;
   const next=[];
-  for(const iso of C.isos){if(iso>=t&&!(S.reg[iso]&&S.reg[iso].dado==="nao")&&(S.days[iso].s||[]).some(sg=>!UI.fUc||sg===UI.fUc)){next.push(iso);if(next.length>=7)break}}
+  for(const iso of C.isos){if(iso>=t&&!(S.reg[iso]&&S.reg[iso].dado==="nao")&&(S.days[iso].s||[]).some(sg=>(!UI.fUc||sg===UI.fUc)&&calendarMatch(S,iso,sg,confDay(iso).length>0))){next.push(iso);if(next.length>=7)break}}
   const P=Object.fromEntries(C.rows.map(r=>[r.u.sigla,r.P]));
   if(!UI.month){const ml=monthList(),tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}
   const [y,m]=UI.month.split("-").map(Number),ml=monthList();
@@ -835,7 +850,7 @@ function renderAluno(){
   v.innerHTML=`
   <section class="panel"><h2>Próximas aulas</h2>
     ${next.length?`<div class="tw"><table><thead><tr><th>Data</th><th>Dia</th><th>Disciplina</th><th class="n">Aula</th><th>Docente</th><th>Sala</th><th>Horário</th><th>Obs.</th></tr></thead><tbody>
-    ${next.flatMap(iso=>(S.days[iso].s||[]).map((sg,j)=>{if(UI.fUc&&sg!==UI.fUc)return "";const u=ucOf(sg)||{};return `<tr ${iso===t?'style="font-weight:600"':""}><td class="mono">${br(iso)}${iso===t?" · hoje":""}</td><td>${WD[dow(iso)]}</td><td>${sig(sg)} <span class="small muted">${esc(u.nome||"")}</span></td><td class="n mono">${C.enc[iso][j]}/${P[sg]??"?"}</td><td>${esc(u.docente||"")}</td><td>${esc(u.sala||"")}</td><td class="mono">${ucHours(S,iso,sg)}</td><td>${esc(S.days[iso].h||"")}</td></tr>`})).join("")}
+    ${next.flatMap(iso=>(S.days[iso].s||[]).map((sg,j)=>{if((UI.fUc&&sg!==UI.fUc)||!calendarMatch(S,iso,sg,confDay(iso).length>0))return "";const u=ucOf(sg)||{};return `<tr ${iso===t?'style="font-weight:600"':""}><td class="mono">${br(iso)}${iso===t?" · hoje":""}</td><td>${WD[dow(iso)]}</td><td>${sig(sg)} <span class="small muted">${esc(u.nome||"")}</span></td><td class="n mono">${C.enc[iso][j]}/${P[sg]??"?"}</td><td>${esc(u.docente||"")}</td><td>${esc(u.sala||"")}</td><td class="mono">${ucHours(S,iso,sg)}</td><td>${esc(S.days[iso].h||"")}</td></tr>`})).join("")}
     </tbody></table></div>`:'<p class="muted">Nenhuma aula lançada a partir de hoje.</p>'}
   </section>
   <section class="panel"><h2>Disciplinas</h2><div class="tw"><table><thead><tr><th>Disciplina</th><th>Docente</th><th class="n">CH</th><th>Andamento</th><th class="n">Aulas</th><th class="n">Limite de faltas</th><th>Início</th><th>Fim</th><th>Situação</th></tr></thead><tbody>
@@ -844,8 +859,7 @@ function renderAluno(){
   </tbody></table></div><p class="small muted">Limite de faltas: 25% das aulas de cada disciplina.${c.coord?" Coordenação: "+esc(c.coord)+".":""}</p></section>
   <section class="panel"><div class="calbar"><div class="row"><button class="btn" data-act="mprev" aria-label="Mês anterior">‹</button><h2>${MESES[m-1]} de ${y}</h2><button class="btn" data-act="mnext" aria-label="Próximo mês">›</button></div>
     <select id="mjump" aria-label="Ir para o mês" style="width:auto">${ml.map(x=>`<option value="${x}" ${x===UI.month?"selected":""}>${MESES[+x.slice(5)-1]} ${x.slice(0,4)}</option>`).join("")}</select></div>
-    <div class="pal" style="margin-block:12px 10px" role="group" aria-label="Filtrar disciplina"><button data-act="fuc" data-k="" aria-pressed="${!UI.fUc}">Todas</button>${S.ucs.filter(u=>used.has(u.sigla)).map(u=>`<button data-act="fuc" data-k="${esc(u.sigla)}" aria-pressed="${UI.fUc===u.sigla}" title="${esc(u.nome)}"><span class="sw" style="--c:${colorOf(u.sigla)}"></span>${esc(u.sigla)}</button>`).join("")}</div>
-    <div class="cal">${roCells(UI.month,C)}</div><p class="small muted">O número ao lado da sigla é o aula. Dias em vermelho são feriados.</p></section>
+    ${calendarFilters()}<div class="cal">${roCells(UI.month,C)}</div><p class="small muted">O número ao lado da sigla é o aula. Dias em vermelho são feriados.</p></section>
   <section class="panel"><h2>Horário das aulas</h2>${horTable()}</section>`;
 }
 
@@ -888,7 +902,8 @@ function renderDocente(){
   if(!UI.month||!ml.includes(UI.month)){const tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}
   const [y,m]=UI.month.split("-").map(Number);
   const first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),dim=new Date(Date.UTC(y,m,0)).getUTCDate();
-  const byDay={};A.aulas.forEach(a=>(byDay[a.iso]=byDay[a.iso]||[]).push(a));
+  const filtered=A.aulas.filter(a=>calendarMatch(A.turmas.find(x=>x.ti===a.ti).st,a.iso,a.sig,A.aulas.some(b=>b!==a&&b.iso===a.iso&&a.inicio<b.fim&&b.inicio<a.fim)));
+  const byDay={};filtered.forEach(a=>(byDay[a.iso]=byDay[a.iso]||[]).push(a));
   let cells=WD.map(x=>`<div class="h">${x}</div>`).join("");
   for(let i=0;i<first;i++)cells+='<div class="day blank"></div>';
   for(let k=1;k<=dim;k++){
@@ -897,7 +912,7 @@ function renderDocente(){
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(A.fer[iso])cl.push("hol");if(blk&&!A.fer[iso])cl.push("blk");if(iso===t)cl.push("today");
     cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${k}</span>${lab?`<span class="lb">${esc(lab)}</span>`:""}${as.map(a=>`<span class="chip ${as.some(b=>b!==a&&a.inicio<b.fim&&b.inicio<a.fim)?"bad":""}" style="--c:var(--u${a.ti%8})" title="${esc(a.nome+" · aula "+a.n+"/"+a.P+" · "+a.hor)}">${esc(a.turma)} · ${esc(a.sig)} ${a.n}<small>${esc(a.hor)}</small></span>`).join("")}</div>`;
   }
-  const next=A.aulas.filter(a=>a.iso>=t).slice(0,10);
+  const next=filtered.filter(a=>a.iso>=t).slice(0,10);
   const wk=(d.semana||[]).map(w=>PLUR[w]),bl=(d.bloqueios||[]).filter(x=>x.de);
   v.innerHTML=`
   <section class="panel"><h2>Próximas aulas</h2>${next.length?`<div class="tw"><table><thead><tr><th>Data</th><th>Dia</th><th>Turma</th><th>Disciplina</th><th class="n">Aula</th><th>Sala</th><th>Horário</th><th>Obs.</th></tr></thead><tbody>
@@ -906,7 +921,7 @@ function renderDocente(){
   <section class="panel"><div class="calbar"><div class="row"><button class="btn" data-act="mprev" aria-label="Mês anterior">‹</button><h2>${MESES[m-1]} de ${y}</h2><button class="btn" data-act="mnext" aria-label="Próximo mês">›</button></div>
     <select id="mjump" aria-label="Ir para o mês" style="width:auto">${ml.map(x=>`<option value="${x}" ${x===UI.month?"selected":""}>${MESES[+x.slice(5)-1]} ${x.slice(0,4)}</option>`).join("")}</select></div>
     <div class="pal" style="margin-block:12px 10px">${A.turmas.map(x=>`<span class="small"><span class="sig" style="--c:var(--u${x.ti%8})">${esc(x.st.cfg.turma)}</span> ${esc(x.st.cfg.curso)} · ${esc(x.st.cfg.turno)}</span>`).join(" ")}</div>
-    <div class="cal">${cells}</div><p class="small muted">Cada chip mostra turma, sigla e intervalo de aulas. Dias em vermelho são feriados ou dias sem aula. Dias listrados são dias em que você está indisponível.</p></section>
+    ${calendarFilters(A.turmas.map(x=>({...x.st,ucs:x.st.ucs.filter(u=>u.docente===d.nome)})),A.aulas)}<div class="cal">${cells}</div><p class="small muted">Cada chip mostra turma, sigla e intervalo de aulas. Dias em vermelho são feriados ou dias sem aula. Dias listrados são dias em que você está indisponível.</p></section>
   <section class="panel"><h2>Minhas disciplinas</h2><div class="tw"><table><thead><tr><th>Turma</th><th>Disciplina</th><th class="n">CH</th><th class="n">Aulas</th><th>Início</th><th>Fim</th><th>Horário</th><th>Situação</th></tr></thead><tbody>
   ${A.turmas.flatMap(x=>x.rows.map(r=>`<tr><td class="mono">${esc(x.st.cfg.turma)}</td><td><span class="sig" style="--c:var(--u${x.ti%8})">${esc(r.u.sigla)}</span> ${esc(r.u.nome)}</td><td class="n mono">${r.u.ch} h</td><td class="n mono">${r.ds.filter(z=>z<=t).reduce((n,iso)=>n+dayBlocks(x.st,iso).filter(b=>b.sigla===r.u.sigla).reduce((n,b)=>n+b.quantidade,0),0)}/${r.P}</td><td class="mono">${br(r.ini)}</td><td class="mono">${br(r.fim)}</td><td class="mono">${spanStr(x.st.cfg)}</td><td><span class="pill ${r.status.replace(" ","-")}">${r.status}</span></td></tr>`)).join("")}
   </tbody></table></div></section>
@@ -1122,6 +1137,7 @@ document.addEventListener("click",e=>{
   else if(a==="auto")autoAlloc();
   else if(a==="ucadd"){S.ucs.push({nome:"Nova disciplina",sigla:"NOVA"+(S.ucs.length+1),ch:40,docente:"",sala:""});save();renderView()}
   else if(a==="ucdel"){const i=+b.dataset.i;if(UI.confirm==="uc"+i){const sg=S.ucs[i].sigla;S.ucs.splice(i,1);for(const [k,d] of Object.entries(S.days)){d.s=(d.s||[]).filter(x=>x!==sg);if(Array.isArray(d.grade))d.grade=d.grade.map(x=>x===sg?"":x);if(!d.s.length&&!d.h)delete S.days[k]}UI.confirm=null;save()}else UI.confirm="uc"+i;renderView()}
+  else if(a==="calfilterclear"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");UI.fUc="";renderView();queueMicrotask(()=>document.querySelector("[data-calfilter]")?.focus())}
   else if(a==="docadd"){openDocCadastro(-1)}
   else if(a==="docedit"){openDocCadastro(+b.dataset.i)}
   else if(a==="docsave"){saveDocCadastro()}
@@ -1180,7 +1196,8 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("change",e=>{
   const t=e.target;
-  if(t.id==="turmaSel"){CUR=t.value;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView()}
+  if(t.id==="turmaSel"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");CUR=t.value;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView()}
+  else if(t.dataset.calfilter){const key=t.dataset.calfilter;UI.calFilters[key]=t.value;renderView();queueMicrotask(()=>document.querySelector(`[data-calfilter="${key}"]`)?.focus())}
   else if(t.id==="mjump"){UI.month=t.value;renderView()}
   else if(t.id==="rfSel"){UI.rf=t.value;renderView()}
   else if(t.dataset.av!==undefined){const k=t.dataset.av;S.aviso[k]=t.type==="checkbox"?t.checked:t.value;if((k==="auto"||k==="lembrete")&&t.checked)PLAN.api({op:"notify_baseline",turma:CUR});save();UI.av=null;renderView()}
