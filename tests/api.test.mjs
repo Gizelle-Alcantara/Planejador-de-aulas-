@@ -331,7 +331,7 @@ test('reservas: aprovação concorrente bloqueia sobreposição; revalida aula e
  const results=await Promise.all([a,b].map(x=>call({op:'reservation_decide',id:x.id,status:'aprovada'},m.cookie)));
  assert.deepEqual(results.map(x=>x.status).sort(),[200,409]);
  const list=await (await call({op:'reservation_list'},m.cookie)).json();assert.equal(list.items.filter(x=>x.data==='2099-05-01'&&x.status==='aprovada').length,1);
- const pending=list.items.find(x=>x.data==='2099-05-01'&&x.status==='pendente');
+ const pending=list.items.find(x=>x.data==='2099-05-01'&&['pendente','revisao'].includes(x.status));
  await setDoc(m.cookie,pending.turmaId,{state:{...turma.state,days:{},reg:{}}});
  assert.equal((await call({op:'reservation_decide',id:pending.id,status:'aprovada'},m.cookie)).status,409);
  await setDoc(m.cookie,'turma-ocupada',{state:{...turma.state,ucs:[{...turma.state.ucs[0],sala:' Lab Maker '}],days:{'2099-04-01':{s:['LOG']}},reg:{}}});
@@ -348,4 +348,108 @@ test('reservas: outro docente não consulta nem cancela pedidos de terceiros',as
  assert.equal((await call({op:'reservation_cancel',id:target.id},d.cookie)).status,403);
  assert.deepEqual((await (await get('',d.cookie)).json()).docs.find(x=>x.id==='reservas').data.items,[]);
  assert.equal((await call({op:'set',id:'reservas',data:{items:[]},base:1},m.cookie)).status,400);
+});
+
+const nextFixture=async()=>{
+ const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'});
+ await call({op:'user_link',login:'prof',docente:'Ana'},m.cookie);
+ await setDoc(m.cookie,'turma-melhorias',{state:{cfg:turma.state.cfg,ucs:turma.state.ucs,days:{'2099-06-01':{s:['LOG']},'2099-06-02':{s:['LOG']},'2099-06-03':{s:['LOG']}},reg:{}}});
+ return {m,d};
+};
+const requestNew=(cookie,extra={})=>call({op:'reservation_request',turmaId:'turma-melhorias',data:'2099-06-01',sigla:'LOG',ambienteId:'lab-maker',finalidade:'Atividade prática',...extra},cookie);
+test('perfil ambientes: decide reservas e cadastra espaços, mas não edita turma nem acessa contas ou backup',async()=>{
+ const {m,d}=await nextFixture();
+ assert.equal((await call({op:'user_add',login:'gestorlab',nome:'Gestor de ambientes',password:'senha-gestao-1',role:'ambientes'},m.cookie)).status,200);
+ const a=await login({login:'gestorlab',password:'senha-gestao-1'});assert.equal(a.r.status,200);
+ for(const op of ['users','backup_list','history','notify_log'])assert.equal((await call({op},a.cookie)).status,403);
+ assert.equal((await call({op:'set',id:'turma-melhorias',data:turma,base:1},a.cookie)).status,403);
+ const e=await (await call({op:'environment_list'},a.cookie)).json();assert.equal((await call({op:'environment_save',items:e.items,base:e.rev},a.cookie)).status,200);
+ const r=await (await requestNew(d.cookie)).json();assert.equal((await call({op:'reservation_decide',id:r.item.id,status:'aprovada'},a.cookie)).status,200);
+ const safe=await (await get('',a.cookie)).json();assert.ok(!JSON.stringify(safe).includes('Aluno Secreto'));
+});
+test('sincronização: alterar turno exige revisão e gera aviso sem permitir aprovar diretamente',async()=>{
+ const {m}=await nextFixture();
+ const before=(await (await call({op:'reservation_list'},m.cookie)).json()).items.find(r=>r.turmaId==='turma-melhorias'&&r.data==='2099-06-01');
+ assert.equal(before.status,'aprovada');
+ const cur=(await (await get('',m.cookie)).json()).docs.find(x=>x.id==='turma-melhorias');
+ await call({op:'set',id:cur.id,base:cur.rev,data:{state:{...cur.data.state,cfg:{...cur.data.state.cfg,turno:'Vespertino'}}}},m.cookie);
+ const d=await login({login:'prof',password:'senha-docente-1'});
+ const current=(await (await call({op:'reservation_list'},d.cookie)).json()).items.find(r=>r.id===before.id);assert.equal(current.status,'revisao');
+ assert.equal((await call({op:'reservation_decide',id:before.id,status:'aprovada'},m.cookie)).status,409);
+ const notices=await (await call({op:'notification_list'},d.cookie)).json();assert.ok(notices.items.some(n=>n.reservaId===before.id));
+ const notice=notices.items.find(n=>n.reservaId===before.id);await call({op:'notification_read',id:notice.id},d.cookie);
+ assert.equal((await (await call({op:'notification_list'},d.cookie)).json()).items.find(n=>n.id===notice.id).lida,true);
+});
+test('reagendamento conserva histórico, volta a pendente e libera o horário anterior',async()=>{
+ const {m,d}=await nextFixture();
+ const r=(await (await call({op:'reservation_list'},d.cookie)).json()).items.find(r=>r.turmaId==='turma-melhorias'&&r.data==='2099-06-01');
+ const moved=await (await call({op:'reservation_reschedule',id:r.id,turmaId:'turma-melhorias',data:'2099-06-02',sigla:'LOG',ambienteId:'lab-maker',finalidade:'Reposição prática'},d.cookie)).json();
+ assert.equal(moved.item.status,'pendente');assert.equal(moved.item.data,'2099-06-02');assert.ok(moved.item.historico.at(-1).anterior);
+ assert.equal((await call({op:'reservation_decide',id:r.id,status:'aprovada'},m.cookie)).status,200);
+ const board=await (await call({op:'daily_board',data:'2099-06-01'},d.cookie)).json();assert.ok(!board.items.some(x=>x.id===r.id));
+ const other=await login({login:'outroprof',password:'senha-docente-2'});
+ assert.equal((await call({op:'reservation_reschedule',id:r.id,turmaId:'turma-melhorias',data:'2099-06-03',sigla:'LOG',ambienteId:'lab-maker',finalidade:'Outra'},other.cookie)).status,403);
+});
+test('bloqueios: validam período e suspendem reserva afetada; removal não aprova automaticamente',async()=>{
+ const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'}),a=await login({login:'gestorlab',password:'senha-gestao-1'});
+ const block={op:'block_add',ambienteId:'lab-maker',de:'2099-06-02',ate:'2099-06-03',inicio:420,fim:1380,motivo:'Manutenção'};
+ assert.equal((await call(block,d.cookie)).status,403);
+ assert.equal((await call({...block,de:'2099-02-30'},a.cookie)).status,400);
+ assert.equal((await call(block,a.cookie)).status,200);
+ const list=await (await call({op:'reservation_list'},d.cookie)).json();assert.equal(list.items.find(r=>r.data==='2099-06-02'&&r.turmaId==='turma-melhorias').status,'revisao');
+ assert.equal((await requestNew(d.cookie,{data:'2099-06-03'})).status,409);
+ const blocks=await (await call({op:'block_list'},a.cookie)).json();assert.equal((await call({op:'block_remove',id:blocks.items[0].id},a.cookie)).status,200);
+ assert.equal((await (await call({op:'reservation_list'},d.cookie)).json()).items.find(r=>r.data==='2099-06-02'&&r.turmaId==='turma-melhorias').status,'revisao');
+});
+test('grade diária e relatórios: dados por período, sem finalidade compartilhada e sem relatório para docente',async()=>{
+ const {m,d}=await nextFixture();
+ const r=await (await requestNew(d.cookie,{data:'2099-06-03'})).json();await call({op:'reservation_decide',id:r.item.id,status:'aprovada'},m.cookie);
+ const board=await (await call({op:'daily_board',data:'2099-06-03'},d.cookie)).json();assert.ok(board.items.some(x=>x.status==='aprovada'));assert.ok(!JSON.stringify(board).includes('finalidade'));
+ assert.equal((await call({op:'reservation_report',de:'2099-06-01',ate:'2099-06-30'},d.cookie)).status,403);
+ const report=await (await call({op:'reservation_report',de:'2099-06-01',ate:'2099-06-30'},m.cookie)).json();assert.equal(report.resumo[0].horas,4);assert.equal(report.resumo[0].aprovadas,1);
+ const other=await login({login:'outroprof',password:'senha-docente-2'}),notices=await (await call({op:'notification_list'},d.cookie)).json();
+ assert.equal((await call({op:'notification_read',id:notices.items[0].id},other.cookie)).status,404);
+});
+test('backup completo: inclui contas e vínculos, detecta mudanças só de contas e restaura credenciais',async()=>{
+ const m=await login({password:'mestre-123'});
+ const saved=await (await call({op:'backup_now'},m.cookie)).json();
+ const payload=JSON.parse((await (await call({op:'backup_download',id:saved.id},m.cookie)).json()).data);
+ assert.equal(payload.versao,2);assert.equal(payload.users.find(u=>u.login==='prof').docente,'Ana');assert.ok(Array.isArray(payload.notifications));assert.ok(!JSON.stringify(payload).includes('senha-docente-1'));
+ const coordinator=await login({login:'maria',password:'senha-longa-1'});
+ const redacted=JSON.parse((await (await call({op:'backup_download',id:saved.id},coordinator.cookie)).json()).data);assert.ok(!redacted.users);
+ assert.equal((await call({op:'backup_restore',id:saved.id},coordinator.cookie)).status,403);
+ await call({op:'user_pw',login:'prof',password:'senha-nova-1'},m.cookie);assert.equal((await runBackup('agendado','teste')).saved,true);
+ await call({op:'user_link',login:'prof',docente:''},m.cookie);
+ assert.equal((await call({op:'backup_restore',id:saved.id},m.cookie)).status,200);
+ assert.equal((await login({login:'prof',password:'senha-docente-1'})).r.status,200);
+ const users=await (await call({op:'users'},m.cookie)).json();assert.equal(users.users.find(u=>u.login==='prof').docente,'Ana');
+});
+
+test('relatório inclui ocupações do calendário e evita contar duas vezes uma aula reservada',async()=>{
+ const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'});
+ await setDoc(m.cookie,'turma-relatorio-calendario',{state:{...turma.state,ucs:[{...turma.state.ucs[0],sala:'Lab Maker'}],days:{'2099-08-01':{s:['LOG']}},reg:{}}});
+ const report=()=>call({op:'reservation_report',de:'2099-08-01',ate:'2099-08-01'},m.cookie).then(r=>r.json());
+ assert.equal((await report()).resumo[0].horasCalendario,4);
+ const r=await (await call({op:'reservation_request',turmaId:'turma-relatorio-calendario',data:'2099-08-01',sigla:'LOG',ambienteId:'lab-maker',finalidade:'Prática na aula programada'},d.cookie)).json();
+ await call({op:'reservation_decide',id:r.item.id,status:'aprovada'},m.cookie);
+ const after=await report();assert.equal(after.resumo[0].horas,4);assert.equal(after.resumo[0].horasReservadas,4);assert.equal(after.resumo[0].horasCalendario,0);
+});
+test('restauração v2 recupera snapshot completo e desfaz documentos criados depois; backup inválido não altera dados',async()=>{
+ const m=await login({password:'mestre-123'}),saved=await (await call({op:'backup_now'},m.cookie)).json();
+ await setDoc(m.cookie,'turma-depois-do-backup',turma);
+ await call({op:'backup_restore',id:saved.id},m.cookie);
+ assert.ok(!(await (await get('',m.cookie)).json()).docs.some(d=>d.id==='turma-depois-do-backup'));
+ const before=await (await get('',m.cookie)).json();
+ const {restoreBackupPayload}=await import('../lib/core.js');
+ await assert.rejects(restoreBackupPayload({versao:2,docs:{},users:[{login:'admin'}]}));
+ const after=await (await get('',m.cookie)).json();assert.deepEqual(after.docs,before.docs);
+});
+test('alteração de calendário concorrente com aprovação nunca deixa reserva aprovada com horário antigo',async()=>{
+ const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'});
+ const data={state:{...turma.state,days:{'2099-09-01':{s:['LOG']}},reg:{}}};await setDoc(m.cookie,'turma-corrida-calendario',data);
+ const r=await (await call({op:'reservation_request',turmaId:'turma-corrida-calendario',data:'2099-09-01',sigla:'LOG',ambienteId:'lab-maker',finalidade:'Prática'},d.cookie)).json();
+ const cur=(await (await get('',m.cookie)).json()).docs.find(x=>x.id==='turma-corrida-calendario');
+ const results=await Promise.all([call({op:'reservation_decide',id:r.item.id,status:'aprovada'},m.cookie),call({op:'set',id:cur.id,base:cur.rev,data:{state:{...data.state,cfg:{...data.state.cfg,turno:'Noturno'}}}},m.cookie)]);
+ assert.equal(results[1].status,200);
+ const item=(await (await call({op:'reservation_list'},m.cookie)).json()).items.find(x=>x.id===r.item.id);assert.equal(item.status,'revisao');
 });

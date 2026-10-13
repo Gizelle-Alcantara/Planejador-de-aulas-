@@ -1,23 +1,38 @@
-# Ambientes e vínculo de docentes — primeira etapa
+# Gestão de ambientes
 
-## Como usar
-1. Execute `npm install`, `npm run build` e inicie o servidor com as variáveis descritas no guia de instalação.
-2. Abra a aba **Ambientes** e clique em **Abrir gestão de ambientes**, ou acesse `/ambientes.html`.
-3. Entre com a conta da coordenação para cadastrar nome, tipo, capacidade e disponibilidade. Use **Editar** para alterar ou desativar um ambiente.
-4. Para vincular um professor, entre com a senha mestre. Na seção **Vincular contas aos docentes**, selecione o nome já cadastrado em **Docentes** e salve. Crie as contas de docente pela aba **Acesso**, se necessário.
-5. O docente entra na mesma página com sua conta e consulta os ambientes e suas aulas programadas. A seleção das aulas usa o vínculo da conta, sem permitir escolher a identidade de outro professor.
+Acesse **Ambientes → Abrir gestão de ambientes** no calendário, ou `/ambientes.html`.
 
-## Preservação e funcionamento
-O cadastro é armazenado no documento `ambientes` do banco utilizado pela API e participa dos backups e do histórico existentes. Uma nova coluna opcional `docente` é criada na tabela `users` automaticamente; contas anteriores continuam funcionando sem vínculo.
-Os vínculos pertencem à tabela de contas: o backup JSON atual de documentos não inclui as contas nem seus vínculos. Para preservar ambos, guarde também uma cópia integral do banco utilizado em produção.
-Os ambientes já escritos nas disciplinas não são convertidos nem renomeados automaticamente. Cadastre os nomes usados pela unidade. Capacidade e disponibilidade são informativas nesta etapa.
-A lista de aulas usa os horários do turno definidos no calendário atual. Feriados e aulas marcadas como não dadas são excluídos da consulta.
+## Contas
+Entre com a senha mestre na aba **Acesso** para criar contas. Escolha **Administrador de ambientes** para quem administra os espaços, ou **Docente** para professores. Os coordenadores existentes continuam gerenciando ambientes e reservas.
 
-## Permissões
-Coordenação cadastra e edita ambientes; docente consulta. Somente a senha mestre vincula contas. A API recusa dados inválidos, nomes duplicados e gravações com revisão desatualizada. Contas de docente mantêm as permissões anteriores de chamada e alunos.
+| Perfil | Permissões nesta área |
+| --- | --- |
+| Senha mestre | Todas as funções, criação de contas, vínculo de docentes e backup completo |
+| Coordenação | Ambientes, reservas, manutenção, relatórios e calendário |
+| Administrador de ambientes | Ambientes, reservas, manutenção e relatórios; calendário em leitura |
+| Docente | Grade de disponibilidade, pedidos próprios, reagendamento e notificações próprias |
 
-## Próxima etapa
-Solicitação por aula, decisão pela coordenação, cancelamento e histórico agora estão disponíveis. Veja RESERVAS-pt-BR.md. Um perfil separado de administrador de ambientes e uma grade diária de ocupação permanecem como possíveis evoluções.
+Para vincular uma conta de docente, entre com a senha mestre, vá à seção **Contas e vínculos**, escolha o nome cadastrado em Docentes e salve. O professor passa a solicitar os ambientes para as aulas associadas a esse nome.
 
-## Validação
-27 testes de API aprovados, incluindo permissões, validação, concorrência e vínculo da conta. Geração do site e sintaxe JavaScript verificadas. Páginas do módulo servidas pelo servidor local com HTTP 200. Não houve teste visual no navegador nesta etapa, pois o executável do navegador não estava disponível no ambiente.
+## Ambientes
+Informe nome, tipo (sala ou laboratório), capacidade e disponibilidade. **Editar** permite alterar o cadastro ou desativar o espaço. Nomes duplicados são recusados.
+A capacidade é informativa; a disponibilidade e os bloqueios são verificados pelo servidor. Desativar um ambiente marca reservas futuras afetadas como **Precisa de revisão**.
+Os nomes de ambientes escritos nas disciplinas permanecem preservados. A grade reconhece os espaços do calendário pelo nome, ignorando diferenças de maiúsculas, espaços extras e acentos.
+
+## Ocupação diária
+Escolha uma data e, opcionalmente, filtre um ambiente. A grade cruza horários e espaços, exibindo professor, turma, disciplina e origem.
+- Amarelo: reserva aprovada.
+- Laranja: solicitação pendente (ainda não garante o horário).
+- Roxo: precisa de revisão.
+- Azul: aula do calendário.
+- Cinza: manutenção ou bloqueio.
+
+A grade é compartilhada somente entre usuários autenticados. Finalidades e históricos de pedidos de terceiros permanecem restritos à gestão. No celular, deslize as tabelas horizontalmente.
+
+## Manutenção
+Na seção **Bloqueios e manutenção**, selecione ambiente, datas, horários e motivo. Um bloqueio novo suspende as reservas futuras afetadas, marca-as para revisão e gera avisos ao professor. Remover o bloqueio não reaprove automaticamente uma reserva.
+
+## Guias relacionados
+- RESERVAS-pt-BR.md: aprovação, reagendamento e notificações.
+- BACKUP-pt-BR.md: cópias completas e restauração.
+- VALIDACAO-INTEGRACAO.md: verificações realizadas.

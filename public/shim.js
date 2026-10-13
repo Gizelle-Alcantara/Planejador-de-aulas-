@@ -75,6 +75,7 @@
     st.textContent = ".lg-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:99}.lg-box{background:var(--surface,#fff);color:var(--ink,#14202e);border-radius:10px;padding:22px;width:min(92vw,340px);box-shadow:0 10px 40px rgba(0,0,0,.3);font-family:inherit}.lg-box h2{margin:0 0 12px;font-size:1.1rem}.lg-box input{width:100%;padding:10px;border:1px solid var(--line,#ccc);border-radius:6px;margin-bottom:10px;font:inherit;box-sizing:border-box;background:var(--surface2,#fff);color:inherit}.lg-box button{padding:9px 14px;border-radius:6px;border:1px solid var(--accent,#0b5cab);background:var(--accent,#0b5cab);color:#fff;font:inherit;cursor:pointer}.lg-box .x{background:transparent;color:inherit;border-color:var(--line,#ccc);margin-left:6px}.lg-err{color:#b3261e;font-size:.85rem;min-height:1.2em;margin:0 0 8px}.lg-out{position:fixed;right:12px;bottom:12px;z-index:50;padding:6px 12px;border-radius:6px;border:1px solid var(--line,#ccc);background:var(--surface,#fff);color:var(--ink,#14202e);font:inherit;font-size:.8rem;cursor:pointer}";
     document.head.appendChild(st);
     first().then((s) => {
+      if (s.user && s.user.role === "ambientes") { location.replace("/ambientes.html"); return; }
       if (s.admin) {
         const b = document.createElement("button"); b.className = "lg-out"; b.textContent = "Sair (" + ((s.user && s.user.nome) || "coordenador").split(" ")[0] + ")";
         b.onclick = async () => { await api({ op: "logout" }); location.hash = ""; location.reload(); };

@@ -1,27 +1,33 @@
-# Solicitações e aprovação de reservas
+# Reservas, aprovação e reagendamento
 
 ## Professor
-1. Acesse a aba Ambientes → Abrir gestão de ambientes e entre com sua conta.
-2. A conta precisa estar vinculada ao nome cadastrado do docente pela senha mestre.
-3. Em Minhas solicitações, escolha uma aula atual ou futura, um ambiente disponível e a finalidade.
-4. Clique em Solicitar reserva. O pedido começa pendente.
-5. Consulte o status e o histórico; use Cancelar para liberar uma reserva aprovada ou desistir de um pedido pendente.
+1. Entre com sua conta vinculada em `/ambientes.html`.
+2. Em **Nova solicitação**, escolha uma aula atual/futura do calendário, um ambiente disponível e a finalidade.
+3. Clique em **Enviar para aprovação**. O pedido começa pendente.
+4. Acompanhe status e decisões na seção **Reservas** e os avisos em **Notificações**.
+5. Para alterar aula ou ambiente, clique em **Reagendar**, preencha a nova seleção e envie. O pedido volta a pendente e libera a ocupação anterior; a mudança exige nova aprovação.
+6. **Cancelar** encerra o pedido ou reserva e libera a ocupação.
 
-## Coordenação
-Entre com a conta de coordenador ou a senha mestre na mesma tela. A seção Solicitações e reservas permite Aprovar, Recusar (com motivo obrigatório) ou Cancelar. Nesta versão, as contas de coordenação exercem a aprovação; não há um perfil separado de administrador de ambientes.
+## Gestão de ambientes
+Coordenação e contas de administrador de ambientes podem aprovar, recusar ou cancelar. A recusa exige motivo. O histórico registra autor, data, decisão e dados anteriores do reagendamento.
 
-## Regras
-- A identidade, a turma, a disciplina e os horários vêm da aula do calendário; o professor não informa o nome de outro docente nem escolhe horários livres.
-- Solicitações pendentes não bloqueiam o ambiente. Ao aprovar, o servidor verifica novamente a aula e impede sobreposição com reservas aprovadas ou com ocupações do calendário de outras aulas.
-- Só existe uma solicitação pendente/aprovada por aula. Uma solicitação recusada ou cancelada permite um novo pedido.
-- O docente só consulta e cancela seus próprios pedidos; coordenação consulta todos.
-- Datas, horários e autoria ficam registrados no histórico. Não há envio automático de e-mail ou WhatsApp de reservas nesta etapa; consulte Atualizar reservas.
-- Cancelamento libera o ambiente. Reagendamento é feito cancelando e solicitando novamente.
+## Regras de disponibilidade
+A identidade do solicitante e os horários são obtidos pelo servidor a partir da conta e da aula escolhida. O professor não solicita em nome de outra pessoa.
+O pedido e a aprovação verificam disponibilidade, bloqueios, reservas aprovadas e outras aulas já ocupando o espaço. Horários que apenas se encostam não conflitam. Pedidos pendentes não garantem ocupação. Só existe um pedido ativo por aula.
+As operações de escrita usam transações para proteger a validação contra aprovação, alteração de calendário ou bloqueio simultâneos.
 
-## Integração e limites
-Reservas são armazenadas no documento reservas do banco usado pela API, incluídas no backup de documentos e protegidas por revisão para impedir duas aprovações simultâneas conflitantes. Os dados originais do pacote não foram alterados.
-A aprovação não reescreve o campo Sala/Lab das disciplinas nem altera o calendário da turma. A ocupação aprovada é consultada na tela de ambientes. Alterações posteriores da coordenação no calendário não cancelam automaticamente reservas já aprovadas: cancele a reserva afetada e faça uma nova solicitação. A verificação usa o intervalo completo do turno, conforme o calendário existente.
-A disponibilidade de ambientes é verificada no pedido e na aprovação. A capacidade é informativa.
+## Sincronização com o calendário
+Alterações de aula, docente, turno, sala, curso ou turma; exclusão/cancelamento da aula; desativação do ambiente; bloqueios ou conflitos novos marcam pedidos futuros afetados como **Precisa de revisão**.
+Uma reserva nesse estado deixa de garantir o horário e não pode ser aprovada diretamente. O professor deve reagendar usando os dados atuais; a gestão pode recusá-la ou cancelá-la. O aviso e o motivo ficam registrados.
+A sincronização ocorre ao salvar/excluir/restaurar dados do calendário e ao consultar reservas, grade ou relatórios. Alterações feitas diretamente no banco são reconhecidas na próxima consulta dessas telas. Reservas passadas preservam seu histórico.
+A reserva aprovada não altera o campo Sala/Lab. da disciplina: a grade combina a ocupação do calendário e das reservas, usando a reserva aprovada no lugar da sala original daquela aula.
+Os horários seguem o intervalo do turno, conforme o calendário existente.
 
-## Validação
-27 testes de API aprovados: permissões, privacidade, calendário alterado, duplicidade, recusa, cancelamento e aprovação concorrente. Site gerado e JavaScript verificado. Revisão visual de navegador permanece pendente por ausência do executável de navegador neste ambiente. Nenhuma publicação ou mensagem externa realizada.
+## Notificações
+Novos pedidos e reagendamentos avisam a gestão; decisões, cancelamentos e necessidade de revisão avisam o professor. Clique no aviso para ir à reserva e use **Marcar como lida**. A leitura é individual, inclusive para contas de gestão.
+Os avisos são internos. São atualizados ao executar ações e a cada 30 segundos enquanto a tela permanece ativa. Não há envio de e-mail ou WhatsApp de reservas nesta implementação.
+
+## Relatórios
+A gestão seleciona um período, gera o relatório e consulta pedidos/aprovações por ambiente, horas de reservas, horas do calendário e horas totais de ocupação prevista; a segunda tabela agrupa por docente.
+Aulas do calendário e reservas aprovadas entram nas horas, com deduplicação da aula já reservada. Pendentes, recusadas, canceladas e em revisão não somam horas de reserva. Os indicadores medem a ocupação prevista, sem confirmar presença física.
+Use **Exportar CSV** para registros detalhados e **Imprimir / salvar PDF** para o relatório formatado. Escolha Salvar como PDF no diálogo de impressão do navegador.

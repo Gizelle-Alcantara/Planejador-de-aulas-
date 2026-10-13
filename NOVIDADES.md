@@ -60,3 +60,15 @@ Divisão do código em módulos e acessibilidade completa.
 - Validação de ocupação do calendário e reservas aprovadas no servidor.
 - Aprovações concorrentes protegidas por revisão; 27 testes de API aprovados.
 - Guia: docs/RESERVAS-pt-BR.md.
+
+## Gestão integrada de ambientes — 12/10/2026
+- Perfil próprio de administrador de ambientes com permissões restritas.
+- Painel diário horários × ambientes, com aprovadas amarelas e pendentes laranja.
+- Sincronização: mudanças de calendário/disponibilidade exigem revisão da reserva e avisam o professor.
+- Notificações internas com leitura individual e acesso à reserva.
+- Bloqueios por ambiente, datas, horários e motivo.
+- Reagendamento volta a pendente e registra a seleção anterior.
+- Relatórios por ambiente/docente/período, CSV e impressão em PDF, incluindo ocupações do calendário sem duplicação.
+- Backup v2 com contas, vínculos e notificações; restauração transacional com cópia anterior.
+- 36 testes da API e fluxo de navegador aprovados, incluindo uso no celular.
+- Chamada e Alunos continuam removidas da navegação.

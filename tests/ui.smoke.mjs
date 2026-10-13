@@ -1,0 +1,42 @@
+// Teste de integração da interface em banco temporário; nunca toca nos dados enviados.
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { mkdtempSync, rmSync, readFileSync, mkdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+const project=fileURLToPath(new URL('../',import.meta.url)),temp=mkdtempSync(join(tmpdir(),'senai-ui-')),port=process.env.UI_TEST_PORT||'3198',base=`http://localhost:${port}`;
+const server=spawn(process.execPath,['server.js'],{cwd:project,env:{...process.env,PORT:port,TURSO_DATABASE_URL:`file:${join(temp,'test.db')}`,ADMIN_PASSWORD:'mestre-teste-ui',SESSION_SECRET:'segredo-temporario-ui'},stdio:'pipe'});
+let browser;const errors=[], watched=[];
+const day='2099-07-01',next='2099-07-02';
+try {
+ for(let i=0;i<50;i++){try{const r=await fetch(base+'/api');if(r.ok)break}catch{}await new Promise(r=>setTimeout(r,100));}
+ browser=await chromium.launch({headless:true,...(process.env.BROWSER_EXECUTABLE_PATH?{executablePath:process.env.BROWSER_EXECUTABLE_PATH,args:['--no-sandbox','--disable-dev-shm-usage']}: {})});
+ const context=await browser.newContext({acceptDownloads:true}),page=await context.newPage();
+ watched.push(page);page.setDefaultTimeout(10000);page.on('pageerror',e=>errors.push(e.message));
+ const call=async(ctx,body)=>{const r=await ctx.request.post(base+'/api',{data:body});assert.ok(r.ok(),`${body.op}: ${await r.text()}`);return r.json()};
+ await page.goto(base+'/ambientes.html');await page.getByLabel('Senha',{exact:true}).fill('mestre-teste-ui');await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.getByRole('heading',{name:'Ambientes cadastrados',exact:true}).waitFor();
+ await call(context,{op:'set',id:'geral',base:0,data:{docentes:[{nome:'Ana'}]}});
+ const state={cfg:{turma:'T-UI',curso:'Desenvolvimento de Sistemas',turno:'Matutino',aulasDia:4},ucs:[{sigla:'LOG',nome:'Lógica',docente:'Ana',sala:'',ch:40}],days:{[day]:{s:['LOG']},[next]:{s:['LOG']}},reg:{}};
+ await call(context,{op:'set',id:'turma-ui',base:0,data:{state}});
+ await call(context,{op:'user_add',login:'profui',nome:'Professora Ana',password:'senha-prof-ui',role:'docente'});
+ await call(context,{op:'user_add',login:'gestorui',nome:'Administrador de ambientes',password:'senha-gestor-ui',role:'ambientes'});
+ await page.reload();await page.getByLabel('Nome',{exact:true}).fill('Laboratório Maker');await page.getByLabel('Capacidade',{exact:true}).fill('30');await page.getByRole('button',{name:'Salvar ambiente',exact:true}).click();await page.getByText('Ambiente salvo.',{exact:true}).waitFor();
+ await page.getByLabel('Docente de Professora Ana').selectOption('Ana');await page.getByRole('button',{name:'Salvar vínculo',exact:true}).click();await page.getByText('Vínculo salvo.',{exact:true}).waitFor();
+ const teacherContext=await browser.newContext({acceptDownloads:true}),teacher=await teacherContext.newPage();watched.push(teacher);teacher.setDefaultTimeout(10000);teacher.on('pageerror',e=>errors.push(e.message));await teacher.goto(base+'/ambientes.html');await teacher.getByLabel('Usuário',{exact:true}).fill('profui');await teacher.getByLabel('Senha',{exact:true}).fill('senha-prof-ui');await teacher.getByRole('button',{name:'Entrar',exact:true}).click();await teacher.getByLabel('Aula programada',{exact:true}).selectOption('0');await teacher.getByLabel('Ambiente da solicitação',{exact:true}).selectOption({label:'Laboratório Maker'});await teacher.getByLabel('Finalidade',{exact:true}).fill('Prática de lógica');await teacher.getByRole('button',{name:'Enviar para aprovação',exact:true}).click();await teacher.getByText('Solicitação enviada para aprovação.',{exact:true}).waitFor();
+ const managerContext=await browser.newContext({acceptDownloads:true}),manager=await managerContext.newPage();watched.push(manager);manager.setDefaultTimeout(10000);manager.on('pageerror',e=>errors.push(e.message));await manager.goto(base+'/ambientes.html');await manager.getByLabel('Usuário',{exact:true}).fill('gestorui');await manager.getByLabel('Senha',{exact:true}).fill('senha-gestor-ui');await manager.getByRole('button',{name:'Entrar',exact:true}).click();await manager.getByRole('button',{name:'Aprovar',exact:true}).click();await manager.getByText('Reserva aprovada.',{exact:true}).waitFor();
+ await teacher.getByRole('button',{name:'Atualizar reservas',exact:true}).click();await teacher.locator('#reservation-content .badge.aprovada').waitFor();await teacher.getByRole('button',{name:'Marcar como lida',exact:true}).first().click();
+ await manager.locator('#board-date').fill(day);await manager.locator('#board-date').dispatchEvent('change');await manager.locator('#board-content .aprovada').first().waitFor();
+ await manager.setViewportSize({width:1440,height:1000});if(process.env.UI_EVIDENCE_DIR){mkdirSync(process.env.UI_EVIDENCE_DIR,{recursive:true});await manager.locator('#board').screenshot({path:join(process.env.UI_EVIDENCE_DIR,'painel-diario.png')});}
+ await manager.locator('#block-form input[name=de]').fill(day);await manager.locator('#block-form input[name=ate]').fill(day);await manager.locator('#block-form input[name=motivo]').fill('Manutenção preventiva');await manager.getByRole('button',{name:'Adicionar bloqueio',exact:true}).click();await manager.getByText('Bloqueio cadastrado.',{exact:true}).waitFor();await manager.locator('#reservation-content .badge.revisao').waitFor();
+ await teacher.getByRole('button',{name:'Atualizar reservas',exact:true}).click();await teacher.getByRole('button',{name:'Reagendar',exact:true}).click();await teacher.getByLabel('Aula programada',{exact:true}).selectOption('1');await teacher.getByRole('button',{name:'Enviar para aprovação',exact:true}).click();await teacher.locator('#reservation-content .badge.pendente').waitFor();
+ await manager.getByRole('button',{name:'Atualizar reservas',exact:true}).click();await manager.getByRole('button',{name:'Aprovar',exact:true}).click();await manager.getByText('Reserva aprovada.',{exact:true}).waitFor();
+ await manager.locator('#report-form input[name=de]').fill(day);await manager.locator('#report-form input[name=ate]').fill(next);await manager.getByRole('button',{name:'Gerar relatório',exact:true}).click();await manager.getByRole('button',{name:'Exportar CSV',exact:true}).waitFor();const [csv]=await Promise.all([manager.waitForEvent('download'),manager.getByRole('button',{name:'Exportar CSV',exact:true}).click()]);assert.ok(readFileSync(await csv.path(),'utf8').includes('Laboratório Maker'));
+ if(process.env.UI_EVIDENCE_DIR){await manager.emulateMedia({media:'print'});await manager.pdf({path:join(process.env.UI_EVIDENCE_DIR,'relatorio-validacao.pdf'),format:'A4',landscape:true});await manager.emulateMedia({media:'screen'});}
+ await teacher.setViewportSize({width:390,height:844});await teacher.locator('#reservations').scrollIntoViewIfNeeded();assert.equal(await teacher.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Página não deve transbordar no celular');if(process.env.UI_EVIDENCE_DIR)await teacher.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'celular.png')});
+ const [backup]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Baixar backup completo',exact:true}).click()]);const payload=JSON.parse(readFileSync(await backup.path(),'utf8'));assert.equal(payload.users.find(u=>u.login==='profui').docente,'Ana');assert.ok(payload.docs.reservas);
+ await manager.goto(base+'/#login');await manager.waitForURL('**/ambientes.html');
+ await page.goto(base+'/');await page.getByRole('tab',{name:'Ambientes',exact:true}).waitFor();assert.equal(await page.getByRole('tab',{name:'Chamada',exact:true}).count(),0);assert.equal(await page.getByRole('tab',{name:'Alunos',exact:true}).count(),0);
+ assert.deepEqual(errors,[]);console.log('UI aprovada: login, cadastro, vínculo, solicitação, aprovação, revisão, reagendamento, notificações, CSV, impressão, backup e layout móvel.');
+}catch(e){for(const p of watched)console.error(await p.locator("body").innerText());throw e;}finally{if(browser)await browser.close();server.kill();await new Promise(r=>server.once('exit',r));rmSync(temp,{recursive:true,force:true});}
