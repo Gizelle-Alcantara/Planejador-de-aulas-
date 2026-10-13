@@ -4,7 +4,7 @@
 Abra o planejador, escolha a turma no cabeçalho e clique em **Exportar calendário**. A mesma ação também fica na aba **Enviar**.
 
 Escolha um formato:
-- **Baixar Excel no padrão SENAI**: gera `.xlsx` na estrutura da planilha original, com cabeçalho, logo, dias em colunas, disciplina, instrutor, sala/laboratório e quadro de unidades curriculares.
+- **Prévia do Excel da turma**: permite conferir antes de baixar e gera `.xlsx` na estrutura da planilha original, com cabeçalho, logo, dias em colunas, disciplina, instrutor, sala/laboratório e quadro de unidades curriculares.
 - **Imprimir / salvar calendário em PDF**: abre o calendário mensal com cabeçalho SENAI, disciplinas, docentes e ambientes. No diálogo de impressão, escolha **Salvar como PDF**.
 - **Baixar calendário mensal (HTML)**: salva a página do calendário para abrir no navegador e imprimir depois.
 

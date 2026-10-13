@@ -14,9 +14,15 @@ As abas **Chamada** e **Alunos** foram removidas, conforme solicitado. Os dados 
 Os testes de navegador exigem Node.js 20+. O servidor mantém compatibilidade com Node.js 18+; instalações de produção podem usar `npm ci --omit=dev`.
 
 ## Exportação do calendário
-No cabeçalho, clique em **Exportar calendário** e escolha **Excel no padrão SENAI**, **PDF** ou **HTML**. Se houver lançamentos fora do período, escolha se deseja incluí-los. O botão **Voltar** permite retornar à aba ou ao calendário conforme o perfil.
+No cabeçalho, clique em **Exportar calendário** e escolha a **Prévia do Excel da turma** ou do docente, **PDF** ou **HTML**. Se houver lançamentos fora do período, escolha se deseja incluí-los. O botão **Voltar** permite retornar à aba ou ao calendário conforme o perfil.
 Guia: `docs/EXPORTACAO-CALENDARIO.md`.
 
 ## Aulas por horário
 
 No Calendário, abra um dia com a ferramenta Editar e escolha a disciplina de cada aula. Guia completo: `docs/HORARIOS-POR-AULA.md`. Os dados antigos não são redistribuídos automaticamente.
+
+## Prévia antes do download
+Confira a planilha, escolha o mês e ajuste o zoom. Clique em **Baixar Excel** quando terminar. Se os dados mudarem, use **Atualizar prévia**. Consulte `docs/PREVIA-EXCEL.md`.
+
+## Cadastro completo do docente
+Formulário com matrícula, contatos, unidade, área, formação, Meu SENAI, vínculo e observações, com validação e preservação dos cadastros existentes. Consulte `docs/CADASTRO-DOCENTE.md`.

@@ -479,3 +479,22 @@ test('grades por horário são validadas no servidor; turmas sem sobreposição 
  const mismatch=make('GC',['','','','']);assert.equal((await setDoc(m.cookie,'turma-grade-c',mismatch)).status,400);
  const saved=(await (await get('',m.cookie)).json()).docs.find(d=>d.id==='turma-grade-b').data;assert.deepEqual(saved.state.days[date].grade,['','','UC','UC']);
 });
+
+test('prévia do Excel aplica permissões e recusa o download de uma versão desatualizada',async()=>{
+ const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'}),a=await login({login:'gestorlab',password:'senha-gestao-1'}),q='?export=docente-preview&docente=Ana&ano=2099';
+ assert.equal((await get(q)).status,401);assert.equal((await get(q,a.cookie)).status,403);assert.equal((await get('?export=docente-preview&docente=Outro&ano=2099',d.cookie)).status,403);assert.equal((await get(q,d.cookie)).status,200);
+ const response=await get(q,m.cookie);assert.equal(response.status,200);const p=await response.json();assert.equal(p.sheets[0].months.length,12);assert.match(p.version,/^[0-9a-f]{64}$/);assert.equal((await get(`?export=docente-xlsx&docente=Ana&ano=2099&versao=${p.version}`,m.cookie)).status,200);assert.equal((await get('?export=docente-xlsx&docente=Ana&ano=2099&versao=antiga',m.cookie)).status,409);
+ const data={state:{...turma.state,cfg:{...turma.state.cfg,inicio:'2099-12-01',termino:'2099-12-31'},days:{'2099-12-01':{s:['LOG']}}}};await setDoc(m.cookie,'turma-previa-api',data);const tr=await get('?export=turma-preview&turma=turma-previa-api',m.cookie);const tp=await tr.json();assert.equal(tr.status,200,JSON.stringify(tp));assert.ok(tp.sheets.some(s=>s.name==='Encontros'));assert.equal((await get(`?export=xlsx&turma=turma-previa-api&versao=${tp.version}`,m.cookie)).status,200);
+ await setDoc(m.cookie,'turma-previa-api',{state:{...data.state,cfg:{...data.state.cfg,curso:'Curso atualizado'}}});const stale=await get(`?export=xlsx&turma=turma-previa-api&versao=${tp.version}`,m.cookie);assert.equal(stale.status,409);assert.match((await stale.json()).error,/Atualize a prévia/);
+});
+
+test('cadastro completo valida e preserva dados privados na consulta pública',async()=>{
+ const {cookie}=await login({password:'mestre-123'});
+ const docs=(await (await get('',cookie)).json()).docs;
+ const base=docs.find(d=>d.id==='geral')?.rev||0;
+ const docentes=[{nome:'Cadastro Teste',matricula:'987',emailInstitucional:'teste@senai.test',unidade:'Alagoinhas',meuSenai:'teste.senai',vinculo:'Horista',observacoes:'Dados internos',semana:[],bloqueios:[]}];
+ assert.equal((await call({op:'set',id:'geral',base,data:{docentes}},cookie)).status,200);
+ const saved=(await (await get('',cookie)).json()).docs.find(d=>d.id==='geral');assert.equal(saved.data.docentes[0].matricula,'987');
+ const pub=(await (await get()).json()).docs.find(d=>d.id==='geral').data.docentes[0];assert.equal(pub.nome,'Cadastro Teste');for(const key of ['matricula','emailInstitucional','observacoes','meuSenai','unidade','vinculo'])assert.equal(pub[key],undefined);
+ assert.equal((await call({op:'set',id:'geral',base:saved.rev,data:{docentes:[{nome:'Teste',email:'invalido'}]}},cookie)).status,400);
+});

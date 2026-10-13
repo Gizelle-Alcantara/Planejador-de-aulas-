@@ -6,7 +6,7 @@ A exportação usa o arquivo `Gizelle Karine Santos Alcantara.xlsx` enviado como
 
 1. Entre como coordenação e clique em **Exportar calendário**.
 2. Na seção **Agenda anual do docente — modelo enviado**, escolha o docente e o ano.
-3. Informe o vínculo, se conhecido, e clique em **Baixar Excel no modelo do docente**.
+3. Informe o vínculo, se conhecido, e clique em **Prévia do Excel do docente**. Confira a planilha e clique em **Baixar Excel**.
 
 O docente autenticado também encontra o botão **Exportar calendário** na própria agenda e pode baixar somente o calendário vinculado à sua conta. O administrador de ambientes não acessa esta exportação. A exportação exige que os dados estejam salvos.
 
@@ -31,7 +31,7 @@ Os dias disponíveis consideram segunda a sexta, feriados registrados nas turmas
 
 O vínculo segue as regras do modelo: Mensalista = dias disponíveis × 8; Horista = 90; Intermitente = parte inteira de dias disponíveis × 8 × 0,909. Sem vínculo ou para RSA, capacidade e ocupação ficam em branco. O campo Meu SENAI fica em branco quando não estiver cadastrado; o e-mail pessoal do exemplo não é copiado para outros docentes.
 
-Contagens, pendências, totais, capacidade, ocupação e situação são fórmulas. As datas de início e fim são preenchidas com os lançamentos salvos na exportação. Alterações no Excel não retornam ao sistema. Salas e reservas constam no Excel por turma, que continua disponível separadamente em **Baixar Excel da turma**.
+Contagens, pendências, totais, capacidade, ocupação e situação são fórmulas. As datas de início e fim são preenchidas com os lançamentos salvos na exportação. Alterações no Excel não retornam ao sistema. Salas e reservas constam no Excel por turma, que continua disponível separadamente em **Prévia do Excel da turma**.
 
 ## Instalação e validação
 

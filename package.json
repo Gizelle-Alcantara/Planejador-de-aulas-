@@ -10,7 +10,7 @@
     "build": "node scripts/build.js",
     "start": "node server.js",
     "import": "node scripts/import.js",
-    "test": "node --test tests/api.test.mjs tests/calendar-export.test.mjs tests/teacher-calendar-export.test.mjs tests/schedule.test.mjs",
+    "test": "node --test tests/api.test.mjs tests/calendar-export.test.mjs tests/teacher-calendar-export.test.mjs tests/schedule.test.mjs tests/excel-preview.test.mjs tests/docentes.test.mjs",
     "test:ui": "npm run build && node tests/ui.smoke.mjs"
   },
   "dependencies": {

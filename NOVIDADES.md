@@ -100,3 +100,9 @@ Adicionado o modelo `Gizelle Karine Santos Alcantara.xlsx`, com escolha de docen
 ## Programação por horário de aula
 
 A coordenação pode distribuir várias disciplinas no mesmo dia por aula, com horários e quantidades próprios. A carga horária passa a contar as aulas individuais; conflitos, reservas, avisos e exportações seguem os intervalos da grade. Os lançamentos antigos são preservados até serem redistribuídos. Guia: `docs/HORARIOS-POR-AULA.md`.
+
+## Prévia do Excel
+Exportações da turma e do docente agora abrem uma prévia do arquivo gerado. Inclui seleção de planilha, mês e zoom, retorno às opções sem perder escolhas e download com conferência de versão. Alterações posteriores exigem atualizar a prévia. Navegação por teclado e leitura no celular verificadas.
+
+## Cadastro completo do docente
+Formulário com matrícula, contatos, unidade, área, formação, Meu SENAI, vínculo e observações, com validação e preservação dos cadastros existentes. Consulte `docs/CADASTRO-DOCENTE.md`.
