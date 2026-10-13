@@ -1,4 +1,10 @@
 const root=document.querySelector('#content'),msg=document.querySelector('#message');
+document.querySelector('#module-back').onclick=()=>{
+ const user=session?.user;
+ if(user?.role==='ambientes')location.href='/?visao=calendario#aluno';
+ else if(user?.role==='docente'){const name=String(user.docente||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');location.href='/#docente'+(name?'-'+name:'')}
+ else location.href='/?aba=calendario';
+};
 let session, environments=[],envRev=0,editId=null,rescheduleId=null,lessons=[],requests=[];
 const manage=()=>['coord','ambientes'].includes(session?.user?.role);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -235,8 +235,11 @@ function fromDocs(docs){
   Object.values(t).forEach(st=>{delete st.docentes});
   return {g,t,legacy:!docs.geral};
 }
-const UI={fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
+let EXPORT_RESERVAS=[];
+const UI={fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",backTabs:[],month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
 try{const t=localStorage.getItem(KEY+"-tab");if(t&&TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
+
+try{const t=new URLSearchParams(location.search).get("aba");if(TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
 
 /* ---------- datas ---------- */
 const pd=iso=>{const [y,m,d]=iso.split(".").length>1?[0,0,0]:iso.split("-").map(Number);return new Date(Date.UTC(y,m-1,d))};
@@ -351,7 +354,7 @@ const rowHorario=()=>{const h=horarios();return h.length?`${hm(h[0].i)} às ${hm
 const DOCTABS=["relatorios","ambientes"];
 function renderHead(){
   const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
-  document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
+  document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><button class="btn sm" data-act="back">Voltar</button><button class="btn sm pri" data-act="export">Exportar calendário</button><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
   setStatus(UI.status);
   document.getElementById("tabs").innerHTML=TABS.filter(x=>UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])).map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join("");
 }
@@ -633,21 +636,44 @@ function buildMsg(p,canal){
     "",`Calendário sempre atualizado: ${alunoLink()}`,
     ...(c.coord?["",`Coordenação: ${c.coord}`]:[])].join("\n");
 }
+function exportCalendarPeriod(){
+  const c={...S.cfg},include=document.getElementById("export-outside");
+  if(!include||include.checked){const dates=Object.entries(S.days).filter(([d,v])=>(v.s||[]).length).map(([d])=>d).sort();if(dates.length){c.inicio=c.inicio<dates[0]?c.inicio:dates[0];c.termino=c.termino>dates.at(-1)?c.termino:dates.at(-1)}}
+  return c;
+}
+function openExportModal(){
+  if(!UI.loaded||UI.empty){toast("Carregue uma turma antes de exportar.");return}
+  const outside=Object.entries(S.days).filter(([d,v])=>(v.s||[]).length&&(d<S.cfg.inicio||d>S.cfg.termino)).length;
+  document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Exportar calendário"><h2>Exportar calendário no padrão SENAI</h2><p>Turma ${esc(S.cfg.turma)} · ${esc(S.cfg.curso)}<br>${br(S.cfg.inicio)} a ${br(S.cfg.termino)}</p><p>Escolha o calendário mensal ou a planilha no modelo original.</p>${outside?`<p>${outside} data(s) com aulas estão fora do período da turma.</p><label class="small"><input id="export-outside" type="checkbox" checked> Incluir lançamentos fora do período configurado</label>`:""}<div class="row"><button class="btn pri" data-act="dlxlsx">Baixar Excel no padrão SENAI</button><button class="btn" data-act="print">Imprimir / salvar calendário em PDF</button><button class="btn" data-act="dlhtml">Baixar calendário mensal (HTML)</button></div><p class="small muted">O Excel usa os dados salvos no sistema. Salve alterações pendentes antes de exportar.</p><div class="row"><button class="btn" data-act="mclose2">Voltar</button></div></div></div>`;
+}
+async function exportXlsx(button){
+  if(UI.status==="saving"){toast("Aguarde a gravação das alterações e tente novamente.");return}
+  button.disabled=true;
+  try{
+    const url=new URL("/api",location.origin);url.searchParams.set("export","xlsx");url.searchParams.set("turma","turma-"+CUR);if(document.getElementById("export-outside")?.checked)url.searchParams.set("incluir","1");
+    const r=await fetch(url,{credentials:"same-origin",cache:"no-store"});
+    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.error||"Não foi possível exportar.")}
+    const blob=await r.blob(),a=document.createElement("a"),object=URL.createObjectURL(blob);a.href=object;a.download="calendario-senai-"+slug(S.cfg.turma)+".xlsx";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(object),1000);toast("Calendário em Excel exportado.");
+  }catch(e){toast(e.message)}finally{button.disabled=false}
+}
 function htmlCalendario(){
-  const C=calc(),c=S.cfg,P=Object.fromEntries(C.rows.map(r=>[r.u.sigla,r.P]));
-  const months=monthList().map(ym=>{
+  const C=calc(),c=exportCalendarPeriod(),P=Object.fromEntries(C.rows.map(r=>[r.u.sigla,r.P]));
+  const monthsCount=(+c.termino.slice(0,4)-+c.inicio.slice(0,4))*12+(+c.termino.slice(5,7)-+c.inicio.slice(5,7))+1;
+  const months=Array.from({length:Math.min(132,Math.max(0,monthsCount))},(_,i)=>shiftMonth(c.inicio.slice(0,7),i)).map(ym=>{
     const [y,m]=ym.split("-").map(Number),first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),dim=new Date(Date.UTC(y,m,0)).getUTCDate();
     let cells="";for(let i=0;i<first;i++)cells+="<td></td>";
     for(let d=1;d<=dim;d++){const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso);
       if((first+d-1)%7===0&&d>1)cells+="</tr><tr>";
-      cells+=`<td class="${w===0||w===6?"w":""} ${e.t==="feriado"?"h":""}"><b>${d}</b>${e.h?`<i>${esc(e.h)}</i>`:""}${(e.s||[]).map((sg,j)=>`<span>${esc(sg)} ${C.enc[iso][j]}</span>`).join("")}</td>`}
+      cells+=`<td class="${w===0||w===6?"w":""} ${e.t==="feriado"?"h":""}"><b>${d}</b>${e.h?`<i>${esc(e.h)}</i>`:""}${(e.s||[]).map((sg,j)=>`<span>${esc(sg)} ${C.enc[iso][j]}${(()=>{const u=ucOf(sg)||{},r=EXPORT_RESERVAS.find(r=>r.turmaId==="turma-"+CUR&&r.status==="aprovada"&&r.data===iso&&r.sigla===sg);return (u.docente?"<small>"+esc(u.docente)+"</small>":"")+((r&&r.ambienteNome)||u.sala?"<small>"+esc((r&&r.ambienteNome)||u.sala)+"</small>":"")})()}</span>`).join("")}</td>`}
+    for(let i=0;i<(7-(first+dim)%7)%7;i++)cells+="<td></td>";
     return `<section><h2>${MESES[m-1]} de ${y}</h2><table class="cal"><thead><tr>${WD.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody><tr>${cells}</tr></tbody></table></section>`}).join("");
   const ucs=C.rows.map(r=>`<tr><td>${esc(r.u.sigla)}</td><td>${esc(r.u.nome)}</td><td>${esc(r.u.docente)}</td><td>${r.u.ch} h</td><td>${r.P}</td><td>${r.R}</td><td>${br(r.ini)}</td><td>${br(r.fim)}</td></tr>`).join("");
   return `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calendário da turma ${esc(c.turma)}</title><style>
 body{font:14px system-ui,sans-serif;max-width:900px;margin:0 auto;padding:16px;color:#14202e}h1{font-size:1.4rem;margin:0}h2{font-size:1.05rem;margin:18px 0 6px;text-transform:capitalize}.m{color:#5a6b7f;margin:4px 0 14px}
 table{border-collapse:collapse;width:100%}th,td{border:1px solid #d9e0ea;padding:4px;vertical-align:top;font-size:.82rem}th{background:#f2f5f9;text-align:left}
-table.cal td{height:68px;width:14.28%}td.w{background:#eaeef4}td.h{background:#fde9e7}td i{display:block;font-size:.68rem;font-style:normal}td span{display:block;background:#dfeaf7;border-radius:3px;padding:0 3px;margin-top:2px;font-size:.72rem}
-section{break-inside:avoid}</style></head><body><img src="${LOGO}" alt="SENAI" style="height:40px;margin-bottom:8px"><h1>${esc(c.curso)}</h1><p class="m">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${rowHorario()}<br>Período: ${br(c.inicio)} a ${br(c.termino)}${c.coord?" · Coordenação: "+esc(c.coord):""}</p>
+table.cal td{height:68px;width:14.28%}td.w{background:#eaeef4}td.h{background:#fde9e7}td i{display:block;font-size:.68rem;font-style:normal}td small{display:block;font-size:.65rem;line-height:1.2}td span{display:block;background:#dfeaf7;border-radius:3px;padding:0 3px;margin-top:2px;font-size:.72rem}
+section{break-inside:avoid}.export-tools{display:flex;gap:10px;margin-bottom:16px}.export-tools button{padding:9px 14px;background:white;border:1px solid #0b5cab;color:#0b5cab;border-radius:6px;cursor:pointer;font:inherit}@page{size:A4 landscape;margin:12mm}@media print{body{max-width:none;padding:0}.export-tools{display:none}thead{display:table-header-group}table.cal td{height:58px}section{break-inside:avoid;page-break-inside:avoid}}
+</style></head><body><nav class="export-tools"><button type="button" data-return="${esc(location.origin+"/?aba=calendario")}" onclick="if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}else{location.href=this.dataset.return}">Voltar</button><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></nav><img src="${LOGO}" alt="SENAI" style="height:40px;margin-bottom:8px"><h1>${esc(c.curso)}</h1><p class="m">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${rowHorario()}<br>Período: ${br(c.inicio)} a ${br(c.termino)}${c.coord?" · Coordenação: "+esc(c.coord):""}</p>
 <table><thead><tr><th>Sigla</th><th>Disciplina</th><th>Docente</th><th>CH</th><th>Encontros</th><th>Limite de faltas</th><th>Início</th><th>Fim</th></tr></thead><tbody>${ucs}</tbody></table>${months}
 <p class="m">O número ao lado da sigla é o encontro. Gerado em ${br(todayISO())}.</p></body></html>`;
 }
@@ -673,7 +699,7 @@ function vEnviar(){
     <div class="row" style="margin-top:8px"><button class="btn" data-act="copy" data-id="envLink">Copiar link</button></div>
     <p class="small muted">Quem abre esse link vê o calendário atualizado ao vivo. Basta enviar o link: quem abre só visualiza.</p></section>
   <section class="panel"><h2>Arquivos para anexar</h2>
-    ${DL?`<div class="row"><button class="btn" data-act="dlhtml">Baixar página do calendário (HTML)</button><button class="btn" data-act="dlcsv">Baixar encontros (CSV)</button><button class="btn" data-act="print">Imprimir / salvar em PDF</button></div><p class="small muted">A página HTML abre em qualquer navegador e pode ser impressa ou salva em PDF. O CSV abre no Excel.</p>`:`<p class="small muted">O download de arquivos não está disponível neste momento. Use os textos da aba Dados (CSV e agenda .ics).</p>`}</section>
+    ${DL?`<div class="row"><button class="btn pri" data-act="export">Exportar calendário</button><button class="btn" data-act="dlhtml">Baixar página do calendário (HTML)</button><button class="btn" data-act="dlcsv">Baixar encontros (CSV)</button><button class="btn" data-act="print">Imprimir / salvar em PDF</button></div><p class="small muted">A página HTML abre em qualquer navegador e pode ser impressa ou salva em PDF. O CSV abre no Excel.</p>`:`<p class="small muted">O download de arquivos não está disponível neste momento. Use os textos da aba Dados (CSV e agenda .ics).</p>`}</section>
   <section class="panel"><h2>Destinatários</h2><label class="f">E-mails da turma (um por linha)<textarea id="envDest" data-cfgx="destinatarios" style="min-height:110px" placeholder="aluno1@email.com">${esc(S.cfg.destinatarios)}</textarea></label>
     <div class="row" style="margin-top:8px"><button class="btn" data-act="copy" data-id="envDest">Copiar lista</button><span class="small muted">${dest.length} e-mail(s)</span></div></section>
   </div></div>
@@ -1077,7 +1103,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const a=b.dataset.act;
   if(a==="mclose"){if(e.target===b)closeModal();return}
-  if(a==="tab"){UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
+  if(a==="tab"){if(UI.tab!==b.dataset.k)UI.backTabs.push(UI.tab);UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
   else if(a==="day")dayClick(b.dataset.iso);
   else if(a==="tool"){UI.tool=b.dataset.k;renderView()}
   else if(a==="mprev"){UI.month=shiftMonth(UI.month,-1);renderView()}
@@ -1092,6 +1118,9 @@ document.addEventListener("click",e=>{
   else if(a==="docdel"){const i=+b.dataset.i;if(UI.confirm==="doc"+i){const nm=S.docentes[i].nome;S.docentes.splice(i,1);Object.values(T).forEach(st=>st.ucs.forEach(u=>{if(u.docente===nm)u.docente=""}));UI.confirm=null;save()}else UI.confirm="doc"+i;renderView()}
   else if(a==="envopt"){UI.env[b.dataset.k]=b.dataset.v;UI.env.msg=null;renderView()}
   else if(a==="envlog"){S.envios.push({em:new Date().toISOString(),canal:UI.env.canal,periodo:UI.env.periodo,sig:sigHash()});save();toast("Envio registrado");renderView()}
+  else if(a==="back"){UI.tab=UI.backTabs.pop()||(UI.role==="docente"?"ambientes":"painel");UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(e){}renderView();window.scrollTo(0,0)}
+  else if(a==="export")openExportModal();
+  else if(a==="dlxlsx")exportXlsx(b);
   else if(a==="dlcsv"||a==="dlhtml"){
     const csv=a==="dlcsv";
     DL.save({filename:csv?`encontros-turma-${S.cfg.turma}.csv`:`calendario-turma-${S.cfg.turma}.html`,data:csv?"\ufeff"+csvText():htmlCalendario()})
@@ -1194,7 +1223,7 @@ renderView();
   let first=true;
   dref.onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
-    const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});
+    const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});EXPORT_RESERVAS=Array.isArray(docs.reservas&&docs.reservas.items)?docs.reservas.items:[];
     const r=fromDocs(docs);
     if(MODE==="aluno"||MODE==="docente"){
       if(!Object.keys(r.t).length){UI.loaded=true;UI.empty=true;renderView();return}
@@ -1206,7 +1235,7 @@ renderView();
       if(changed)toast("Calendário atualizado");return;
     }
     if(!Object.keys(r.t).length){if(first){first=false;lastJson={};save()}return}
-    first=false;
+    first=false;UI.loaded=true;UI.empty=false;
     if(dirty||document.querySelector(".modal"))return;
     const cand={G:r.g,T:r.t},cur=canon([docItems()]);
     const keep=CUR;G=r.g;T=r.t;CUR=T[keep]?keep:Object.keys(T)[0];normalize();

@@ -6,7 +6,9 @@ import { mkdtempSync, rmSync, readFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-const project=fileURLToPath(new URL('../',import.meta.url)),temp=mkdtempSync(join(tmpdir(),'senai-ui-')),port=process.env.UI_TEST_PORT||'3198',base=`http://localhost:${port}`;
+import { createServer } from 'node:net';
+const portProbe=createServer();await new Promise(r=>portProbe.listen(0,'127.0.0.1',r));const freePort=portProbe.address().port;await new Promise(r=>portProbe.close(r));
+const project=fileURLToPath(new URL('../',import.meta.url)),temp=mkdtempSync(join(tmpdir(),'senai-ui-')),port=process.env.UI_TEST_PORT||String(freePort),base=`http://localhost:${port}`;
 const server=spawn(process.execPath,['server.js'],{cwd:project,env:{...process.env,PORT:port,TURSO_DATABASE_URL:`file:${join(temp,'test.db')}`,ADMIN_PASSWORD:'mestre-teste-ui',SESSION_SECRET:'segredo-temporario-ui'},stdio:'pipe'});
 let browser;const errors=[], watched=[];
 const day='2099-07-01',next='2099-07-02';
@@ -18,7 +20,7 @@ try {
  const call=async(ctx,body)=>{const r=await ctx.request.post(base+'/api',{data:body});assert.ok(r.ok(),`${body.op}: ${await r.text()}`);return r.json()};
  await page.goto(base+'/ambientes.html');await page.getByLabel('Senha',{exact:true}).fill('mestre-teste-ui');await page.getByRole('button',{name:'Entrar',exact:true}).click();await page.getByRole('heading',{name:'Ambientes cadastrados',exact:true}).waitFor();
  await call(context,{op:'set',id:'geral',base:0,data:{docentes:[{nome:'Ana'}]}});
- const state={cfg:{turma:'T-UI',curso:'Desenvolvimento de Sistemas',turno:'Matutino',aulasDia:4},ucs:[{sigla:'LOG',nome:'Lógica',docente:'Ana',sala:'',ch:40}],days:{[day]:{s:['LOG']},[next]:{s:['LOG']}},reg:{}};
+ const state={cfg:{turma:'T-UI',curso:'Desenvolvimento de Sistemas',turno:'Matutino',aulasDia:4,inicio:day,termino:next},ucs:[{sigla:'LOG',nome:'Lógica',docente:'Ana',sala:'',ch:40}],days:{[day]:{s:['LOG']},[next]:{s:['LOG']}},reg:{}};
  await call(context,{op:'set',id:'turma-ui',base:0,data:{state}});
  await call(context,{op:'user_add',login:'profui',nome:'Professora Ana',password:'senha-prof-ui',role:'docente'});
  await call(context,{op:'user_add',login:'gestorui',nome:'Administrador de ambientes',password:'senha-gestor-ui',role:'ambientes'});
@@ -36,7 +38,17 @@ try {
  if(process.env.UI_EVIDENCE_DIR){await manager.emulateMedia({media:'print'});await manager.pdf({path:join(process.env.UI_EVIDENCE_DIR,'relatorio-validacao.pdf'),format:'A4',landscape:true});await manager.emulateMedia({media:'screen'});}
  await teacher.setViewportSize({width:390,height:844});await teacher.locator('#reservations').scrollIntoViewIfNeeded();assert.equal(await teacher.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Página não deve transbordar no celular');if(process.env.UI_EVIDENCE_DIR)await teacher.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'celular.png')});
  const [backup]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Baixar backup completo',exact:true}).click()]);const payload=JSON.parse(readFileSync(await backup.path(),'utf8'));assert.equal(payload.users.find(u=>u.login==='profui').docente,'Ana');assert.ok(payload.docs.reservas);
- await manager.goto(base+'/#login');await manager.waitForURL('**/ambientes.html');
+ await manager.goto(base+'/#login');await manager.waitForURL('**/ambientes.html');await manager.getByRole('button',{name:'Voltar',exact:true}).click();await manager.waitForURL('**/?visao=calendario#aluno');await manager.getByRole('heading',{name:'Desenvolvimento de Sistemas',exact:true}).waitFor();
  await page.goto(base+'/');await page.getByRole('tab',{name:'Ambientes',exact:true}).waitFor();assert.equal(await page.getByRole('tab',{name:'Chamada',exact:true}).count(),0);assert.equal(await page.getByRole('tab',{name:'Alunos',exact:true}).count(),0);
- assert.deepEqual(errors,[]);console.log('UI aprovada: login, cadastro, vínculo, solicitação, aprovação, revisão, reagendamento, notificações, CSV, impressão, backup e layout móvel.');
-}catch(e){for(const p of watched)console.error(await p.locator("body").innerText());throw e;}finally{if(browser)await browser.close();server.kill();await new Promise(r=>server.once('exit',r));rmSync(temp,{recursive:true,force:true});}
+ await page.getByRole('tab',{name:'Ambientes',exact:true}).click();await page.getByRole('tab',{name:'Calendário',exact:true}).click();await page.getByRole('heading',{name:'julho de 2099',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Exportar calendário',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Exportar calendário',exact:true});
+ const [xlsx]=await Promise.all([page.waitForEvent('download'),dialog.getByRole('button',{name:'Baixar Excel no padrão SENAI',exact:true}).click()]);assert.equal(readFileSync(await xlsx.path()).subarray(0,2).toString(),'PK');
+ const [html]=await Promise.all([page.waitForEvent('download'),dialog.getByRole('button',{name:'Baixar calendário mensal (HTML)',exact:true}).click()]);assert.ok(readFileSync(await html.path(),'utf8').includes('Imprimir / salvar PDF'));
+ const [preview]=await Promise.all([page.waitForEvent('popup'),dialog.getByRole('button',{name:'Imprimir / salvar calendário em PDF',exact:true}).click()]);await preview.getByRole('heading',{name:'Desenvolvimento de Sistemas',exact:true}).waitFor();await preview.getByRole('heading',{name:'julho de 2099',exact:true}).waitFor();
+ if(process.env.UI_EVIDENCE_DIR){await preview.emulateMedia({media:'print'});await preview.pdf({path:join(process.env.UI_EVIDENCE_DIR,'calendario-padrao.pdf'),format:'A4',landscape:true});}
+ await preview.emulateMedia({media:'screen'});const closed=preview.waitForEvent('close');await preview.getByRole('button',{name:'Voltar',exact:true}).click().catch(e=>{if(!preview.isClosed())throw e});await closed;
+ await dialog.getByRole('button',{name:'Voltar',exact:true}).click();assert.equal(await page.getByRole('dialog',{name:'Exportar calendário',exact:true}).count(),0);
+ await page.getByRole('button',{name:'Voltar',exact:true}).click();await page.getByRole('tab',{name:'Ambientes',exact:true}).getAttribute('aria-selected').then(v=>assert.equal(v,'true'));
+ await teacher.getByRole('button',{name:'Voltar',exact:true}).click();await teacher.waitForURL('**/#docente-ana');await teacher.getByRole('heading',{name:'Ana',exact:true}).waitFor();
+ assert.deepEqual(errors,[]);console.log('UI aprovada: login, cadastro, vínculo, solicitação, aprovação, revisão, reagendamento, notificações, CSV, impressão, backup, exportação Excel/PDF/HTML, botão Voltar e layout móvel.');
+}catch(e){for(const p of watched)console.error(await p.locator("body").innerText());throw e;}finally{if(browser)await browser.close();if(server.exitCode===null&&server.signalCode===null){const exit=new Promise(r=>server.once('exit',r));server.kill();await exit;}rmSync(temp,{recursive:true,force:true});}

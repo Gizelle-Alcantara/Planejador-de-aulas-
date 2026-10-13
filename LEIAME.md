@@ -12,3 +12,7 @@ Validação: 36 testes da API e fluxo de interface em computador/celular. `npm r
 As abas **Chamada** e **Alunos** foram removidas, conforme solicitado. Os dados anteriores permanecem preservados.
 
 Os testes de navegador exigem Node.js 20+. O servidor mantém compatibilidade com Node.js 18+; instalações de produção podem usar `npm ci --omit=dev`.
+
+## Exportação do calendário
+No cabeçalho, clique em **Exportar calendário** e escolha **Excel no padrão SENAI**, **PDF** ou **HTML**. Se houver lançamentos fora do período, escolha se deseja incluí-los. O botão **Voltar** permite retornar à aba ou ao calendário conforme o perfil.
+Guia: `docs/EXPORTACAO-CALENDARIO.md`.

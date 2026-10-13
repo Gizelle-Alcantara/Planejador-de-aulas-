@@ -453,3 +453,12 @@ test('alteração de calendário concorrente com aprovação nunca deixa reserva
  assert.equal(results[1].status,200);
  const item=(await (await call({op:'reservation_list'},m.cookie)).json()).items.find(x=>x.id===r.item.id);assert.equal(item.status,'revisao');
 });
+
+test('download Excel exige login e entrega arquivo do calendário salvo no modelo SENAI',async()=>{
+ const query='?export=xlsx&turma=turma-exportacao';assert.equal((await get(query)).status,401);
+ const m=await login({password:'mestre-123'});
+ const data={state:{...turma.state,cfg:{...turma.state.cfg,inicio:'2099-03-01',termino:'2099-03-31'},days:{'2099-03-01':{s:['LOG']}}}};
+ await setDoc(m.cookie,'turma-exportacao',data);
+ const r=await get(query,m.cookie);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/spreadsheetml/);assert.match(r.headers.get('content-disposition'),/xlsx/);assert.equal(Buffer.from(await r.arrayBuffer()).subarray(0,2).toString(),'PK');
+ assert.equal((await get('?export=xlsx&turma=nao-existe',m.cookie)).status,404);
+});

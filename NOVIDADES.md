@@ -72,3 +72,11 @@ Divisão do código em módulos e acessibilidade completa.
 - Backup v2 com contas, vínculos e notificações; restauração transacional com cópia anterior.
 - 36 testes da API e fluxo de navegador aprovados, incluindo uso no celular.
 - Chamada e Alunos continuam removidas da navegação.
+
+## Exportação no padrão SENAI e retorno
+- Botão Exportar calendário no cabeçalho e na aba Enviar.
+- Excel preenchido no modelo original SENAI, com imagens, estilos, datas, docentes e ambientes aprovados.
+- PDF/HTML mensal com controles de impressão e retorno.
+- Opção de incluir lançamentos fora do período, preservando as datas do cadastro.
+- Botão Voltar na gestão de ambientes e na navegação do planejador.
+- 41 testes automatizados, fluxos de navegador e conferência visual/recalculo do Excel aprovados.

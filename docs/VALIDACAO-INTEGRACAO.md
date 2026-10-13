@@ -1,7 +1,7 @@
 # Validação da versão — 12/10/2026
 
 ## Resultado
-36 testes automatizados da API aprovados e teste de integração da interface aprovado em navegador Chromium, em computador e celular (390 × 844). Geração do site concluída.
+41 testes automatizados da API aprovados e teste de integração da interface aprovado em navegador Chromium, em computador e celular (390 × 844). Geração do site concluída.
 
 ## Verificações
 - Login, contas, papéis e vínculo de docentes.
@@ -13,6 +13,7 @@
 - Relatórios por ambiente e docente, com deduplicação de ocupações.
 - CSV, impressão/PDF e layout móvel (sem transbordamento da página).
 - Backup completo, recuperação de contas e vínculos, compatibilidade com cópias antigas e rollback de restauração inválida.
+- Exportação Excel no modelo original, PDF/HTML mensal e botão Voltar por perfil.
 - As abas Chamada e Alunos permanecem removidas da navegação.
 
 ## Preservação
@@ -27,7 +28,7 @@ npm test
 npx playwright install chromium
 npm run test:ui
 ```
-O teste de interface inicia seu próprio servidor e banco temporário. A porta padrão é 3198; defina UI_TEST_PORT se estiver ocupada. Para usar um Chromium já instalado, informe BROWSER_EXECUTABLE_PATH.
+O teste de interface inicia seu próprio servidor e banco temporário. O teste escolhe uma porta livre; UI_TEST_PORT permite definir uma porta específica. Para usar um Chromium já instalado, informe BROWSER_EXECUTABLE_PATH.
 
 ## Limites
-Teste visual e de fluxos realizado em Chromium; Safari e Firefox não foram testados. Serviços externos reais, hospedagem de produção e banco remoto Turso não foram exercitados nesta execução. Relatórios apresentam ocupação prevista, não confirmação de utilização.
+Teste visual e de fluxos realizado em Chromium; Safari e Firefox não foram testados. Arquivos Excel foram importados, recalculados e renderizados para validação, mas não foram abertos no Microsoft Excel de desktop. Serviços externos reais, hospedagem de produção e banco remoto Turso não foram exercitados nesta execução. Relatórios apresentam ocupação prevista, não confirmação de utilização.

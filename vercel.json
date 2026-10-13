@@ -3,7 +3,8 @@
   "outputDirectory": "public",
   "functions": {
     "api/index.js": {
-      "maxDuration": 15
+      "maxDuration": 15,
+      "includeFiles": "lib/assets/**"
     }
   },
   "crons": [
