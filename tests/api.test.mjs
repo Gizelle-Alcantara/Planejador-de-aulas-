@@ -462,3 +462,10 @@ test('download Excel exige login e entrega arquivo do calendário salvo no model
  const r=await get(query,m.cookie);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/spreadsheetml/);assert.match(r.headers.get('content-disposition'),/xlsx/);assert.equal(Buffer.from(await r.arrayBuffer()).subarray(0,2).toString(),'PK');
  assert.equal((await get('?export=xlsx&turma=nao-existe',m.cookie)).status,404);
 });
+
+test('modelo do docente: exportação autenticada, ano válido e acesso restrito ao docente vinculado',async()=>{
+ const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'}),a=await login({login:'gestorlab',password:'senha-gestao-1'});
+ const query='?export=docente-xlsx&docente=Ana&ano=2099&vinculo=Mensalista';assert.equal((await get(query)).status,401);assert.equal((await get(query,a.cookie)).status,403);
+ const r=await get(query,m.cookie);assert.equal(r.status,200);assert.match(r.headers.get('content-type'),/spreadsheetml/);assert.equal(Buffer.from(await r.arrayBuffer()).subarray(0,2).toString(),'PK');
+ assert.equal((await get(query,d.cookie)).status,200);assert.equal((await get('?export=docente-xlsx&docente=Outro&ano=2099',d.cookie)).status,403);assert.equal((await get('?export=docente-xlsx&docente=Ana&ano=banana',m.cookie)).status,400);
+});

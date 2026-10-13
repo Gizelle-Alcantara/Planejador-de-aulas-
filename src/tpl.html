@@ -640,10 +640,27 @@ function exportCalendarPeriod(){
   if(!include||include.checked){const dates=Object.entries(S.days).filter(([d,v])=>(v.s||[]).length).map(([d])=>d).sort();if(dates.length){c.inicio=c.inicio<dates[0]?c.inicio:dates[0];c.termino=c.termino>dates.at(-1)?c.termino:dates.at(-1)}}
   return c;
 }
+function teacherExportFields(){
+  const chosen=MODE==="docente"?G.docentes.find(d=>slug(d.nome)===DOC_ID)?.nome:(S?.ucs||[]).find(u=>u.docente)?.docente;
+  const names=MODE==="docente"?G.docentes.filter(d=>d.nome===chosen):G.docentes;
+  const year=UI.month?.slice(0,4)||S?.cfg?.inicio?.slice(0,4)||todayISO().slice(0,4);
+  return `<section><h3>Agenda anual do docente — modelo enviado</h3><p>Exporta as aulas do docente em todas as turmas, por mês e turno, com o resumo das disciplinas.</p><div class="row"><label class="f">Docente<select id="export-docente" aria-label="Docente da exportação">${names.map(d=>`<option value="${esc(d.nome)}" ${d.nome===chosen?"selected":""}>${esc(d.nome)}</option>`).join("")}</select></label><label class="f">Ano<input id="export-year" type="number" min="1900" max="2100" required value="${esc(year)}" aria-label="Ano da exportação"></label><label class="f">Vínculo (opcional)<select id="export-contract" aria-label="Vínculo do docente"><option value="">Não informado</option>${["Mensalista","Horista","Intermitente","RSA"].map(v=>`<option>${v}</option>`).join("")}</select></label></div><p class="small muted">Sem vínculo informado, alocação máxima e ocupação ficam em branco. Os e-mails vêm do cadastro do docente; dados não cadastrados ficam em branco.</p><button class="btn pri" data-act="dldocxlsx" ${names.length?"":"disabled"}>Baixar Excel no modelo do docente</button></section>`;
+}
+function openTeacherExportModal(){
+ if(!UI.loaded||UI.empty){toast("Aguarde o carregamento do calendário.");return}
+ document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Exportar calendário">${teacherExportFields()}<div class="row"><button class="btn" data-act="mclose2">Voltar</button></div></div></div>`;
+}
+async function exportTeacherXlsx(button){
+ if(MODE==="planner"&&(UI.status==="saving"||dirty||docItems().some(([id,data])=>lastJson[id]!==canon(data)))){toast("Aguarde a gravação de todas as alterações antes de exportar a agenda do docente.");return}
+ const year=document.getElementById("export-year"),nome=document.getElementById("export-docente").value;
+ if(!year.reportValidity()||!nome)return;
+ button.disabled=true;
+ try{const url=new URL("/api",location.origin);url.searchParams.set("export","docente-xlsx");url.searchParams.set("docente",nome);url.searchParams.set("ano",year.value);url.searchParams.set("vinculo",document.getElementById("export-contract").value);const response=await fetch(url,{credentials:"same-origin",cache:"no-store"});if(!response.ok){const j=await response.json().catch(()=>({}));throw new Error(j.error||"Não foi possível exportar a agenda do docente.")}const blob=await response.blob(),link=document.createElement("a"),object=URL.createObjectURL(blob);link.href=object;link.download=`calendario-docente-${slug(nome)}-${year.value}.xlsx`;document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(object),1000);toast("Agenda anual do docente exportada.")}catch(e){toast(e.message)}finally{button.disabled=false}
+}
 function openExportModal(){
   if(!UI.loaded||UI.empty){toast("Carregue uma turma antes de exportar.");return}
   const outside=Object.entries(S.days).filter(([d,v])=>(v.s||[]).length&&(d<S.cfg.inicio||d>S.cfg.termino)).length;
-  document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Exportar calendário"><h2>Exportar calendário no padrão SENAI</h2><p>Turma ${esc(S.cfg.turma)} · ${esc(S.cfg.curso)}<br>${br(S.cfg.inicio)} a ${br(S.cfg.termino)}</p><p>Escolha o calendário mensal ou a planilha no modelo original.</p>${outside?`<p>${outside} data(s) com aulas estão fora do período da turma.</p><label class="small"><input id="export-outside" type="checkbox" checked> Incluir lançamentos fora do período configurado</label>`:""}<div class="row"><button class="btn pri" data-act="dlxlsx">Baixar Excel no padrão SENAI</button><button class="btn" data-act="print">Imprimir / salvar calendário em PDF</button><button class="btn" data-act="dlhtml">Baixar calendário mensal (HTML)</button></div><p class="small muted">O Excel usa os dados salvos no sistema. Salve alterações pendentes antes de exportar.</p><div class="row"><button class="btn" data-act="mclose2">Voltar</button></div></div></div>`;
+  document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Exportar calendário"><h2>Exportar calendário no padrão SENAI</h2>${teacherExportFields()}<h3>Calendário da turma</h3><p>Turma ${esc(S.cfg.turma)} · ${esc(S.cfg.curso)}<br>${br(S.cfg.inicio)} a ${br(S.cfg.termino)}</p><p>Escolha o calendário mensal ou a planilha no modelo original.</p>${outside?`<p>${outside} data(s) com aulas estão fora do período da turma.</p><label class="small"><input id="export-outside" type="checkbox" checked> Incluir lançamentos fora do período configurado</label>`:""}<div class="row"><button class="btn" data-act="dlxlsx">Baixar Excel da turma</button><button class="btn" data-act="print">Imprimir / salvar calendário em PDF</button><button class="btn" data-act="dlhtml">Baixar calendário mensal (HTML)</button></div><p class="small muted">O Excel usa os dados salvos no sistema. Salve alterações pendentes antes de exportar.</p><div class="row"><button class="btn" data-act="mclose2">Voltar</button></div></div></div>`;
 }
 async function exportXlsx(button){
   if(UI.status==="saving"||dirty){toast("Aguarde a gravação das alterações e tente novamente.");return}
@@ -876,7 +893,7 @@ function renderDocente(){
     v.innerHTML=`<section class="panel"><h2>Escolha seu nome</h2><div style="display:flex;flex-direction:column;gap:8px">${G.docentes.map(x=>`<a class="btn" href="#docente-${esc(slug(x.nome))}">${esc(x.nome)}</a>`).join("")||'<span class="muted">Nenhum docente cadastrado.</span>'}</div></section>`;return;
   }
   const A=docAgg(d),t=todayISO();
-  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}<a class="btn sm" href="#docente">Trocar docente</a></div>`;
+  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}<a class="btn sm" href="#docente">Trocar docente</a>${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
   if(!A.turmas.length){v.innerHTML='<section class="panel"><p class="muted" style="margin:0">Você ainda não está associado a nenhuma disciplina. Fale com a coordenação.</p></section>';return}
   const ini=A.turmas.map(x=>x.st.cfg.inicio).sort()[0],fim=A.turmas.map(x=>x.st.cfg.termino).sort().pop(),ml=monthList(ini,fim);
   if(!UI.month||!ml.includes(UI.month)){const tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}
@@ -1123,6 +1140,8 @@ document.addEventListener("click",e=>{
   else if(a==="back"){UI.tab=UI.backTabs.pop()||(UI.role==="docente"?"ambientes":"painel");UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(e){}renderView();window.scrollTo(0,0)}
   else if(a==="export")openExportModal();
   else if(a==="dlxlsx")exportXlsx(b);
+  else if(a==="dldocxlsx")exportTeacherXlsx(b);
+  else if(a==="exportdoc")openTeacherExportModal();
   else if(a==="dlcsv"||a==="dlhtml"){
     const csv=a==="dlcsv";
     DL.save({filename:csv?`encontros-turma-${S.cfg.turma}.csv`:`calendario-turma-${S.cfg.turma}.html`,data:csv?"\ufeff"+csvText():htmlCalendario()})

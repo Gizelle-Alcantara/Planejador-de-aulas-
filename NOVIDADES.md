@@ -92,3 +92,7 @@ Excel: ordem correta das células, limpeza de caracteres inválidos no XML, trat
 ## Celular com o mesmo padrão do site
 
 Calendário mensal preservado em sete colunas, com todos os dias da semana visíveis. Próximas aulas e disciplinas permanecem em tabelas, com rolagem lateral quando necessário. Removidas a agenda em lista, a conversão de aulas em cartões e a opção de ocultar dias sem aula. A próxima aula é destacada na tabela e no calendário; teclado, leitores de tela e escolha do mês permanecem disponíveis.
+
+## Exportação no modelo anual do docente
+
+Adicionado o modelo `Gizelle Karine Santos Alcantara.xlsx`, com escolha de docente, ano e vínculo. O Excel reúne todas as turmas do docente, preserva a grade mensal por turno e o resumo de disciplinas. Há tratamento de códigos repetidos, conflitos, anos bissextos e turnos que exigem mais linhas. A exportação por turma continua separada. Consulte `docs/EXPORTACAO-DOCENTE.md`.

@@ -44,9 +44,11 @@ try {
  await page.getByRole('tab',{name:'Ambientes',exact:true}).click();await page.getByRole('tab',{name:'Calendário',exact:true}).click();await page.getByRole('heading',{name:'julho de 2099',exact:true}).waitFor();
  await page.getByRole('button',{name:'Exportar calendário',exact:true}).click();const dialog=page.getByRole('dialog',{name:'Exportar calendário',exact:true});
  await page.evaluate(()=>{window.exportSavedSnapshot=lastJson['turma-'+CUR];lastJson['turma-'+CUR]='pending-test'});
- await dialog.getByRole('button',{name:'Baixar Excel no padrão SENAI',exact:true}).click();await page.getByRole('status').filter({hasText:'Há alterações que ainda não foram salvas no servidor'}).waitFor();
+ await dialog.getByRole('button',{name:'Baixar Excel da turma',exact:true}).click();await page.getByRole('status').filter({hasText:'Há alterações que ainda não foram salvas no servidor'}).waitFor();
  await page.evaluate(()=>{lastJson['turma-'+CUR]=window.exportSavedSnapshot;delete window.exportSavedSnapshot});
- const [xlsx]=await Promise.all([page.waitForEvent('download'),dialog.getByRole('button',{name:'Baixar Excel no padrão SENAI',exact:true}).click()]);assert.equal(readFileSync(await xlsx.path()).subarray(0,2).toString(),'PK');
+ await dialog.getByLabel('Docente da exportação',{exact:true}).selectOption('Ana');await dialog.getByLabel('Ano da exportação',{exact:true}).fill('2099');await dialog.getByLabel('Vínculo do docente',{exact:true}).selectOption('Mensalista');
+ const [teacherXlsx]=await Promise.all([page.waitForEvent('download'),dialog.getByRole('button',{name:'Baixar Excel no modelo do docente',exact:true}).click()]);assert.equal(readFileSync(await teacherXlsx.path()).subarray(0,2).toString(),'PK');assert.match(teacherXlsx.suggestedFilename(),/docente-ana-2099/);
+ const [xlsx]=await Promise.all([page.waitForEvent('download'),dialog.getByRole('button',{name:'Baixar Excel da turma',exact:true}).click()]);assert.equal(readFileSync(await xlsx.path()).subarray(0,2).toString(),'PK');
  const [html]=await Promise.all([page.waitForEvent('download'),dialog.getByRole('button',{name:'Baixar calendário mensal (HTML)',exact:true}).click()]);assert.ok(readFileSync(await html.path(),'utf8').includes('Imprimir / salvar PDF'));
  const [preview]=await Promise.all([page.waitForEvent('popup'),dialog.getByRole('button',{name:'Imprimir / salvar calendário em PDF',exact:true}).click()]);await preview.getByRole('heading',{name:'Desenvolvimento de Sistemas',exact:true}).waitFor();await preview.getByRole('heading',{name:'julho de 2099',exact:true}).waitFor();
  if(process.env.UI_EVIDENCE_DIR){await preview.emulateMedia({media:'print'});await preview.pdf({path:join(process.env.UI_EVIDENCE_DIR,'calendario-padrao.pdf'),format:'A4',landscape:true});}
@@ -54,6 +56,8 @@ try {
  await dialog.getByRole('button',{name:'Voltar',exact:true}).click();assert.equal(await page.getByRole('dialog',{name:'Exportar calendário',exact:true}).count(),0);
  await page.getByRole('button',{name:'Voltar',exact:true}).click();await page.getByRole('tab',{name:'Ambientes',exact:true}).getAttribute('aria-selected').then(v=>assert.equal(v,'true'));
  await teacher.getByRole('button',{name:'Voltar',exact:true}).click();await teacher.waitForURL('**/#docente-ana');await teacher.getByRole('heading',{name:'Ana',exact:true}).waitFor();
+ await teacher.getByRole('button',{name:'Exportar calendário',exact:true}).click();const ownExport=teacher.getByRole('dialog',{name:'Exportar calendário'});await ownExport.getByLabel('Ano da exportação',{exact:true}).fill('2099');const [ownFile]=await Promise.all([teacher.waitForEvent('download'),ownExport.getByRole('button',{name:'Baixar Excel no modelo do docente',exact:true}).click()]);assert.match(ownFile.suggestedFilename(),/docente-ana-2099/);await ownExport.getByRole('button',{name:'Voltar',exact:true}).click();
+
  await teacher.setViewportSize({width:320,height:780});
  await teacher.locator('.next-lesson').waitFor();
  assert.equal(await teacher.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'Agenda docente em 320px');
