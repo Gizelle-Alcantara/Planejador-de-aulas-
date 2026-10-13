@@ -2,6 +2,8 @@
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from "node:fs";
 const rd = (p) => readFileSync(new URL("../src/" + p, import.meta.url), "utf8");
 let t = rd("tpl.html");
+// Inclui a prévia na página para evitar dependência de um script separado/desatualizado.
+t=t.replace('<script src="/excel-preview.js" defer></script>', "");
 const rep = (a, b) => { if (!t.includes(a)) throw new Error("trecho não encontrado: " + a.slice(0, 50)); t = t.split(a).join(b); };
 
 t = t.replace("__SEED__", () => rd("seed.json").trim()).replace("__LOGO__", () => rd("logo.b64").trim());
@@ -18,6 +20,9 @@ rep('step(3,"Coordenação: o único acesso de Editor","Só o nível Editor edit
 rep("A permissão de acesso é definida no menu Compartilhar. Este planejador não consegue mudá-la. Quem abre precisa estar com a conta ativa para ver os dados ao vivo.", "A permissão é verificada no servidor: sem a senha, nenhuma alteração é gravada.");
 rep("A edição do calendário é restrita à coordenação.</p>", 'A edição do calendário é restrita à coordenação. <a href="#login">Acesso do coordenador</a></p>');
 mkdirSync(new URL("../public/", import.meta.url), { recursive: true });
+const bodyEnd=t.lastIndexOf("</body>");
+if(bodyEnd<0)throw new Error("Fechamento da página não encontrado");
+t=t.slice(0,bodyEnd)+`<script>${rd("static/excel-preview.js")}</script>`+t.slice(bodyEnd);
 writeFileSync(new URL("../public/index.html", import.meta.url), t);
 copyFileSync(new URL("../src/shim.js", import.meta.url), new URL("../public/shim.js", import.meta.url));
 for (const f of readdirSync(new URL("../src/static/", import.meta.url))) copyFileSync(new URL("../src/static/" + f, import.meta.url), new URL("../public/" + f, import.meta.url));

@@ -29,3 +29,6 @@ Formulário com matrícula, contatos, unidade, área, formação, Meu SENAI, ví
 
 ## Filtros do calendário
 Filtros combinados por docente, disciplina, sala/laboratório e situação, com contador mensal e limpeza. A agenda do docente também permite turma e turno. Consulte `docs/FILTROS-CALENDARIO.md`.
+
+## Correção da abertura da prévia
+O código da prévia agora acompanha a página principal, evitando depender de um arquivo JavaScript separado. Falhas aparecem na janela de exportação, com opção **Baixar Excel sem prévia**. A prévia mostra o andamento e limita a espera por resposta do servidor.
