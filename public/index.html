@@ -650,7 +650,9 @@ function openExportModal(){
   document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Exportar calendário"><h2>Exportar calendário no padrão SENAI</h2><p>Turma ${esc(S.cfg.turma)} · ${esc(S.cfg.curso)}<br>${br(S.cfg.inicio)} a ${br(S.cfg.termino)}</p><p>Escolha o calendário mensal ou a planilha no modelo original.</p>${outside?`<p>${outside} data(s) com aulas estão fora do período da turma.</p><label class="small"><input id="export-outside" type="checkbox" checked> Incluir lançamentos fora do período configurado</label>`:""}<div class="row"><button class="btn pri" data-act="dlxlsx">Baixar Excel no padrão SENAI</button><button class="btn" data-act="print">Imprimir / salvar calendário em PDF</button><button class="btn" data-act="dlhtml">Baixar calendário mensal (HTML)</button></div><p class="small muted">O Excel usa os dados salvos no sistema. Salve alterações pendentes antes de exportar.</p><div class="row"><button class="btn" data-act="mclose2">Voltar</button></div></div></div>`;
 }
 async function exportXlsx(button){
-  if(UI.status==="saving"){toast("Aguarde a gravação das alterações e tente novamente.");return}
+  if(UI.status==="saving"||dirty){toast("Aguarde a gravação das alterações e tente novamente.");return}
+  const item=docItems().find(([id])=>id==="turma-"+CUR);
+  if(!item||lastJson[item[0]]!==canon(item[1])){toast("Há alterações que ainda não foram salvas no servidor. Salve os dados antes de exportar o Excel.");return}
   button.disabled=true;
   try{
     const url=new URL("/api",location.origin);url.searchParams.set("export","xlsx");url.searchParams.set("turma","turma-"+CUR);if(document.getElementById("export-outside")?.checked)url.searchParams.set("incluir","1");
@@ -676,7 +678,7 @@ body{font:14px system-ui,sans-serif;max-width:900px;margin:0 auto;padding:16px;c
 table{border-collapse:collapse;width:100%}th,td{border:1px solid #d9e0ea;padding:4px;vertical-align:top;font-size:.82rem}th{background:#f2f5f9;text-align:left}
 table.cal td{height:68px;width:14.28%}td.w{background:#eaeef4}td.h{background:#fde9e7}td i{display:block;font-size:.68rem;font-style:normal}td small{display:block;font-size:.65rem;line-height:1.2}td span{display:block;background:#dfeaf7;border-radius:3px;padding:0 3px;margin-top:2px;font-size:.72rem}
 section{break-inside:avoid}.export-tools{display:flex;gap:10px;margin-bottom:16px}.export-tools button{padding:9px 14px;background:white;border:1px solid #0b5cab;color:#0b5cab;border-radius:6px;cursor:pointer;font:inherit}@page{size:A4 landscape;margin:12mm}@media print{body{max-width:none;padding:0}.export-tools{display:none}thead{display:table-header-group}table.cal td{height:58px}section{break-inside:avoid;page-break-inside:avoid}}
-</style><link rel="stylesheet" href="/accessibility.css">
+</style>
 </head><body><nav class="export-tools"><button type="button" data-return="${esc(location.origin+"/?aba=calendario")}" onclick="if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}else{location.href=this.dataset.return}">Voltar</button><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></nav><img src="${LOGO}" alt="SENAI" style="height:40px;margin-bottom:8px"><h1>${esc(c.curso)}</h1><p class="m">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${rowHorario()}<br>Período: ${br(c.inicio)} a ${br(c.termino)}${c.coord?" · Coordenação: "+esc(c.coord):""}</p>
 <table><thead><tr><th>Sigla</th><th>Disciplina</th><th>Docente</th><th>CH</th><th>Encontros</th><th>Limite de faltas</th><th>Início</th><th>Fim</th></tr></thead><tbody>${ucs}</tbody></table>${months}
 <p class="m">O número ao lado da sigla é o encontro. Gerado em ${br(todayISO())}.</p></body></html>`;

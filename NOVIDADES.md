@@ -84,3 +84,11 @@ Divisão do código em módulos e acessibilidade completa.
 ## Acessibilidade e celular
 
 Navegação por teclado nas abas e dias, foco das janelas, link para pular ao conteúdo, escolha do mês na entrada, próxima aula destacada e agenda móvel em cartões. Texto das disciplinas com contraste e sem truncamento na agenda. Testes automáticos com axe e teclado documentados em `docs/ACESSIBILIDADE.md`.
+
+## Correção da exportação do calendário
+
+Excel: ordem correta das células, limpeza de caracteres inválidos no XML, tratamento de datas inválidas e bloqueio de exportação com dados ainda não salvos. O HTML exportado volta a ser independente do CSS externo do sistema.
+
+## Celular com o mesmo padrão do site
+
+Calendário mensal preservado em sete colunas, com todos os dias da semana visíveis. Próximas aulas e disciplinas permanecem em tabelas, com rolagem lateral quando necessário. Removidas a agenda em lista, a conversão de aulas em cartões e a opção de ocultar dias sem aula. A próxima aula é destacada na tabela e no calendário; teclado, leitores de tela e escolha do mês permanecem disponíveis.

@@ -32,3 +32,8 @@ O modelo Excel fica em `lib/assets/calendario-senai-modelo.xlsx`; as configuraç
 ## Validação
 41 testes automatizados (API e exportação) aprovados; fluxo de navegador com downloads Excel/HTML, impressão PDF e retorno por perfil aprovado. Arquivo Excel importado, recalculado e renderizado para conferência; contagem verificada com alteração temporária de 2 para 1 e de volta a 2 encontros em uma cópia isolada.
 O arquivo não foi aberto no aplicativo Microsoft Excel de desktop nesta execução. A revisão visual utilizou o renderizador de planilhas e a impressão PDF do Chromium. Hospedagens remotas não foram publicadas nem exercitadas.
+
+## Correção de compatibilidade do Excel
+As células são gravadas em ordem crescente em todas as linhas, inclusive nas linhas esparsas do modelo. Caracteres incompatíveis com XML são removidos apenas no arquivo exportado e datas inválidas são ignoradas. O caminho local de origem do modelo deixa de constar na pasta de trabalho. A exportação em Excel é bloqueada quando há alterações da turma ainda não salvas no servidor, evitando baixar uma versão desatualizada.
+
+A regressão inclui validação da ordem e unicidade das células, período bissexto, várias abas, disciplinas adicionais e dados inválidos. O arquivo foi carregado por um leitor independente de XLSX (openpyxl); Microsoft Excel de desktop não está disponível neste ambiente.

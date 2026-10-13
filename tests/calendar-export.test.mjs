@@ -40,3 +40,26 @@ test('lançamentos fora do período são incluídos somente quando solicitado, s
  const serial=Math.round((Date.parse('2027-12-10T00:00:00Z')-Date.UTC(1899,11,30))/86400000);
  assert.ok(extended.some(s=>s.includes(`<v>${serial}</v>`)));assert.equal(JSON.stringify(data),old);
 });
+
+test('todas as linhas mantêm células únicas em ordem crescente, inclusive meses com observações esparsas',()=>{
+ const data={...state,cfg:{...state.cfg,inicio:'2028-01-01',termino:'2029-06-30'},ucs:Array.from({length:20},(_,i)=>({sigla:'UC'+i,nome:'Disciplina '+i,ch:8})),days:{'2029-02-01':{s:['UC0'],h:'Observação'}}};
+ const files=unzipSync(calendarXlsx(data));
+ const col=ref=>[...ref.match(/^[A-Z]+/)[0]].reduce((n,c)=>n*26+c.charCodeAt(0)-64,0);
+ for(const [path,bytes] of Object.entries(files).filter(([p])=>/^xl\/worksheets\/sheet\d+\.xml$/.test(p))){
+  const xml=strFromU8(bytes);
+  for(const row of xml.matchAll(/<row\b[^>]*r="(\d+)"[^>]*>([\s\S]*?)<\/row>/g)){
+   const refs=[...row[2].matchAll(/<c\b[^>]*r="([A-Z]+\d+)"/g)].map(m=>m[1]);
+   assert.equal(new Set(refs).size,refs.length,`${path} linha ${row[1]}: duplicatas`);
+   assert.deepEqual(refs.map(col),refs.map(col).sort((a,b)=>a-b),`${path} linha ${row[1]}: ordem de células`);
+   assert.ok(refs.every(r=>r.match(/\d+$/)[0]===row[1]));
+  }
+ }
+ assert.ok(!strFromU8(files['xl/workbook.xml']).includes('absPath'));
+});
+
+test('caracteres inválidos no XML e datas importadas inválidas não corrompem a exportação',()=>{
+ const files=unzipSync(calendarXlsx({...state,cfg:{...state.cfg,curso:'Curso\u0001 & <teste>'},days:{...state.days,'2028-02-30':{s:['LOG']},'2028-02-12x':{s:['LOG']}}}));
+ const main=strFromU8(files['xl/worksheets/sheet1.xml']),details=strFromU8(files['xl/worksheets/sheet2.xml']);
+ assert.match(main,/Curso &amp; &lt;teste&gt;/);assert.ok(!main.includes('\u0001'));assert.ok(!details.includes('NaN'));
+ assert.equal((details.match(/Programada/g)||[]).length,2);
+});
