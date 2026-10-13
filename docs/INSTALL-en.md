@@ -68,3 +68,12 @@ Without `TURSO_DATABASE_URL` it uses the local file `data/planejador.db`. Keep i
 
 ## 6. Security and backup
 The password is checked on the server; without it no write is accepted. Back up via *Dados → copy everything (JSON)* and/or `turso db shell planejador ".dump"`. The optional `banco/` folder has a relational SQLite/SQL schema for reporting.
+
+## 7. Accounts, history and calendar feeds (new)
+See `NOVIDADES.md` (Portuguese). Summary: log in at `/#login` with the master password, open the **Acesso** tab to create one account per coordinator and to restore earlier versions. The **Compartilhar** tab has calendar feed links to subscribe to on a phone.
+
+## 8. Automatic notices (e-mail / WhatsApp)
+See `docs/AVISOS-pt-BR.md` (Portuguese). Summary: set `RESEND_API_KEY` + `MAIL_FROM` (Resend) for e-mail, and `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE` (Meta WhatsApp Cloud API, approved template with one body variable) for WhatsApp. Set `CRON_SECRET` for the Vercel daily cron (Netlify and a self-hosted server schedule it automatically). Without keys, sending is simulated.
+
+## 9. Scheduled backup
+See `docs/BACKUP-pt-BR.md` (Portuguese): daily copy inside the database, weekly e-mail copy (`BACKUP_EMAIL`), restore from the Dados tab or with `scripts/restore-backup.js`.

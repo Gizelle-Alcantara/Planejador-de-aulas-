@@ -1,12 +1,12 @@
 // Gera public/index.html e public/shim.js a partir de src/
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from "node:fs";
 const rd = (p) => readFileSync(new URL("../src/" + p, import.meta.url), "utf8");
 let t = rd("tpl.html");
 const rep = (a, b) => { if (!t.includes(a)) throw new Error("trecho não encontrado: " + a.slice(0, 50)); t = t.split(a).join(b); };
 
 t = t.replace("__SEED__", () => rd("seed.json").trim()).replace("__LOGO__", () => rd("logo.b64").trim());
 // o shim precisa existir antes do aplicativo
-rep("<style>\n/* Layout", '<script src="/shim.js"></script>\n<style>\n/* Layout');
+rep("<style>\n/* Layout", '<link rel="manifest" href="/manifest.webmanifest">\n<meta name="theme-color" content="#0b5cab">\n<link rel="icon" href="/icon-192.png">\n<script src="/shim.js"></script>\n<style>\n/* Layout');
 rep('const BASE0="https://claude.ai/artifact/CfTYuZKeRR1fAn42uNdZtZ";', 'const BASE0=location.origin+"/";');
 // textos de compartilhamento
 rep("Compartilhe o artefato como Visualizador na opção Compartilhar.", "Basta enviar o link: quem abre só visualiza.");
@@ -20,4 +20,5 @@ rep("A edição do calendário é restrita à coordenação.</p>", 'A edição d
 mkdirSync(new URL("../public/", import.meta.url), { recursive: true });
 writeFileSync(new URL("../public/index.html", import.meta.url), t);
 copyFileSync(new URL("../src/shim.js", import.meta.url), new URL("../public/shim.js", import.meta.url));
+for (const f of readdirSync(new URL("../src/static/", import.meta.url))) copyFileSync(new URL("../src/static/" + f, import.meta.url), new URL("../public/" + f, import.meta.url));
 console.log("public/index.html gerado (" + Math.round(t.length / 1024) + " KB)");

@@ -69,3 +69,12 @@ Sem `TURSO_DATABASE_URL`, usa o arquivo local `data/planejador.db`. Mantenha rod
 
 ## 6. Segurança e backup
 A senha é conferida no servidor; sem ela nenhuma gravação é aceita. Faça backup na aba *Dados → copiar tudo (JSON)* e/ou com `turso db shell planejador ".dump"`. A pasta `banco/` traz o esquema relacional (SQLite/SQL) opcional para relatórios.
+
+## 7. Contas, histórico e agenda (novidades)
+Veja `NOVIDADES.md`. Resumo: entre em `/#login` com a senha mestre, abra a aba **Acesso** para criar uma conta por coordenador e para restaurar versões anteriores. Na aba **Compartilhar** há links de agenda para assinar no celular.
+
+## 8. Avisos automáticos por e-mail e WhatsApp
+Veja `docs/AVISOS-pt-BR.md`: criação das contas no Resend e na Meta, variáveis de ambiente (`RESEND_API_KEY`, `MAIL_FROM`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE`, `CRON_SECRET`, `PUBLIC_URL`) e uso da aba **Avisos**.
+
+## 9. Backup agendado
+Veja `docs/BACKUP-pt-BR.md`: cópia diária no banco, cópia semanal por e-mail (`BACKUP_EMAIL`) e como restaurar.

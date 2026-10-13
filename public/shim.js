@@ -1,10 +1,11 @@
 /* Camada de compatibilidade: oferece window.claude (db, user, downloads) usando a API /api.
    O aplicativo foi escrito para esse formato; aqui ele passa a falar com o seu servidor. */
 (function () {
-  let session = null, loading = null;
+  let session = null, loading = null; const revs = {}; let poke = null;
   const api = (body) => fetch("/api", body ? { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body), credentials: "same-origin" } : { credentials: "same-origin", cache: "no-store" });
   const load = async () => { const r = await api(); if (!r.ok) throw new Error("api " + r.status); return r.json(); };
-  const first = () => (loading = loading || load().then((j) => (session = j)));
+  const keep = (j) => { (j.docs || []).forEach((d) => (revs[d.id] = d.rev)); return j; };
+  const first = () => (loading = loading || load().then((j) => (session = keep(j))));
   const BASE = location.origin + "/";
 
   function db() {
@@ -14,10 +15,16 @@
           doc(id) {
             return {
               async set(data) {
-                const r = await api({ op: "set", id, data });
+                const r = await api({ op: "set", id, data, base: revs[id] || 0 });
+                if (r.status === 409) {
+                  const j = await r.json().catch(() => ({})); revs[id] = j.rev || 0;
+                  window.dispatchEvent(new Event("plan-conflict")); if (poke) poke();
+                  const e = new Error("conflict"); e.code = "conflict"; throw e;
+                }
                 if (!r.ok) { const e = new Error("write"); e.code = r.status === 401 ? "invalid_argument" : "error"; throw e; }
+                const j = await r.json(); revs[id] = j.rev;
               },
-              async delete() { const r = await api({ op: "delete", id }); if (!r.ok) { const e = new Error("write"); e.code = "invalid_argument"; throw e; } },
+              async delete() { const r = await api({ op: "delete", id }); if (!r.ok) { const e = new Error("write"); e.code = "invalid_argument"; throw e; } delete revs[id]; },
             };
           },
           onSnapshot(cb, errcb) {
@@ -28,10 +35,11 @@
               cb({ metadata: { hasPendingWrites: false }, docs: j.docs.map((d) => { if (d.id === "geral") d.data.base = BASE; return { id: d.id, data: () => d.data }; }) });
             };
             const tick = async (initial) => {
-              if (stop) return;
-              try { const j = initial ? await first() : await load(); session = j; emit(j); } catch (e) { if (initial && errcb) errcb(e); }
+              if (stop) return; clearTimeout(timer);
+              try { const j = initial ? await first() : await load(); session = keep(j); emit(j); } catch (e) { if (initial && errcb) errcb(e); }
               if (!stop) timer = setTimeout(() => tick(false), document.hidden ? 20000 : 5000);
             };
+            poke = () => { last = null; tick(false); };
             tick(true);
             return () => { stop = true; clearTimeout(timer); };
           },
@@ -51,6 +59,7 @@
     },
   };
 
+  window.PLAN = { api: (b) => api(b).then(async (r) => ({ ok: r.ok, status: r.status, ...(await r.json().catch(() => ({}))) })), me: () => first().then((s) => s.user || null) };
   window.claude = {
     async use(name) {
       if (name === "db") return db();
@@ -67,22 +76,23 @@
     document.head.appendChild(st);
     first().then((s) => {
       if (s.admin) {
-        const b = document.createElement("button"); b.className = "lg-out"; b.textContent = "Sair (coordenador)";
+        const b = document.createElement("button"); b.className = "lg-out"; b.textContent = "Sair (" + ((s.user && s.user.nome) || "coordenador").split(" ")[0] + ")";
         b.onclick = async () => { await api({ op: "logout" }); location.hash = ""; location.reload(); };
         document.body.appendChild(b);
       } else if (location.hash === "#login") {
         const ov = document.createElement("div"); ov.className = "lg-ov";
-        ov.innerHTML = '<form class="lg-box"><h2>Acesso do coordenador</h2><input type="password" placeholder="Senha" autocomplete="current-password" autofocus><p class="lg-err"></p><button type="submit">Entrar</button><button type="button" class="x">Cancelar</button></form>';
+        ov.innerHTML = '<form class="lg-box"><h2>Acesso do coordenador</h2><input type="text" class="lg-user" placeholder="Usuário (deixe vazio para a senha mestre)" autocomplete="username" aria-label="Usuário"><input type="password" placeholder="Senha" autocomplete="current-password" aria-label="Senha"><p class="lg-err"></p><button type="submit">Entrar</button><button type="button" class="x">Cancelar</button></form>';
         document.body.appendChild(ov);
-        const f = ov.firstChild, inp = f.querySelector("input"), err = f.querySelector(".lg-err");
+        const f = ov.firstChild, inp = f.querySelector("input[type=password]"), err = f.querySelector(".lg-err");
         f.querySelector(".x").onclick = () => { location.hash = ""; };
         f.onsubmit = async (e) => {
           e.preventDefault(); err.textContent = "";
-          const r = await api({ op: "login", password: inp.value }); const j = await r.json().catch(() => ({}));
+          const r = await api({ op: "login", login: f.querySelector(".lg-user").value, password: inp.value }); const j = await r.json().catch(() => ({}));
           if (r.ok) { history.replaceState(null, "", location.pathname); location.reload(); } else err.textContent = j.error || "Não foi possível entrar.";
         };
       }
     }).catch(() => {});
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", ui); else ui();
+  if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 })();

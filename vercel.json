@@ -1,5 +1,15 @@
 {
   "buildCommand": "node scripts/build.js",
   "outputDirectory": "public",
-  "functions": { "api/index.js": { "maxDuration": 15 } }
+  "functions": {
+    "api/index.js": {
+      "maxDuration": 15
+    }
+  },
+  "crons": [
+    {
+      "path": "/api?cron=1",
+      "schedule": "0 23 * * *"
+    }
+  ]
 }

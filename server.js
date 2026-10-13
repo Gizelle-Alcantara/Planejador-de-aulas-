@@ -3,7 +3,7 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 import { fileURLToPath } from "node:url";
-import { handle } from "./lib/core.js";
+import { handle, runDaily } from "./lib/core.js";
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "public");
 const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".ico": "image/x-icon" };
 http.createServer(async (rq, rs) => {
@@ -21,3 +21,10 @@ http.createServer(async (rq, rs) => {
     rs.writeHead(200, { "content-type": types[extname(p)] || "application/octet-stream" }); rs.end(data);
   } catch { rs.writeHead(404); rs.end("Não encontrado"); }
 }).listen(process.env.PORT || 3000, () => console.log("Planejador em http://localhost:" + (process.env.PORT || 3000)));
+
+// Avisos agendados: verifica a cada minuto e roda uma vez por dia às 23:00 UTC (20:00 em Salvador)
+let lastRun = "";
+setInterval(async () => {
+  const n = new Date(), key = n.toISOString().slice(0, 10);
+  if (n.getUTCHours() === 23 && n.getUTCMinutes() === 0 && lastRun !== key) { lastRun = key; try { console.log("avisos:", JSON.stringify(await runDaily(n))); } catch (e) { console.error(e); } }
+}, 30000);

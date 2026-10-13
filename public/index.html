@@ -3,6 +3,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0b5cab">
+<link rel="icon" href="/icon-192.png">
 <script src="/shim.js"></script>
 <style>
 /* Layout: cabeçalho da turma + abas; calendário mensal com pincel de disciplinas; tabelas densas para controle de encontros */
@@ -113,6 +116,7 @@ td input{padding:5px 7px}
 .chip.bad{outline:1px dashed var(--bad)}
 @media(max-width:620px){.day{min-height:62px;padding:3px}.chip{font-size:.62rem;padding:1px 2px}.day .lb{font-size:.6rem}}
 /* modal */
+.bdg{display:inline-block;padding:1px 8px;border-radius:99px;font-size:.74rem;border:1px solid currentColor;white-space:nowrap}.bdg.ok{color:var(--ok)}.bdg.warn{color:var(--warn)}.bdg.bad{color:var(--bad)}.bdg.mut{color:var(--muted)}
 .ov{position:fixed;inset:0;background:rgba(5,10,18,.55);display:flex;align-items:center;justify-content:center;padding:16px;z-index:20}
 .modal{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;width:min(100%,460px);max-height:100%;overflow:auto;display:flex;flex-direction:column;gap:12px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-weight:500;z-index:30;max-width:calc(100% - 32px)}
@@ -153,7 +157,7 @@ const WD=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const WDL=["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const TURNOS=["Matutino","Matutino NEM","Vespertino","Vespertino NEM","Noturno (Técnico)","Noturno (Comunidade)","Diurno"];
-const TABS=[["painel","Painel"],["calendario","Calendário"],["cronograma","Cronograma"],["enviar","Enviar"],["compartilhar","Compartilhar"],["disciplinas","Disciplinas"],["docentes","Docentes"],["turma","Turma"],["dados","Dados"]];
+const TABS=[["painel","Painel"],["calendario","Calendário"],["cronograma","Cronograma"],["chamada","Chamada"],["alunos","Alunos"],["enviar","Enviar"],["avisos","Avisos"],["compartilhar","Compartilhar"],["disciplinas","Disciplinas"],["docentes","Docentes"],["relatorios","Relatórios"],["turma","Turma"],["ambientes","Ambientes"],["acesso","Acesso"],["dados","Dados"]];
 
 /* ---------- estado ---------- */
 function seedTurma(){
@@ -195,6 +199,7 @@ function normalize(){
   const have=new Set(G.docentes.map(d=>d.nome));
   Object.values(T).forEach(st=>{
     st.envios=Array.isArray(st.envios)?st.envios:[];
+    st.aviso=Object.assign({auto:false,lembrete:false,canal:"email",alunos:true,docentes:true,lista:true},st.aviso||{});if(!Array.isArray(st.alunos))st.alunos=[];if(!st.reg||typeof st.reg!=="object"||Array.isArray(st.reg))st.reg={};
     if(st.cfg.destinatarios===undefined)st.cfg.destinatarios="";
     st.ucs.forEach(u=>{if(u.docente&&!have.has(u.docente)){G.docentes.push({nome:u.docente,email:"",semana:[],bloqueios:[]});have.add(u.docente)}});
     st.docentes=G.docentes;
@@ -264,33 +269,43 @@ function calcOf(S){
   const c=S.cfg,hora=horaOf(c),isos=Object.keys(S.days).sort();
   const dates={},enc={};
   S.ucs.forEach(u=>dates[u.sigla]=[]);
+  const reg=S.reg||{};
   for(const iso of isos){
-    const d=S.days[iso];enc[iso]=[];
-    (d.s||[]).forEach(sg=>{(dates[sg]=dates[sg]||[]).push(iso);enc[iso].push(dates[sg].length)});
+    const d=S.days[iso];enc[iso]=[];const nao=reg[iso]&&reg[iso].dado==="nao";
+    (d.s||[]).forEach(sg=>{if(nao){enc[iso].push("×");return}(dates[sg]=dates[sg]||[]).push(iso);enc[iso].push(dates[sg].length)});
   }
+  const cnt={};
+  for(const [iso,r] of Object.entries(reg)){const sg=((S.days[iso]||{}).s||[])[0];if(!sg)continue;const c=cnt[sg]=cnt[sg]||{dadas:0,nao:0,semRep:0};
+    if(r.dado==="sim")c.dadas++;else if(r.dado==="nao"){c.nao++;if(!r.rep)c.semRep++}}
   const t=todayISO();
   const rows=S.ucs.map((u,i)=>{
     const Q=Math.ceil(hora===60?u.ch:u.ch*1.2),P=Math.ceil(Q/c.aulasDia),R=Math.floor(Q*.25);
     const ds=dates[u.sigla]||[],ini=ds[0]||"-",fim=ds[ds.length-1]||"-";
     const status=ds.length&&t>=ini&&t<=fim?"EM ANDAMENTO":ds.length&&t>fim?"CONCLUÍDA":"PLANEJADA";
-    return {u,i,Q,P,R,aloc:ds.length,faltam:P-ds.length,ini,fim,status,ds};
+    const k=cnt[u.sigla]||{dadas:0,nao:0,semRep:0};
+    return {u,i,Q,P,R,aloc:ds.length,faltam:P-ds.length,ini,fim,status,ds,dadas:k.dadas,nao:k.nao,semRep:k.semRep};
   });
   return {rows,enc,dates,isos};
 }
 const PLUR=["domingos","segundas-feiras","terças-feiras","quartas-feiras","quintas-feiras","sextas-feiras","sábados"];
+const normSala=s=>String(s||"").trim().toLowerCase();
 function blockMsg(iso,sg){
-  const u=ucOf(sg);if(!u||!u.docente)return "";
-  const d=S.docentes.find(x=>x.nome===u.docente);if(!d)return "";
+  const u=ucOf(sg);if(!u)return "";
+  const d=u.docente?S.docentes.find(x=>x.nome===u.docente):null;
   const w=dow(iso);
-  if((d.semana||[]).includes(w))return `${d.nome} não leciona ${w===0||w===6?"aos":"às"} ${PLUR[w]}`;
-  const b=(d.bloqueios||[]).find(x=>x.de&&iso>=x.de&&iso<=(x.ate||x.de));
-  if(b)return `${d.nome} está indisponível${b.motivo?" ("+b.motivo+")":""} de ${br(b.de)}${b.ate&&b.ate!==b.de?" a "+br(b.ate):""}`;
-  const sp1=spanOf(S.cfg);
+  if(d){
+    if((d.semana||[]).includes(w))return `${d.nome} não leciona ${w===0||w===6?"aos":"às"} ${PLUR[w]}`;
+    const b=(d.bloqueios||[]).find(x=>x.de&&iso>=x.de&&iso<=(x.ate||x.de));
+    if(b)return `${d.nome} está indisponível${b.motivo?" ("+b.motivo+")":""} de ${br(b.de)}${b.ate&&b.ate!==b.de?" a "+br(b.ate):""}`;
+  }
+  const sp1=spanOf(S.cfg),sala=normSala(u.sala);
   for(const st of Object.values(T)){
     if(st===S)continue;const dd=st.days[iso];if(!dd||!(dd.s||[]).length)continue;
+    if(st.reg&&st.reg[iso]&&st.reg[iso].dado==="nao")continue;
     const sp2=spanOf(st.cfg);if(!(sp1[0]<sp2[1]&&sp2[0]<sp1[1]))continue;
-    const hit=dd.s.map(x=>st.ucs.find(u2=>u2.sigla===x)).find(u2=>u2&&u2.docente===u.docente);
-    if(hit)return `${d.nome} já leciona ${hit.sigla} na turma ${st.cfg.turma} nesse horário`;
+    const ucs=dd.s.map(x=>st.ucs.find(u2=>u2.sigla===x)).filter(Boolean);
+    if(d){const hit=ucs.find(u2=>u2.docente===u.docente);if(hit)return `${d.nome} já leciona ${hit.sigla} na turma ${st.cfg.turma} nesse horário`}
+    if(sala){const hit=ucs.find(u2=>normSala(u2.sala)===sala);if(hit)return `a sala ${u.sala.trim()} já está ocupada por ${hit.sigla} (turma ${st.cfg.turma}) nesse horário`}
   }
   return "";
 }
@@ -307,6 +322,7 @@ function avisos(C){
     if(r.faltam>0)a.push(["warn",`${r.u.sigla}: faltam ${r.faltam} encontro(s) para lançar (${r.aloc} de ${r.P}).`]);
     if(r.faltam<0)a.push(["err",`${r.u.sigla}: ${-r.faltam} encontro(s) a mais que o previsto (${r.aloc} de ${r.P}).`]);
     if(!r.u.docente)a.push(["info",`${r.u.sigla}: sem docente definido.`]);
+    if(r.semRep>0)a.push(["warn",`${r.u.sigla}: ${r.semRep} aula(s) não dada(s) sem reposição. Veja a aba Chamada.`]);
   });
   for(const iso of C.isos){
     const d=S.days[iso],s=d.s||[];if(!s.length)continue;
@@ -321,7 +337,7 @@ function avisos(C){
 }
 
 /* ---------- util UI ---------- */
-function toast(m){const r=document.getElementById("toastRoot");r.innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>r.innerHTML="",2600)}
+function toast(m){const r=document.getElementById("toastRoot");r.innerHTML=`<div class="toast" role="status">${esc(m)}</div>`;clearTimeout(toast.t);toast.t=setTimeout(()=>r.innerHTML="",Math.max(2600,String(m).length*65))}
 const sig=s=>`<span class="sig" style="--c:${colorOf(s)}">${esc(s)}</span>`;
 function copyText(id){
   const el=document.getElementById(id);if(!el)return;
@@ -332,11 +348,12 @@ function copyText(id){
 const rowHorario=()=>{const h=horarios();return h.length?`${hm(h[0].i)} às ${hm(h[h.length-1].f)}`:""};
 
 /* ---------- cabeçalho / abas ---------- */
+const DOCTABS=["chamada","alunos","relatorios","ambientes"];
 function renderHead(){
-  const c=S.cfg;
+  const c=S.cfg;if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="chamada";
   document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
   setStatus(UI.status);
-  document.getElementById("tabs").innerHTML=TABS.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join("");
+  document.getElementById("tabs").innerHTML=TABS.filter(x=>UI.role!=="docente"||DOCTABS.includes(x[0])).map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join("");
 }
 
 /* ---------- PAINEL ---------- */
@@ -554,13 +571,14 @@ function vDisc(){
 function vDoc(){
   const C=calc(),t=todayISO();
   return `<section class="panel"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Docentes</h2><button class="btn pri" data-act="docadd">Adicionar docente</button></div>
-  <div class="tw"><table><thead><tr><th>Nome</th><th>E-mail</th><th>Disciplinas</th><th class="n">CH</th><th class="n">Encontros</th><th>Próxima aula</th><th></th></tr></thead><tbody>
+  <div class="tw"><table><thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Disciplinas</th><th class="n">CH</th><th class="n">Encontros</th><th>Próxima aula</th><th></th></tr></thead><tbody>
   ${S.docentes.map((d,i)=>{const rs=[];for(const st of Object.values(T))calcOf(st).rows.filter(r=>r.u.docente===d.nome).forEach(r=>rs.push({st,r}));
    const all=rs.flatMap(x=>x.r.ds.map(y=>[y,x.r.u.sigla])).sort();const nx=all.find(x=>x[0]>=t);
    return `<tr><td><input type="text" data-doc="${i}" data-f="nome" value="${esc(d.nome)}" style="min-width:180px" aria-label="Nome"></td>
    <td><input type="email" data-doc="${i}" data-f="email" value="${esc(d.email||"")}" style="min-width:200px" aria-label="E-mail"></td>
+   <td><input type="tel" data-doc="${i}" data-f="tel" value="${esc(d.tel||"")}" placeholder="(75) 99999-9999" style="width:150px" aria-label="WhatsApp"></td>
    <td>${rs.map(x=>`<span class="sig" style="--c:var(--accent)" title="${esc(x.r.u.nome)}">${esc(x.st.cfg.turma)} · ${esc(x.r.u.sigla)}</span>`).join(" ")||'<span class="muted">-</span>'}</td><td class="n mono">${rs.reduce((a,x)=>a+(+x.r.u.ch||0),0)}</td><td class="n mono">${all.length}</td><td class="mono">${nx?br(nx[0])+" · "+nx[1]:"-"}</td>
-   <td><button class="btn sm bad" data-act="docdel" data-i="${i}">${UI.confirm==="doc"+i?"Confirmar":"Excluir"}</button></td></tr>`}).join("")||`<tr><td colspan="7" class="muted">Nenhum docente cadastrado.</td></tr>`}
+   <td><button class="btn sm bad" data-act="docdel" data-i="${i}">${UI.confirm==="doc"+i?"Confirmar":"Excluir"}</button></td></tr>`}).join("")||`<tr><td colspan="8" class="muted">Nenhum docente cadastrado.</td></tr>`}
   </tbody></table></div><p class="small muted">Os docentes valem para todas as turmas. Renomear atualiza as disciplinas dele em todas elas. Excluir deixa as disciplinas sem docente. A coluna Disciplinas mostra turma · sigla.</p></section>
   <section class="panel"><h2>Bloqueios de disponibilidade</h2><p class="small muted" style="margin-top:-4px">O planejador não deixa lançar aula de um docente nos dias bloqueados. Use o bloqueio por período para representar aulas em outras turmas, licenças e férias.</p>
   <div style="display:flex;flex-direction:column;gap:14px">
@@ -655,7 +673,7 @@ function vEnviar(){
     <div class="row" style="margin-top:8px"><button class="btn" data-act="copy" data-id="envLink">Copiar link</button></div>
     <p class="small muted">Quem abre esse link vê o calendário atualizado ao vivo. Basta enviar o link: quem abre só visualiza.</p></section>
   <section class="panel"><h2>Arquivos para anexar</h2>
-    ${DL?`<div class="row"><button class="btn" data-act="dlhtml">Baixar página do calendário (HTML)</button><button class="btn" data-act="dlcsv">Baixar encontros (CSV)</button></div><p class="small muted">A página HTML abre em qualquer navegador e pode ser impressa ou salva em PDF. O CSV abre no Excel.</p>`:`<p class="small muted">O download de arquivos não está disponível neste momento. Use os textos da aba Dados (CSV e agenda .ics).</p>`}</section>
+    ${DL?`<div class="row"><button class="btn" data-act="dlhtml">Baixar página do calendário (HTML)</button><button class="btn" data-act="dlcsv">Baixar encontros (CSV)</button><button class="btn" data-act="print">Imprimir / salvar em PDF</button></div><p class="small muted">A página HTML abre em qualquer navegador e pode ser impressa ou salva em PDF. O CSV abre no Excel.</p>`:`<p class="small muted">O download de arquivos não está disponível neste momento. Use os textos da aba Dados (CSV e agenda .ics).</p>`}</section>
   <section class="panel"><h2>Destinatários</h2><label class="f">E-mails da turma (um por linha)<textarea id="envDest" data-cfgx="destinatarios" style="min-height:110px" placeholder="aluno1@email.com">${esc(S.cfg.destinatarios)}</textarea></label>
     <div class="row" style="margin-top:8px"><button class="btn" data-act="copy" data-id="envDest">Copiar lista</button><span class="small muted">${dest.length} e-mail(s)</span></div></section>
   </div></div>
@@ -683,6 +701,10 @@ function vShare(){
     <label class="f">Link geral (o docente escolhe o nome)<input type="text" id="shDoc" value="${esc(G.base+"#docente")}" readonly></label>
     <div class="row" style="margin-top:8px"><button class="btn pri" data-act="copyv" data-v="${esc(G.base+"#docente")}">Copiar link geral</button></div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">${S.docentes.map(d=>`<div class="row"><span style="min-width:140px;flex:1">${esc(d.nome)}</span><button class="btn sm" data-act="copyv" data-v="${esc(G.base+"#docente-"+slug(d.nome))}">Copiar link</button></div>`).join("")}</div></section>
+  <section class="panel"><h2>Agenda no celular (assinar)</h2><p class="small muted" style="margin-top:-4px">Aluno ou docente assina uma vez e o calendário se atualiza sozinho no Google Agenda, Outlook ou iPhone, a cada alteração sua.</p>
+    <label class="f">Agenda da turma ${esc(S.cfg.turma)}<input type="text" id="shIcs" value="${esc(location.origin+"/api?ics=turma-"+CUR)}" readonly></label>
+    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="copy" data-id="shIcs">Copiar link da agenda</button><a class="btn" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent("webcal://"+location.host+"/api?ics=turma-"+CUR)}">Adicionar ao Google Agenda</a></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">${S.docentes.map(d=>`<div class="row"><span style="min-width:140px;flex:1">${esc(d.nome)}</span><button class="btn sm" data-act="copyv" data-v="${esc(location.origin+"/api?ics=docente-"+slug(d.nome))}">Copiar agenda</button></div>`).join("")}</div></section>
   <section class="panel"><h2>Como compartilhar</h2><ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
     ${step(1,"Copie o link da turma ou do docente","Os links ficam nesta aba. Eles abrem sempre a visão somente leitura.")}
     ${step(2,"Alunos e docentes: só visualizam","Não precisam de conta nem de senha. Quem abre o endereço do site escolhe entre a visão do aluno e a do docente e não altera nada.")}
@@ -708,9 +730,27 @@ function icsText(){
     L.push("BEGIN:VEVENT",`UID:${d}-${S.cfg.turma}@planejador`,`DTSTAMP:${d}T000000`,`DTSTART:${d}T${a}`,`DTEND:${d}T${b}`,`SUMMARY:${s.join(" + ")} - Turma ${S.cfg.turma}`,"END:VEVENT")}
   L.push("END:VCALENDAR");return L.join("\r\n");
 }
+async function loadBk(){
+  const [l,s]=await Promise.all([PLAN.api({op:"backup_list"}),PLAN.api({op:"backup_status"})]);
+  UI.bk={items:l.items||[],st:s};if(MODE==="planner"&&UI.tab==="dados")renderView();
+}
+function vBackups(){
+  if(!window.PLAN)return "";
+  if(!UI.bk){UI.bk={loading:true};loadBk()}
+  const B=UI.bk;if(B.loading)return '<section class="panel"><h2>Backups automáticos</h2><p class="muted">Carregando…</p></section>';
+  const when=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}};
+  const kb=n=>n>=1048576?(n/1048576).toFixed(1)+" MB":Math.max(1,Math.round(n/1024))+" KB";
+  const last=B.items[0];
+  return `<section class="panel"><div class="row" style="justify-content:space-between;margin-bottom:6px"><h2>Backups automáticos</h2><div class="row"><button class="btn pri" data-act="bkrun">Fazer backup agora</button><button class="btn sm" data-act="bkreload">Atualizar</button></div></div>
+    <p class="small muted" style="margin-top:-2px">Todo dia às 20h o sistema guarda uma cópia de tudo (turmas, docentes, chamada e alunos) no próprio banco, se algo mudou. Ficam as últimas 30 cópias e a primeira de cada mês, por 12 meses. ${B.st&&B.st.email?`Aos domingos uma cópia também vai por e-mail${B.st.semAlunos?" (sem nomes e faltas de alunos)":""}.`:'A cópia semanal por e-mail está <b>desligada</b>: cadastre <span class="mono">BACKUP_EMAIL</span> no servidor para ligar (guia: docs/BACKUP-pt-BR.md).'}</p>
+    <p class="small" style="margin:0 0 8px">${last?`Último backup: <b>${when(last.at)}</b> (${esc(last.kind)}).`:"Ainda não há backups. O primeiro sai no próximo horário agendado ou ao clicar em Fazer backup agora."}</p>
+    <div class="tw"><table><thead><tr><th>Quando</th><th>Tipo</th><th>Por</th><th class="n">Itens</th><th class="n">Tamanho</th><th></th></tr></thead><tbody>
+    ${B.items.map(b=>`<tr><td class="mono">${when(b.at)}</td><td>${esc(b.kind)}</td><td>${esc(b.by||"")}</td><td class="n mono">${b.docs}</td><td class="n mono">${kb(b.size)}</td><td><div class="row"><button class="btn sm" data-act="bkdl" data-id="${b.id}">Baixar</button><button class="btn sm bad" data-act="bkres" data-id="${b.id}">${UI.confirm==="bk"+b.id?"Confirmar restauração":"Restaurar"}</button></div></td></tr>`).join("")||'<tr><td colspan="6" class="muted">Nenhum backup ainda.</td></tr>'}</tbody></table></div>
+    <p class="small muted">Restaurar devolve turmas e docentes ao estado daquela cópia e antes guarda uma cópia do estado atual ("antes de restaurar"). Turmas criadas depois do backup não são apagadas.</p></section>`;
+}
 function vDados(){
-  return `<div class="grid2">
-  <section class="panel"><h2>Cópia de segurança (JSON)</h2><p class="small muted">Os dados ficam salvos neste navegador. Copie este texto para guardar uma cópia ou levar para outro computador.</p>
+  return `${vBackups()}<div class="grid2">
+  <section class="panel"><h2>Cópia de segurança (JSON)</h2><div class="row" style="margin-bottom:8px"><button class="btn pri" data-act="bkfull">Baixar backup completo (arquivo)</button></div><p class="small muted">Os dados ficam salvos neste navegador. Copie este texto para guardar uma cópia ou levar para outro computador.</p>
     <textarea id="tJson" readonly>${esc(JSON.stringify({geral:G,turmas:strippedT()},null,1))}</textarea><div class="row" style="margin-top:8px"><button class="btn pri" data-act="copy" data-id="tJson">Copiar</button></div></section>
   <section class="panel"><h2>Restaurar cópia</h2><p class="small muted">Cole o JSON ou escolha o arquivo.</p>
     <textarea id="tImp" placeholder="Cole aqui o JSON"></textarea>
@@ -852,6 +892,176 @@ function docIcs(A){
 function csvDoc(A){return ["Data;Dia;Turma;Sigla;Disciplina;Encontro;Sala;Horário;Observação",...A.aulas.map(a=>[br(a.iso),WD[dow(a.iso)],a.turma,a.sig,a.nome,`${a.n}/${a.P}`,a.sala,a.hor,a.h].join(";"))].join("\n")}
 
 /* ---------- render / eventos ---------- */
+/* ---------- CHAMADA, FALTAS E REPOSIÇÃO ---------- */
+const MOTIVOS=["Docente ausente","Feriado ou recesso","Evento da escola","Problema de infraestrutura","Outro motivo"];
+const newId=()=>"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+function repCands(iso,max=5){
+  const sg=((S.days[iso]||{}).s||[])[0];if(!sg)return [];
+  const out=[],today=todayISO(),lim=addD(S.cfg.termino,45);
+  for(let d=addD(iso>today?iso:today,1);d<=lim&&out.length<max;d=addD(d,1)){
+    const w=dow(d);if(w===0||(w===6&&!UI.repSab)||d<S.cfg.inicio)continue;
+    const x=S.days[d];if(x&&((x.s||[]).length||x.t==="feriado"||x.t==="sem"))continue;
+    S.days[d]={s:[sg]};const m=blockMsg(d,sg);if(x)S.days[d]=x;else delete S.days[d];
+    if(!m)out.push({iso:d,fora:d>S.cfg.termino});
+  }
+  return out;
+}
+function applyRep(orig,nw){
+  const r=S.reg[orig];if(!r||r.dado!=="nao")return false;const sg=((S.days[orig]||{}).s||[])[0];if(!sg)return false;
+  if(r.rep&&S.days[r.rep]&&String(S.days[r.rep].h||"").startsWith("Reposição"))delete S.days[r.rep];
+  S.days[nw]={s:[sg],t:"nota",h:"Reposição de "+br(orig)};r.rep=nw;return true;
+}
+function repAuto(){
+  const pend=Object.keys(S.reg).filter(i=>S.reg[i].dado==="nao"&&!S.reg[i].rep&&S.days[i]).sort();let ok=0,sem=0;
+  for(const i of pend){const c=repCands(i).find(x=>!x.fora);if(c&&applyRep(i,c.iso))ok++;else sem++}
+  save();renderView();toast(ok?`${ok} reposição(ões) lançada(s) no calendário.${sem?` ${sem} sem data livre: escolha manualmente.`:""}`:"Nenhuma data livre dentro do período. Escolha manualmente ou inclua sábados.");
+}
+function faltasMap(){
+  const m={};(S.alunos||[]).forEach(a=>m[a.id]={});
+  for(const [iso,r] of Object.entries(S.reg||{})){if(r.dado!=="sim"||!r.faltas)continue;const sg=((S.days[iso]||{}).s||[])[0];if(!sg)continue;
+    for(const [aid,n] of Object.entries(r.faltas))if(m[aid])m[aid][sg]=(m[aid][sg]||0)+(+n||0)}
+  return m;
+}
+const stFalta=(n,lim)=>!lim?(n>0?"warn":"ok"):n>lim?"bad":n>=Math.ceil(lim*.75)?"warn":"ok";
+function vChamada(){
+  const C=calc(),t=todayISO(),reg=S.reg||{},f=UI.rf||"pend";
+  const tot=C.rows.reduce((a,r)=>({d:a.d+r.dadas,p:a.p+r.P,n:a.n+r.semRep}),{d:0,p:0,n:0});
+  const pend=C.isos.filter(i=>(S.days[i].s||[]).length&&i<=t&&!reg[i]).length;
+  let rows=[];
+  for(const iso of C.isos){const sg=(S.days[iso].s||[])[0];if(!sg)continue;const r=reg[iso];
+    if(f==="pend"&&!(iso<=t&&!r))continue;if(f==="nao"&&!(r&&r.dado==="nao"))continue;if(f==="fut"&&!(iso>t))continue;if(UI.ucFilter&&sg!==UI.ucFilter)continue;
+    rows.push({iso,sg,r,n:C.enc[iso][0]})}
+  const nf=r=>r&&r.faltas?Object.values(r.faltas).filter(x=>+x>0).length:0;
+  const badge=r=>!r?'<span class="bdg mut">Sem registro</span>':r.dado==="sim"?'<span class="bdg ok">Aula dada</span>':`<span class="bdg bad">Não dada</span>${r.rep?` <span class="bdg ok">Reposta em ${br(r.rep)}</span>`:' <span class="bdg warn">Sem reposição</span>'}`;
+  const pendRep=Object.keys(reg).filter(i=>reg[i].dado==="nao"&&!reg[i].rep&&S.days[i]).sort();
+  const wd=iso=>WD[dow(iso)];
+  const repPanel=pendRep.length?`<section class="panel"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2>Reposição de aulas (${pendRep.length})</h2><div class="row"><label class="row small" style="gap:6px"><input type="checkbox" id="rSab" ${UI.repSab?"checked":""}> Incluir sábados</label><button class="btn pri" data-act="repauto">Repor tudo automaticamente</button></div></div>
+    <p class="small muted" style="margin-top:-2px">As datas sugeridas são dias livres, sem feriado, sem choque de docente, de sala ou de outra disciplina. Escolha uma data ou deixe o sistema lançar a primeira de cada aula.</p>
+    <div style="display:flex;flex-direction:column;gap:10px">${pendRep.map(i=>{const sg=S.days[i].s[0],cs=repCands(i,4);return `<div class="row" style="align-items:flex-start;gap:10px"><div style="min-width:210px"><b>${esc(sg)}</b> · ${br(i)} (${wd(i)})<br><span class="small muted">${esc(reg[i].motivo||"")}</span></div><div class="row" style="flex:1">${cs.length?cs.map(c=>`<button class="btn sm" data-act="rep" data-o="${i}" data-n="${c.iso}">${br(c.iso)} ${wd(c.iso)}${c.fora?" (após o término)":""}</button>`).join(""):'<span class="small muted">Sem data livre nos próximos dias. Libere agenda ou inclua sábados.</span>'}</div></div>`}).join("")}</div></section>`:"";
+  return `<section class="panel"><div class="row" style="justify-content:space-between;margin-bottom:8px"><h2>Registro de aulas dadas</h2>
+    <div class="row"><select id="rfSel" style="width:auto" aria-label="Filtrar registros"><option value="pend" ${f==="pend"?"selected":""}>Pendentes de registro</option><option value="nao" ${f==="nao"?"selected":""}>Aulas não dadas</option><option value="fut" ${f==="fut"?"selected":""}>Próximas aulas</option><option value="todos" ${f==="todos"?"selected":""}>Todas</option></select>
+    <select id="cf" style="width:auto" aria-label="Filtrar disciplina"><option value="">Todas as disciplinas</option>${S.ucs.map(u=>`<option value="${esc(u.sigla)}" ${u.sigla===UI.ucFilter?"selected":""}>${esc(u.sigla)}</option>`).join("")}</select></div></div>
+    <p class="small" style="margin:0 0 10px"><b>${tot.d}</b> de ${tot.p} encontros previstos já dados · <b>${pend}</b> aula(s) passada(s) sem registro · <b>${tot.n}</b> não dada(s) sem reposição</p>
+    <div class="tw"><table><thead><tr><th>Data</th><th>Dia</th><th>UC</th><th class="n">Encontro</th><th>Docente</th><th>Situação</th><th class="n">Alunos com falta</th><th></th></tr></thead><tbody>
+    ${rows.map(x=>`<tr><td class="mono">${br(x.iso)}</td><td>${wd(x.iso)}</td><td>${esc(x.sg)}</td><td class="n mono">${x.n}</td><td>${esc((ucOf(x.sg)||{}).docente||"-")}</td><td>${badge(x.r)}</td><td class="n mono">${x.r&&x.r.dado==="sim"?nf(x.r):"-"}</td><td><button class="btn sm ${x.r?"":"pri"}" data-act="regopen" data-iso="${x.iso}">${x.r?"Editar":"Registrar"}</button></td></tr>`).join("")||'<tr><td colspan="8" class="muted">Nenhuma aula neste filtro.</td></tr>'}
+    </tbody></table></div></section>${repPanel}`;
+}
+function openRegModal(iso){
+  const r=(S.reg||{})[iso]||{},sg=((S.days[iso]||{}).s||[])[0],u=ucOf(sg)||{},n=S.cfg.aulasDia;
+  const sit=r.dado||"";
+  const selF=a=>{const v=(r.faltas&&r.faltas[a.id])||0;return `<select data-fa="${esc(a.id)}" aria-label="Faltas de ${esc(a.nome)}" style="width:auto">${Array.from({length:n+1},(_,k)=>`<option value="${k}" ${k===+v?"selected":""}>${k===0?"Presente":k===n?`Faltou (${n})`:k+(k===1?" falta":" faltas")}</option>`).join("")}</select>`};
+  document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Registro da aula" data-iso="${iso}" style="width:min(100%,560px)">
+    <h3>${WDL[dow(iso)]}, ${br(iso)} · ${esc(sg||"")}</h3><div class="small muted">${esc(u.nome||"")}${u.docente?" · "+esc(u.docente):""}</div>
+    <label class="f">Situação<select id="rSit"><option value="" ${sit===""?"selected":""}>(sem registro)</option><option value="sim" ${sit==="sim"?"selected":""}>Aula dada</option><option value="nao" ${sit==="nao"?"selected":""}>Aula não dada</option></select></label>
+    <div id="rNao" ${sit==="nao"?"":"hidden"}><label class="f">Motivo<select id="rMot">${MOTIVOS.map(m=>`<option ${m===r.motivo?"selected":""}>${m}</option>`).join("")}</select></label>
+      ${r.rep?`<p class="small">Reposição lançada em <b>${br(r.rep)}</b>. Salvar com outra situação remove essa reposição do calendário.</p>`:'<p class="small muted">Depois de salvar, a aba Chamada sugere as datas de reposição.</p>'}</div>
+    <div id="rSim" ${sit==="sim"?"":"hidden"}>${S.alunos.length?`<div class="row" style="justify-content:space-between;margin-bottom:6px"><b>Faltas dos alunos</b><button class="btn sm" data-act="rall">Todos presentes</button></div>
+      <div style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto">${S.alunos.map(a=>`<div class="row" style="justify-content:space-between"><span>${esc(a.nome)}</span>${selF(a)}</div>`).join("")}</div>`:'<p class="small muted">Cadastre os alunos na aba Alunos para registrar as faltas.</p>'}</div>
+    <label class="f">Observação<input type="text" id="rObs" value="${esc(r.obs||"")}"></label>
+    <div class="row"><button class="btn pri" data-act="rsave">Salvar</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;
+}
+function saveReg(){
+  const m=document.querySelector(".modal"),iso=m.dataset.iso,sit=document.getElementById("rSit").value,old=S.reg[iso]||{};
+  const obs=document.getElementById("rObs").value.trim();
+  if(old.rep&&sit!=="nao"&&S.days[old.rep]&&String(S.days[old.rep].h||"").startsWith("Reposição"))delete S.days[old.rep];
+  if(!sit)delete S.reg[iso];
+  else if(sit==="nao")S.reg[iso]={dado:"nao",motivo:document.getElementById("rMot").value,...(obs?{obs}:{}),...(old.dado==="nao"&&old.rep?{rep:old.rep}:{})};
+  else{const fa={};m.querySelectorAll("[data-fa]").forEach(s=>{if(+s.value>0)fa[s.dataset.fa]=+s.value});S.reg[iso]={dado:"sim",...(Object.keys(fa).length?{faltas:fa}:{}),...(obs?{obs}:{})}}
+  save();closeModal();renderView();
+}
+function vAlunos(){
+  const C=calc(),fm=faltasMap(),rows=C.rows.filter(r=>r.dadas>0||r.u.sigla);
+  const ucs=C.rows;
+  const body=S.alunos.map((a,k)=>{
+    let tot=0,worst="ok";
+    const cells=ucs.map(r=>{const n=(fm[a.id]||{})[r.u.sigla]||0;tot+=n;const s=stFalta(n,r.R);if(s==="bad"||(s==="warn"&&worst==="ok"))worst=s;return `<td class="n mono ${s==="ok"?"":"b-"+s}" style="${s==="bad"?"color:var(--bad);font-weight:600":s==="warn"?"color:var(--warn);font-weight:600":""}">${n}</td>`}).join("");
+    return `<tr><td><input type="text" data-al="${esc(a.id)}" data-f="nome" value="${esc(a.nome)}" style="min-width:200px" aria-label="Nome do aluno"></td><td><input type="text" data-al="${esc(a.id)}" data-f="mat" value="${esc(a.mat||"")}" style="width:110px" aria-label="Matrícula"></td><td><input type="email" data-al="${esc(a.id)}" data-f="email" value="${esc(a.email||"")}" style="min-width:170px" aria-label="E-mail do aluno"></td><td><input type="tel" data-al="${esc(a.id)}" data-f="tel" value="${esc(a.tel||"")}" style="width:140px" aria-label="WhatsApp do aluno"></td>${cells}<td class="n mono">${tot}</td><td>${worst==="bad"?'<span class="bdg bad">Limite excedido</span>':worst==="warn"?'<span class="bdg warn">Atenção</span>':'<span class="bdg ok">Regular</span>'}</td><td><button class="btn sm bad" data-act="alunodel" data-id="${esc(a.id)}">${UI.confirm==="al"+a.id?"Confirmar":"Excluir"}</button></td></tr>`}).join("");
+  return `<section class="panel"><h2>Alunos da turma ${esc(S.cfg.turma)} (${S.alunos.length})</h2>
+    <p class="small muted" style="margin-top:-4px">Faltas são contadas em aulas, por disciplina, só nas aulas dadas. O limite é 25% da carga de cada disciplina (linha "Limite" da tabela). Nomes e faltas só aparecem para quem entrou com conta; visitantes recebem apenas o calendário.</p>
+    <div class="tw"><table><thead><tr><th>Aluno</th><th>Matrícula</th><th>E-mail</th><th>WhatsApp</th>${ucs.map(r=>`<th class="n" title="${esc(r.u.nome)}">${esc(r.u.sigla)}</th>`).join("")}<th class="n">Total</th><th>Situação</th><th></th></tr>
+    <tr><th colspan="4" style="font-weight:400">Limite de faltas (aulas)</th>${ucs.map(r=>`<th class="n mono" style="font-weight:400">${r.R}</th>`).join("")}<th></th><th></th><th></th></tr></thead><tbody>${body||`<tr><td colspan="${ucs.length+7}" class="muted">Nenhum aluno cadastrado.</td></tr>`}</tbody></table></div>
+    <div class="row" style="margin-top:10px"><button class="btn" data-act="frcsv" ${S.alunos.length?"":"disabled"}>Baixar frequência (CSV)</button></div></section>
+  <section class="panel"><h2>Adicionar alunos</h2><p class="small muted" style="margin-top:-4px">Cole um por linha: <span class="mono">Nome;matrícula;e-mail;WhatsApp</span> (só o nome é obrigatório). Preencha e-mail e WhatsApp apenas com a autorização do aluno ou do responsável: são usados nos avisos automáticos.</p>
+    <textarea id="alLista" placeholder="Maria Souza;2026001;maria@email.com;75999990000&#10;João Pereira" style="min-height:110px"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="alunoadd">Adicionar</button></div></section>`;
+}
+
+/* ---------- AVISOS (e-mail / WhatsApp) ---------- */
+async function loadAv(){
+  const cfg=S.aviso,[st,pv,lg]=await Promise.all([PLAN.api({op:"notify_status"}),PLAN.api({op:"notify_preview",turma:CUR,cfg}),PLAN.api({op:"notify_log"})]);
+  UI.av={st,pv,lg:lg.items||[],turma:CUR};if(MODE==="planner"&&UI.tab==="avisos")renderView();
+}
+const avCanal=r=>({email:"E-mail",whatsapp:"WhatsApp",ambos:"E-mail e WhatsApp"}[r]||r);
+function vAvisos(){
+  if(!UI.av||UI.av.turma!==CUR){UI.av={loading:true,turma:CUR};loadAv()}
+  const A=UI.av,a=S.aviso;if(A.loading)return '<section class="panel"><p class="muted">Carregando…</p></section>';
+  const st=A.st||{},pv=A.pv||{},when=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}};
+  const need=a.canal==="whatsapp"?!st.whatsapp:a.canal==="email"?!st.email:(!st.email||!st.whatsapp);
+  const chk=(k,l)=>`<label class="row small" style="gap:6px"><input type="checkbox" data-av="${k}" ${a[k]?"checked":""}> ${l}</label>`;
+  return `${need?`<section class="panel" style="border-color:var(--warn)"><b>Serviço de envio não configurado.</b> <span class="small">O sistema monta e registra os avisos, mas o envio fica <b>simulado</b> (nada sai de verdade) até você cadastrar as chaves do ${a.canal==="whatsapp"?"WhatsApp":a.canal==="email"?"e-mail (Resend)":"e-mail e do WhatsApp"} no servidor. Veja o guia de instalação, seção Avisos.</span></section>`:""}
+  <div class="grid2">
+  <section class="panel"><h2>Envio automático da turma ${esc(S.cfg.turma)}</h2>
+    <div style="display:flex;flex-direction:column;gap:8px">${chk("auto","Avisar alterações do calendário todos os dias às 20h (aulas novas, canceladas, não dadas e reposições)")}${chk("lembrete","Lembrete na véspera de cada aula (às 20h do dia anterior)")}</div>
+    <label class="f" style="margin-top:12px">Canal<select data-av="canal"><option value="email" ${a.canal==="email"?"selected":""}>E-mail</option><option value="whatsapp" ${a.canal==="whatsapp"?"selected":""}>WhatsApp</option><option value="ambos" ${a.canal==="ambos"?"selected":""}>E-mail e WhatsApp</option></select></label>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px"><b class="small">Quem recebe</b>${chk("alunos","Alunos (e-mail e WhatsApp da aba Alunos)")}${chk("docentes","Docentes da turma (cadastro da aba Docentes)")}${chk("lista","Lista extra da aba Enviar (e-mails)")}</div>
+    <p class="small muted">Hoje: <b>${pv.emails||0}</b> e-mail(s) e <b>${pv.phones||0}</b> número(s) de WhatsApp. O agendador roda uma vez por dia. Só são enviadas aulas de hoje em diante.</p></section>
+  <section class="panel"><h2>Alterações pendentes de aviso</h2>
+    ${pv.lines&&pv.lines.length?`<ul style="margin:0 0 10px;padding-left:18px">${pv.lines.map(l=>`<li class="small">${esc(l)}</li>`).join("")}</ul><div class="row"><button class="btn pri" data-act="avsend" data-kind="alterações">Avisar agora</button><button class="btn" data-act="avbase">Marcar como avisado</button></div>`:`<p class="small muted">${pv.hasBase?"Nenhuma alteração desde o último aviso.":"Ative o envio automático ou use Marcar como avisado para começar a acompanhar as alterações a partir de agora."}</p>${pv.hasBase?"":'<div class="row"><button class="btn" data-act="avbase">Começar a acompanhar</button></div>'}`}
+  </section></div>
+  <section class="panel"><h2>Mensagem livre</h2><p class="small muted" style="margin-top:-4px">Vai para os mesmos destinatários e canal definidos acima.</p>
+    <label class="f">Assunto<input type="text" id="avSubj" maxlength="150" value="${esc(UI.avSubj||"")}"></label>
+    <label class="f">Mensagem<textarea id="avText" maxlength="2000" style="min-height:110px">${esc(UI.avText||"")}</textarea></label>
+    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="avsend" data-kind="manual">${UI.confirm==="avsend"?"Confirmar envio para "+((a.canal!=="whatsapp"?pv.emails||0:0)+(a.canal!=="email"?pv.phones||0:0))+" destinatário(s)":"Enviar mensagem"}</button></div></section>
+  <section class="panel"><h2>Histórico de avisos</h2><div class="tw"><table><thead><tr><th>Quando</th><th>Turma</th><th>Tipo</th><th>Canal</th><th>Resultado</th><th>Por</th></tr></thead><tbody>
+    ${(A.lg||[]).map(h=>`<tr><td class="mono">${when(h.at)}</td><td>${esc(h.turma||"")}</td><td>${esc(h.kind||"")}</td><td>${esc(avCanal(h.canal))}</td><td>${h.ok?"":'<span class="bdg bad">Falha</span> '}${esc(h.resumo||"")}${h.erro?`<br><span class="small muted">${esc(h.erro)}</span>`:""}</td><td>${esc(h.by||"")}</td></tr>`).join("")||'<tr><td colspan="6" class="muted">Nenhum aviso enviado ainda.</td></tr>'}</tbody></table></div></section>`;
+}
+async function avSend(kind){
+  const subj=(document.getElementById("avSubj")||{}).value,txt=(document.getElementById("avText")||{}).value;
+  if(kind==="manual"){UI.avSubj=subj;UI.avText=txt}
+  const r=await PLAN.api({op:"notify_send",turma:CUR,kind,assunto:subj,texto:txt,canal:S.aviso.canal,cfg:S.aviso});
+  UI.confirm=null;if(r.error&&!r.result){toast(r.error)}else toast((r.simulated?"Envio simulado (serviço não configurado). ":"")+(r.resumo||""));
+  if(r.ok&&kind==="manual"){UI.avSubj="";UI.avText=""}
+  UI.av=null;renderView();
+}
+
+/* ---------- RELATÓRIOS ---------- */
+function vRel(){
+  const mes=ym=>{const [y,m]=ym.split("-").map(Number);return new Date(Date.UTC(y,m-1,1)).toLocaleDateString("pt-BR",{month:"long",year:"numeric",timeZone:"UTC"})};
+  const pct=(a,b)=>b?Math.round(a/b*100)+"%":"-";
+  const tr=Object.entries(T).map(([id,st])=>{const C=calcOf(st),P=C.rows.reduce((a,r)=>a+r.P,0),A=C.rows.reduce((a,r)=>a+r.aloc,0),ch=st.ucs.reduce((a,u)=>a+(+u.ch||0),0),sem=C.rows.filter(r=>!r.u.docente).length;
+    return `<tr><td>${esc(st.cfg.turma)}</td><td>${esc(st.cfg.curso)}</td><td>${esc(st.cfg.turno)}</td><td class="n mono">${ch}</td><td class="n mono">${A} / ${P}</td><td class="n mono">${pct(A,P)}</td><td class="n mono">${sem}</td></tr>`}).join("");
+  const dr=S.docentes.map(d=>{let ts=new Set(),sg=[],A=0,P=0,HA=0,HP=0;
+    Object.values(T).forEach(st=>{const C=calcOf(st);C.rows.filter(r=>r.u.docente===d.nome).forEach(r=>{ts.add(st.cfg.turma);sg.push(r.u.sigla);A+=r.aloc;P+=r.P;HA+=r.aloc*st.cfg.aulasDia;HP+=r.P*st.cfg.aulasDia})});
+    return `<tr><td>${esc(d.nome)}</td><td>${esc([...ts].join(", ")||"-")}</td><td>${esc(sg.join(", ")||"-")}</td><td class="n mono">${A} / ${P}</td><td class="n mono">${HA} / ${HP}</td><td>${(d.semana||[]).length?esc((d.semana||[]).map(w=>WD[w]).join(", ")):"-"}</td></tr>`}).join("");
+  const isos=Object.keys(S.days),months={};
+  for(let d=S.cfg.inicio;d&&d<=S.cfg.termino;d=addD(d,1)){const w=dow(d);if(w===0||w===6)continue;const ym=d.slice(0,7),e=S.days[d]||{};const m=months[ym]=months[ym]||{u:0,off:0,aula:0};m.u++;if(e.t==="feriado"||e.t==="sem")m.off++;else if((e.s||[]).length)m.aula++}
+  const mr=Object.entries(months).map(([ym,m])=>`<tr><td style="text-transform:capitalize">${mes(ym)}</td><td class="n mono">${m.u}</td><td class="n mono">${m.off}</td><td class="n mono">${m.aula}</td><td class="n mono">${m.u-m.off-m.aula}</td><td class="n mono">${pct(m.aula,m.u-m.off)}</td></tr>`).join("");
+  return `<section class="panel"><h2>Andamento por turma</h2><div class="tw"><table><thead><tr><th>Turma</th><th>Curso</th><th>Turno</th><th class="n">CH (h)</th><th class="n">Encontros lançados / previstos</th><th class="n">Lançado</th><th class="n">Disciplinas sem docente</th></tr></thead><tbody>${tr}</tbody></table></div></section>
+  <section class="panel"><h2>Carga por docente (todas as turmas)</h2><div class="tw"><table><thead><tr><th>Docente</th><th>Turmas</th><th>Disciplinas</th><th class="n">Encontros lançados / previstos</th><th class="n">Horas-aula lançadas / previstas</th><th>Dias bloqueados</th></tr></thead><tbody>${dr}</tbody></table></div><p class="small muted">Horas-aula = encontros × aulas por dia de cada turma.</p></section>
+  <section class="panel"><h2>Ocupação por mês — turma ${esc(S.cfg.turma)}</h2><div class="tw"><table><thead><tr><th>Mês</th><th class="n">Dias úteis</th><th class="n">Feriados / sem aula</th><th class="n">Com aula</th><th class="n">Livres</th><th class="n">Ocupação</th></tr></thead><tbody>${mr||'<tr><td colspan="6" class="muted">Defina início e término na aba Turma.</td></tr>'}</tbody></table></div><p class="small muted">Dias livres são úteis sem aula lançada: úteis para reposição.</p></section>`;
+}
+
+/* ---------- ACESSO (contas e histórico) ---------- */
+async function loadAcc(){
+  const me=await PLAN.me().catch(()=>null);const A={me,users:null,hist:[]};
+  const h=await PLAN.api({op:"history"});A.hist=h.items||[];
+  if(me&&me.master){const u=await PLAN.api({op:"users"});A.users=u.users||[]}
+  UI.acc=A;if(MODE==="planner"&&UI.tab==="acesso")renderView();
+}
+function vAcesso(){
+  if(!UI.acc){UI.acc={loading:true};loadAcc()}
+  const A=UI.acc;if(A.loading)return '<section class="panel"><p class="muted">Carregando…</p></section>';
+  const when=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}};
+  const users=A.me&&A.me.master?`<section class="panel"><h2>Contas dos coordenadores</h2><p class="small muted" style="margin-top:-4px">Cada pessoa entra com o próprio usuário e senha, e o histórico mostra quem alterou o quê. A senha mestre continua valendo para você.</p>
+    <div class="tw"><table><thead><tr><th>Usuário</th><th>Nome</th><th>Tipo</th><th>Nova senha</th><th></th></tr></thead><tbody>${(A.users||[]).map(u=>`<tr><td class="mono">${esc(u.login)}</td><td>${esc(u.nome)}</td><td>${u.role==="docente"?"Docente":"Coordenador"}</td><td><input type="password" id="pw_${esc(u.login)}" placeholder="mín. 8 caracteres" autocomplete="new-password" aria-label="Nova senha de ${esc(u.nome)}" style="width:170px"> <button class="btn sm" data-act="usrpw" data-l="${esc(u.login)}">Alterar</button></td><td><button class="btn sm bad" data-act="usrdel" data-l="${esc(u.login)}">${UI.confirm==="u"+u.login?"Confirmar":"Remover"}</button></td></tr>`).join("")||'<tr><td colspan="5" class="muted">Nenhuma conta ainda.</td></tr>'}</tbody></table></div>
+    <h3 style="margin:16px 0 8px">Nova conta</h3><div class="form"><label class="f">Usuário (letras minúsculas)<input type="text" id="uLogin" autocomplete="off"></label><label class="f">Nome<input type="text" id="uNome" autocomplete="off"></label><label class="f">Senha (mín. 8)<input type="password" id="uPw" autocomplete="new-password"></label><label class="f">Tipo de conta<select id="uRole"><option value="coord">Coordenador (edita tudo)</option><option value="docente">Docente (só chamada e alunos)</option></select></label></div>
+    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="usradd">Criar conta</button></div></section>`:`<section class="panel"><h2>Contas</h2><p class="small muted">Você entrou como ${esc((A.me&&A.me.nome)||"coordenador")}. Só quem usa a senha mestre cria e remove contas.</p></section>`;
+  const hist=`<section class="panel"><div class="row" style="justify-content:space-between"><h2>Histórico de alterações</h2><button class="btn sm" data-act="histload">Atualizar</button></div><p class="small muted" style="margin-top:-4px">As últimas versões de cada turma ficam guardadas. Restaurar volta a turma (ou a lista de docentes) ao estado daquela hora; a versão atual também fica no histórico.</p>
+    <div class="tw"><table><thead><tr><th>Quando</th><th>Quem</th><th>O quê</th><th></th></tr></thead><tbody>${(A.hist||[]).map(h=>`<tr><td class="mono">${when(h.at)}</td><td>${esc(h.by||"-")}</td><td>${esc(h.label)}${h.note?` <span class="muted">(${esc(h.note)})</span>`:""}</td><td><button class="btn sm" data-act="histrestore" data-h="${h.id}">${UI.confirm==="h"+h.id?"Confirmar restauração":"Restaurar"}</button></td></tr>`).join("")||'<tr><td colspan="4" class="muted">Sem alterações registradas.</td></tr>'}</tbody></table></div></section>`;
+  return `<div class="grid2" style="grid-template-columns:1fr"><section class="panel"><a class="btn" href="/ambientes.html">Ambientes e vínculos de docentes</a></section>${users}${hist}</div>`;
+}
+window.addEventListener("plan-conflict",()=>toast("Outra pessoa salvou esta turma ao mesmo tempo. Sua última alteração não foi aplicada: a versão mais recente foi carregada."));
+
 function renderView(){
   if(UI.boot){document.getElementById("hdr").innerHTML="<h1>Planejador de Turma</h1>";document.getElementById("tabs").innerHTML="";document.getElementById("view").innerHTML='<p class="muted">Carregando…</p>';return}
   if(MODE==="aluno"){renderAluno();return}
@@ -859,7 +1069,7 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   renderHead();
   const v=document.getElementById("view");
-  v.innerHTML={painel:vPainel,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,dados:vDados}[UI.tab]();
+  v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,dados:vDados,relatorios:vRel,acesso:vAcesso,avisos:vAvisos,chamada:vChamada,alunos:vAlunos}[UI.tab]();
   afterRender();
 }
 const view=document.getElementById("view");
@@ -867,7 +1077,7 @@ document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const a=b.dataset.act;
   if(a==="mclose"){if(e.target===b)closeModal();return}
-  if(a==="tab"){UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0)}
+  if(a==="tab"){UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
   else if(a==="day")dayClick(b.dataset.iso);
   else if(a==="tool"){UI.tool=b.dataset.k;renderView()}
   else if(a==="mprev"){UI.month=shiftMonth(UI.month,-1);renderView()}
@@ -894,6 +1104,31 @@ document.addEventListener("click",e=>{
   else if(a==="turmasave")saveTurma();
   else if(a==="turmago"){CUR=b.dataset.id;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView();window.scrollTo(0,0)}
   else if(a==="turmadel"){if(UI.confirm==="turmadel"){delete T[CUR];CUR=Object.keys(T)[0];normalize();UI.confirm=null;UI.month=null;UI.tab="painel";save();toast("Turma excluída")}else UI.confirm="turmadel";renderView()}
+  else if(a==="print"){const w=window.open("","_blank");if(!w){toast("Libere os pop-ups do navegador para imprimir.");return}w.document.write(htmlCalendario());w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch(e){}},400)}
+  else if(a==="bkfull"){const o=JSON.stringify({geral:G,turmas:strippedT()},null,1);DL.save({filename:`backup-planejador-${todayISO()}.json`,data:o}).then(()=>toast("Backup salvo"),er=>{if(!er||er.code!=="declined")toast("Não foi possível salvar o arquivo.")})}
+  else if(a==="usradd"){const g=id=>document.getElementById(id).value;PLAN.api({op:"user_add",login:g("uLogin"),nome:g("uNome"),password:g("uPw"),role:g("uRole")}).then(r=>{toast(r.ok?"Conta criada":r.error||"Erro ao criar a conta");if(r.ok)loadAcc()})}
+  else if(a==="usrdel"){const lg=b.dataset.l;if(UI.confirm==="u"+lg){UI.confirm=null;PLAN.api({op:"user_del",login:lg}).then(r=>{toast(r.ok?"Conta removida":r.error||"Erro");loadAcc()})}else{UI.confirm="u"+lg;renderView()}}
+  else if(a==="usrpw"){const lg=b.dataset.l,pw=document.getElementById("pw_"+lg).value;PLAN.api({op:"user_pw",login:lg,password:pw}).then(r=>toast(r.ok?"Senha alterada":r.error||"Erro"))}
+  else if(a==="histload")loadAcc();
+  else if(a==="histrestore"){const id=b.dataset.h;if(UI.confirm==="h"+id){UI.confirm=null;PLAN.api({op:"restore",hid:+id}).then(r=>{if(r.ok){toast("Versão restaurada. Recarregando…");setTimeout(()=>location.reload(),900)}else toast(r.error||"Erro ao restaurar")})}else{UI.confirm="h"+id;renderView()}}
+  else if(a==="avsend"){if(b.dataset.kind==="manual"&&UI.confirm!=="avsend"){UI.avSubj=document.getElementById("avSubj").value;UI.avText=document.getElementById("avText").value;UI.confirm="avsend";renderView();return}avSend(b.dataset.kind)}
+  else if(a==="avbase"){PLAN.api({op:"notify_baseline",turma:CUR}).then(()=>{toast("Pronto: as próximas alterações serão avisadas.");UI.av=null;renderView()})}
+  else if(a==="bkrun"){PLAN.api({op:"backup_now"}).then(r=>{toast(r.ok?"Backup feito":r.error||"Erro ao fazer o backup");loadBk()})}
+  else if(a==="bkreload")loadBk();
+  else if(a==="bkdl"){PLAN.api({op:"backup_download",id:+b.dataset.id}).then(r=>{if(!r.ok){toast(r.error||"Erro");return}const it=(UI.bk.items||[]).find(x=>x.id===+b.dataset.id);DL.save({filename:`backup-planejador-${(it?it.at:todayISO()).slice(0,10)}.json`,data:r.data}).then(()=>toast("Arquivo salvo"),er=>{if(!er||er.code!=="declined")toast("Não foi possível salvar o arquivo.")})})}
+  else if(a==="bkres"){const id=b.dataset.id;if(UI.confirm==="bk"+id){UI.confirm=null;PLAN.api({op:"backup_restore",id:+id}).then(r=>{if(r.ok){toast("Backup restaurado. Recarregando…");setTimeout(()=>location.reload(),900)}else toast(r.error||"Erro ao restaurar")})}else{UI.confirm="bk"+id;renderView()}}
+  else if(a==="regopen")openRegModal(b.dataset.iso);
+  else if(a==="rsave")saveReg();
+  else if(a==="rall")document.querySelectorAll("[data-fa]").forEach(s=>s.value="0");
+  else if(a==="rep"){if(applyRep(b.dataset.o,b.dataset.n)){save();renderView();toast("Reposição lançada em "+br(b.dataset.n))}}
+  else if(a==="repauto")repAuto();
+  else if(a==="alunoadd"){const ls=document.getElementById("alLista").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);let n=0;
+    ls.forEach(l=>{const [nm,mat,email,tel]=l.split(";").map(x=>x.trim());if(nm&&!S.alunos.some(a=>a.nome.toLowerCase()===nm.toLowerCase())){S.alunos.push({id:newId(),nome:nm,mat:mat||"",email:email||"",tel:tel||""});n++}});
+    S.alunos.sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"));if(n){save();renderView()}toast(n?n+" aluno(s) adicionado(s)":"Nenhum aluno novo (nomes vazios ou repetidos).")}
+  else if(a==="alunodel"){const id=b.dataset.id;if(UI.confirm==="al"+id){S.alunos=S.alunos.filter(x=>x.id!==id);Object.values(S.reg).forEach(r=>{if(r.faltas)delete r.faltas[id]});UI.confirm=null;save()}else UI.confirm="al"+id;renderView()}
+  else if(a==="frcsv"){const C=calc(),fm=faltasMap(),L=[["Aluno","Matrícula",...C.rows.map(r=>r.u.sigla+" (lim. "+r.R+")"),"Total"].join(";")];
+    S.alunos.forEach(a=>{let tot=0;const c=C.rows.map(r=>{const n=(fm[a.id]||{})[r.u.sigla]||0;tot+=n;return n});L.push([a.nome,a.mat||"",...c,tot].join(";"))});
+    DL.save({filename:`frequencia-turma-${S.cfg.turma}.csv`,data:"\ufeff"+L.join("\n")}).then(()=>toast("Arquivo salvo"),er=>{if(!er||er.code!=="declined")toast("Não foi possível salvar o arquivo.")})}
   else if(a==="copyv")copyValue(b.dataset.v);
   else if(a==="dldoc"){const d=G.docentes.find(x=>slug(x.nome)===DOC_ID);if(d&&DL)DL.save({filename:`aulas-${DOC_ID}.csv`,data:"\ufeff"+csvDoc(docAgg(d))}).then(()=>toast("Arquivo salvo"),er=>{if(!er||er.code!=="declined")toast("Não foi possível salvar o arquivo.")})}
   else if(a==="copy")copyText(b.dataset.id);
@@ -904,11 +1139,18 @@ document.addEventListener("change",e=>{
   const t=e.target;
   if(t.id==="turmaSel"){CUR=t.value;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView()}
   else if(t.id==="mjump"){UI.month=t.value;renderView()}
+  else if(t.id==="rfSel"){UI.rf=t.value;renderView()}
+  else if(t.dataset.av!==undefined){const k=t.dataset.av;S.aviso[k]=t.type==="checkbox"?t.checked:t.value;if((k==="auto"||k==="lembrete")&&t.checked)PLAN.api({op:"notify_baseline",turma:CUR});save();UI.av=null;renderView()}
+  else if(t.id==="rSab"){UI.repSab=t.checked;renderView()}
+  else if(t.id==="rSit"){document.getElementById("rNao").hidden=t.value!=="nao";document.getElementById("rSim").hidden=t.value!=="sim"}
+  else if(t.dataset.al!==undefined){const a=S.alunos.find(x=>x.id===t.dataset.al);if(a){const v=t.value.trim();if(t.dataset.f==="nome"&&!v){toast("O nome não pode ficar vazio.");renderView();return}a[t.dataset.f]=v;save()}}
   else if(t.id==="cf"){UI.ucFilter=t.value;renderView()}
   else if(t.id==="aUc"){const r=calc().rows.find(r=>r.u.sigla===t.value);document.getElementById("aQty").value=Math.max(r?r.faltam:1,1)}
   else if(t.id==="mS1"||t.id==="mS2"||t.id==="mT")updModalInfo();
   else if(t.id==="fImp"&&t.files[0]){const fr=new FileReader();fr.onload=()=>{document.getElementById("tImp").value=fr.result};fr.readAsText(t.files[0])}
-  else if(t.dataset.cfg){const k=t.dataset.cfg;S.cfg[k]=k==="aulasDia"?Math.max(1,+t.value||1):t.value;if(k==="inicio")UI.month=null;save();renderView()}
+  else if(t.dataset.cfg){const k=t.dataset.cfg;S.cfg[k]=k==="aulasDia"?Math.max(1,+t.value||1):t.value;if(k==="inicio")UI.month=null;
+    if(k==="turma"){const nid=String(t.value).trim().replace(/[^\w.-]/g,"").slice(0,60);if(nid&&nid!==CUR&&!T[nid]){T[nid]=T[CUR];delete T[CUR];CUR=nid;normalize();toast("Código da turma atualizado. Os links antigos dessa turma deixam de valer.")}}
+    save();renderView()}
   else if(t.dataset.bw!==undefined){
     const d=S.docentes[+t.dataset.bw],w=+t.dataset.wd;d.semana=d.semana.filter(x=>x!==w);if(t.checked)d.semana.push(w);d.semana.sort();
     save();renderView();const n=countConf();if(n)toast(`${n} aula(s) já lançadas entram em choque. Veja os avisos no Painel.`)}
@@ -941,6 +1183,7 @@ renderView();
   try{db=window.claude&&await window.claude.use("db")}catch(e){}
   try{u=window.claude&&await window.claude.use("user")}catch(e){}
   try{UI.cw=u?u.can("data.write"):null}catch(e){}
+  try{const me=window.PLAN&&await PLAN.me();UI.role=me&&me.role}catch(e){}
   if(db&&UI.cw===false&&MODE==="planner"){MODE="landing";T={x:emptyTurma()};CUR="x";normalize()}
   try{DL=window.claude&&await window.claude.use("downloads")}catch(e){}
   UI.boot=false;

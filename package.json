@@ -3,11 +3,16 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "build": "node scripts/build.js",
     "start": "node server.js",
-    "import": "node scripts/import.js"
+    "import": "node scripts/import.js",
+    "test": "node --test tests/api.test.mjs"
   },
-  "dependencies": { "@libsql/client": "^0.14.0" }
+  "dependencies": {
+    "@libsql/client": "^0.14.0"
+  }
 }
