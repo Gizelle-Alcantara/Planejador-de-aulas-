@@ -95,5 +95,20 @@ try {
  const lastSnapshot=await(await context.request.get(base+'/api')).json(),lastClass=lastSnapshot.docs.find(d=>d.id==='turma-ui'),teacherId=lastSnapshot.docs.find(d=>d.id==='geral').data.docentes.find(d=>d.nome==='Ana').id;
  await call(context,{op:'set',id:'turma-ui',base:lastClass.rev,data:{state:{...lastClass.data.state,reg:{...lastClass.data.state.reg,[next]:{dado:'nao'}}}}});await teacher.goto(base+'/#docente-'+teacherId);await teacher.getByRole('heading',{name:'Ana',exact:true}).waitFor();await teacher.getByLabel('Filtrar por situação',{exact:true}).selectOption('cancelada');assert.equal(await teacher.locator('.cal .chip').count(),1);assert.ok((await teacher.locator('.cal .chip').innerText()).includes('×'));await teacher.getByRole('button',{name:'Limpar filtros',exact:true}).click();await teacher.getByRole('button',{name:'Exportar calendário',exact:true}).click();assert.equal(await teacher.getByLabel('Docente da exportação',{exact:true}).inputValue(),'Ana');await teacher.getByRole('button',{name:'Voltar',exact:true}).click();
  assert.equal(await page.evaluate(()=>csvCell('=1+1')),'"\'=1+1"');assert.equal(await page.evaluate(()=>csvCell('\t@SUM(A1)')),'"\'\t@SUM(A1)"');
+
+ // Responsividade: rolagem fica nas tabelas; calendário e formulários cabem na tela.
+ for(const width of [320,360,390,430,768]){
+   for(const target of [page,teacher,manager]){
+     await target.setViewportSize({width,height:844});
+     assert.equal(await target.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Sem vazamento lateral em ${width}px: ${target.url()}`);
+   }
+   assert.equal(await teacher.locator('.read-calendar').evaluate(e=>getComputedStyle(e).gridTemplateColumns.split(' ').length),7);
+ }
+ await page.setViewportSize({width:320,height:640});
+ await page.getByRole('button',{name:'Exportar calendário',exact:true}).click();
+ const mobileOptions=page.getByRole('dialog',{name:'Exportar calendário',exact:true});
+ assert.equal(await mobileOptions.evaluate(e=>e.scrollWidth>e.clientWidth),false,'Formulário de exportação sem campos cortados');
+ await mobileOptions.getByRole('button',{name:'Voltar',exact:true}).click();
+ if(process.env.UI_EVIDENCE_DIR){await teacher.setViewportSize({width:390,height:844});await teacher.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'responsivo-docente.png'),fullPage:true});await manager.setViewportSize({width:320,height:780});await manager.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'responsivo-ambientes.png'),fullPage:true});}
  assert.deepEqual(errors,[]);console.log('UI aprovada: login, cadastro, vínculo, solicitação, aprovação, revisão, reagendamento, notificações, CSV, impressão, backup, exportação Excel/PDF/HTML, botão Voltar e layout móvel.');
 }catch(e){for(const p of watched)console.error(await p.locator("body").innerText());throw e;}finally{if(browser)await browser.close();if(server.exitCode===null&&server.signalCode===null){const exit=new Promise(r=>server.once('exit',r));server.kill();await exit;}rmSync(temp,{recursive:true,force:true});}

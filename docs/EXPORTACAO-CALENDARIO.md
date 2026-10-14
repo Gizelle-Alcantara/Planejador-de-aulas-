@@ -1,5 +1,8 @@
 # Exportar calendário e voltar
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 ## Onde exportar
 Abra o planejador, escolha a turma no cabeçalho e clique em **Exportar calendário**. A mesma ação também fica na aba **Enviar**.
 

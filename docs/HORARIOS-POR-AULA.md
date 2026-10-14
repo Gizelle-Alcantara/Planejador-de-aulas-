@@ -1,5 +1,8 @@
 # Divisão das aulas por horário
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 ## Como distribuir o dia
 
 1. Entre como coordenação e abra **Calendário**.

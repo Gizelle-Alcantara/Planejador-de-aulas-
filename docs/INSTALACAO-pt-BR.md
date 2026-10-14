@@ -1,82 +1,118 @@
-# Planejador de Turmas SENAI — Instalação (Português)
+# Instalação — versão atual
 
-Funciona em **Vercel**, **Netlify** ou em qualquer servidor com **Node.js 18+**. Os dados ficam num banco **Turso** (SQLite na nuvem, plano gratuito). Só o coordenador edita (senha); alunos e docentes abrem links somente leitura, atualizados a cada ~5 segundos.
+O [Manual completo](MANUAL-COMPLETO.md) é a referência atual. Leia as seções 12 a 15 para instalação, hospedagem, variáveis e agendamento.
 
-## 0. O que você precisa
-- Conta gratuita no [Turso](https://turso.tech), no [GitHub](https://github.com) e na [Vercel](https://vercel.com) **ou** [Netlify](https://netlify.com)
-- Node.js 18 ou mais novo (só para importar os dados atuais)
+## 12. Instalação local — Windows, Linux ou macOS
 
-## 1. Criar o banco (Turso)
-Pelo painel: *Create database* → nome `planejador` → abra o banco e copie a **URL** (`libsql://planejador-seuuser.turso.io`) e gere um **token** (*Generate token*).
-Pelo terminal (alternativa):
+O `package.json` declara Node.js 18 ou superior. Os exemplos abaixo usam Node.js com `--env-file`, como Node.js 22; esse parâmetro não está disponível em todas as versões antigas aceitas pelo projeto. Os testes de navegador exigem um ambiente compatível com as dependências de desenvolvimento (guia anterior indica Node.js 20+).
+
+### Preparação
+
+Extraia o pacote e abra o terminal na pasta que contém `package.json`. Confira:
+
 ```bash
-turso auth login
-turso db create planejador
-turso db show planejador --url
-turso db tokens create planejador
+node --version
+npm --version
 ```
 
-## 2. Preparar o projeto
+Se o terminal não reconhecer Node/npm, instale o Node.js e reabra o terminal. Não use a pasta `public/` como raiz do projeto.
+
 ```bash
-cp .env.example .env      # edite e preencha as 4 variáveis
-npm install
-node --env-file=.env scripts/import.js   # importa seus lançamentos atuais (pasta dados-atuais/)
+npm ci
+npm run build
 ```
-Variáveis (`.env`):
-| Variável | Para quê |
+
+Crie o diretório `data` para SQLite local. No PowerShell:
+
+```powershell
+New-Item -ItemType Directory -Force data
+```
+
+No Linux/macOS:
+
+```bash
+mkdir -p data
+```
+
+Crie um arquivo `.env` local com as variáveis abaixo, substituindo os marcadores por valores próprios. Para banco local, não copie a URL de exemplo do Turso:
+
+```ini
+ADMIN_PASSWORD=SUA_SENHA_MESTRE_FORTE
+SESSION_SECRET=SUA_CHAVE_ALEATORIA_LONGA_E_DIFERENTE_DA_SENHA
+TURSO_DATABASE_URL=file:./data/planejador.db
+PORT=3000
+PUBLIC_URL=http://localhost:3000
+```
+
+Para gerar uma chave aleatória, execute e copie o resultado para o campo correspondente:
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
+```
+
+O servidor não carrega `.env` sozinho. Inicie com:
+
+```bash
+node --env-file=.env server.js
+```
+
+Abra `http://localhost:3000/#login`. Sem `--env-file`, defina as variáveis no ambiente do processo antes de usar `npm start`. Não publique `.env`, chaves ou backups completos em repositórios. O arquivo de exemplo contém marcadores, não credenciais utilizáveis.
+
+### Importação inicial
+
+A pasta `dados-atuais/` contém documentos JSON de origem. Confira o banco de destino e gere backup se já houver dados. A importação pode substituir documentos com o mesmo identificador:
+
+```bash
+node --env-file=.env scripts/import.js
+```
+
+Confira cada mensagem `importado`/`falhou` e valide pela interface. O importador percorre os arquivos; não oferece uma importação única de toda a pasta com rollback. Não rode esse comando a cada atualização.
+
+## 13. Hospedagem e configuração
+
+### Vercel
+
+Use o projeto completo no repositório, incluindo `api/`, `lib/`, `src/`, `scripts/`, modelos e lockfile. A configuração existente usa `node scripts/build.js`, saída `public/`, função `api/index.js`, inclusão de `lib/assets/**` e duração máxima configurada de 15 segundos.
+
+Cadastre ADMIN_PASSWORD, SESSION_SECRET, TURSO_DATABASE_URL e TURSO_AUTH_TOKEN nas variáveis do ambiente de produção. Use Turso remoto; SQLite local não fornece persistência adequada para esse fluxo de funções. Atualize o projeto inteiro e faça nova implantação. Confira também qual ambiente recebe as variáveis; Preview e Production podem ter configurações diferentes.
+
+### Netlify
+
+A configuração usa build `node scripts/build.js`, pasta `public/`, funções em `netlify/functions/` e inclusão dos modelos. A função API atende `/api`; a função agendada executa `runDaily`. Cadastre as mesmas variáveis e confira os logs após a implantação.
+
+### Servidor próprio
+
+Mantenha um processo Node ativo, acesso de escrita ao diretório do banco e HTTPS na camada de publicação. Com banco local, preserve o volume do arquivo SQLite ao atualizar o código. Configure o gerenciador de processos para carregar as variáveis; executar um comando diferente sem `.env` não as carrega automaticamente.
+
+Os limites da hospedagem devem ser conferidos no ambiente contratado. A publicação do código não valida, sozinha, banco, provedores de mensagens ou execução dos agendamentos.
+
+## 14. Variáveis de ambiente
+
+| Variável | Obrigatoriedade e finalidade |
 |---|---|
-| `ADMIN_PASSWORD` | senha do coordenador (use uma forte) |
-| `SESSION_SECRET` | obrigatório: texto aleatório longo que assina o login, diferente da senha mestre |
-| `TURSO_DATABASE_URL` | URL do passo 1 |
-| `TURSO_AUTH_TOKEN` | token do passo 1 |
+| ADMIN_PASSWORD | Obrigatória; senha mestre; mudar exige nova implantação/reinício e invalida a sessão mestre antiga |
+| SESSION_SECRET | Obrigatória; assinatura de sessões; sem valor padrão; trocar invalida assinaturas existentes |
+| TURSO_DATABASE_URL | Banco remoto na hospedagem; local omite ou usa `file:./data/planejador.db` |
+| TURSO_AUTH_TOKEN | Token do banco remoto; não necessário para arquivo local |
+| PORT | Porta local; padrão 3000 |
+| PUBLIC_URL | Endereço público usado nos links de avisos; se ausente, usa a base cadastrada |
+| CRON_SECRET | Autentica `/api?cron=1` como `Authorization: Bearer ...`; necessário para cron HTTP na Vercel |
+| RESEND_API_KEY / MAIL_FROM | Habilitam envio real de e-mail |
+| WHATSAPP_TOKEN / WHATSAPP_PHONE_ID / WHATSAPP_TEMPLATE | Habilitam envio por template na API WhatsApp |
+| WHATSAPP_LANG | Idioma do template; padrão `pt_BR` |
+| BACKUP_EMAIL | Destinatários da cópia por e-mail; aceita separação por espaço, vírgula ou ponto e vírgula |
+| BACKUP_EMAIL_SEM_ALUNOS | Qualquer valor não vazio ativa a retirada de dados de alunos do backup por e-mail; use `1` ou deixe vazio |
+| BACKUP_EMAIL_DIARIO | Qualquer valor não vazio ativa envio diário, em vez de somente domingo; use `1` ou deixe vazio |
 
-> Para começar do zero (sem os dados atuais), pule o comando `import`: o sistema inicia com a planilha original.
+Não use `0` para desativar as duas flags de backup: o código verifica se o texto está preenchido. Segredos ficam na hospedagem ou no ambiente local, não no navegador nem no código publicado.
 
-## 3A. Publicar na Vercel
-1. Suba a pasta para um repositório no GitHub (`.env` não vai: está no `.gitignore`).
-2. Na Vercel: **Add New → Project** → escolha o repositório → **Framework Preset: Other**.
-3. Em **Environment Variables**, cadastre as 4 variáveis acima.
-4. **Deploy**. O endereço será `https://seu-projeto.vercel.app`.
+## 15. Avisos automáticos e agendamento
 
-Pelo terminal: `npm i -g vercel && vercel` e depois `vercel env add ADMIN_PASSWORD` (idem para as outras) e `vercel --prod`.
+A aba **Avisos** define alterações do calendário, lembretes, canais e destinatários. Esses avisos são diferentes das notificações internas de reservas. Confira a prévia e a lista de destinatários antes de enviar uma mensagem real.
 
-## 3B. Publicar na Netlify
-1. Suba para o GitHub. Na Netlify: **Add new site → Import an existing project**.
-2. Build command `node scripts/build.js`, publish directory `public` (já vêm do `netlify.toml`).
-3. **Site configuration → Environment variables**: cadastre as 4 variáveis.
-4. **Deploy**. Endereço: `https://seu-site.netlify.app`.
+E-mail requer Resend configurado e remetente autorizado. WhatsApp requer as variáveis do número/token/template e um template aprovado compatível com o corpo enviado. Sem configuração, confira o estado retornado pelo provedor: não considere simulação como entrega real.
 
-Pelo terminal: `npm i -g netlify-cli && netlify deploy --prod` (defina as variáveis com `netlify env:set NOME valor`).
+A rotina diária está configurada para **23:00 UTC / 20:00 Bahia**. No servidor local, verifica-se o horário a cada 30 segundos e executa-se uma vez por dia enquanto o processo está ligado. Na Netlify, a função agendada chama a rotina. Na Vercel, `vercel.json` aponta `/api?cron=1`; o servidor exige CRON_SECRET. A rotina cria backup e executa avisos conforme as configurações.
 
-## 3C. Servidor próprio / VPS
-```bash
-npm install
-node --env-file=.env server.js        # http://localhost:3000
-```
-Sem `TURSO_DATABASE_URL`, usa o arquivo local `data/planejador.db`. Mantenha rodando com `pm2 start server.js` e coloque Nginx/Caddy com HTTPS na frente.
+Não há recuperação automática garantida de uma execução perdida enquanto o servidor local estava desligado. Confira o histórico de envios e os logs do agendador. Falhas de provedor precisam ser analisadas sem expor tokens ou contatos em capturas públicas.
 
-## 4. Usar
-- **Coordenador:** abra `https://seu-endereço/#login`, digite a senha. Botão "Sair" no canto inferior direito.
-- **Alunos:** aba *Compartilhar* → link/QR Code da turma.
-- **Docentes:** aba *Compartilhar* → link geral ou individual.
-- Todos os links usam automaticamente o endereço do seu site.
-
-## 5. Problemas comuns
-- **"Somente leitura" ao editar:** você não entrou. Use `/#login`.
-- **Erro 500 / "ADMIN_PASSWORD não configurada":** faltam variáveis de ambiente; cadastre e faça novo deploy.
-- **Calendário vazio para alunos:** rode o `import` ou entre como coordenador uma vez (ele grava a planilha inicial).
-- **Trocar a senha:** altere `ADMIN_PASSWORD` e faça novo deploy.
-
-## 6. Segurança e backup
-A senha é conferida no servidor; sem ela nenhuma gravação é aceita. Faça backup na aba *Dados → copiar tudo (JSON)* e/ou com `turso db shell planejador ".dump"`. A pasta `banco/` traz o esquema relacional (SQLite/SQL) opcional para relatórios.
-
-## 7. Contas, histórico e agenda (novidades)
-Veja `NOVIDADES.md`. Resumo: entre em `/#login` com a senha mestre, abra a aba **Acesso** para criar uma conta por coordenador e para restaurar versões anteriores. Na aba **Compartilhar** há links de agenda para assinar no celular.
-
-## 8. Avisos automáticos por e-mail e WhatsApp
-Veja `docs/AVISOS-pt-BR.md`: criação das contas no Resend e na Meta, variáveis de ambiente (`RESEND_API_KEY`, `MAIL_FROM`, `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE`, `CRON_SECRET`, `PUBLIC_URL`) e uso da aba **Avisos**.
-
-## 9. Backup agendado
-Veja `docs/BACKUP-pt-BR.md`: cópia diária no banco, cópia semanal por e-mail (`BACKUP_EMAIL`) e como restaurar.
-
-A versão com correções da auditoria exige ADMIN_PASSWORD e SESSION_SECRET, sem valores padrão. Contas existentes precisam entrar novamente após a atualização. Os identificadores dos docentes e as novas colunas são migrados automaticamente.

@@ -1,5 +1,8 @@
 # Reservas, aprovação e reagendamento
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 ## Professor
 1. Entre com sua conta vinculada em `/ambientes.html`.
 2. Em **Nova solicitação**, escolha uma aula atual/futura do calendário, um ambiente disponível e a finalidade.

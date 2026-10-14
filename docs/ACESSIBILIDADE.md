@@ -1,5 +1,8 @@
 # Acessibilidade e uso no celular
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 - Link “Pular para o conteúdo”, idioma português do Brasil e identificação das regiões principais.
 - Abas: Tab entra na aba selecionada; setas esquerda/direita, Home e End trocam as abas. O foco acompanha a seleção.
 - Calendário: Tab entra nos dias; setas navegam (cima/baixo movem sete dias); Home e End levam ao início/fim. Na edição, Enter ou Espaço abre o dia. Datas completas e disciplinas são anunciadas pelos leitores de tela.

@@ -1,5 +1,8 @@
 # Validação da versão — 12/10/2026
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 ## Resultado
 41 testes automatizados da API aprovados e teste de integração da interface aprovado em navegador Chromium, em computador e celular (390 × 844). Geração do site concluída.
 

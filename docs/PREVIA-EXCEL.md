@@ -1,5 +1,8 @@
 # Prévia do Excel
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 1. Abra **Exportar calendário** e escolha as opções da turma ou do docente.
 2. Clique em **Prévia do Excel da turma** ou **Prévia do Excel do docente**.
 3. Escolha a planilha, o mês e o zoom. Role a tabela para conferir todos os horários e o resumo.

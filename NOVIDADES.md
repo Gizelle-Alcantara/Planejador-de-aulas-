@@ -115,3 +115,11 @@ O código da prévia agora acompanha a página principal, evitando depender de u
 
 ## Correções da auditoria
 Permissões por docente, privacidade, invalidação de sessões, identificadores permanentes, salvamento em lote com rollback, filtros de cancelamento e ambiente aprovado, e proteção dos CSVs. ADMIN_PASSWORD e SESSION_SECRET são obrigatórios. Após atualizar, entre novamente. Consulte `docs/CORRECOES-AUDITORIA.md`.
+
+## Documentação completa
+Manual operacional em português, referência técnica da API e banco, checklist de homologação e versões HTML navegáveis para leitura e impressão. Instalação e backups revisados conforme a versão atual.
+
+## Responsividade no celular
+Estilos compartilhados carregados após os estilos principais: filtros em duas colunas (uma em telas até 360px), formulários em uma coluna, campos de 16px, botões com área de toque de pelo menos 44px, janelas limitadas à altura visível e navegação de ambientes sem sobreposição fixa no celular. Calendário preservado em sete colunas e tabelas com rolagem interna. Cache atualizado para a nova versão.
+
+Validação: teste de interface completo, acessibilidade em temas claro/escuro e verificações de largura de 320, 360, 390, 430 e 768px nas telas de coordenação, docente e ambientes. Validação automatizada em Chromium; não substitui teste em aparelho iOS físico.

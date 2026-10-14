@@ -1,5 +1,8 @@
 # Gestão de ambientes
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 Acesse **Ambientes → Abrir gestão de ambientes** no calendário, ou `/ambientes.html`.
 
 ## Contas

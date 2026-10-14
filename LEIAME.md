@@ -1,37 +1,33 @@
-# Planejador de Turmas SENAI — versão para hospedagem própria
-Guias de instalação: `docs/INSTALACAO-pt-BR.md` · `docs/INSTALL-en.md` · `docs/INSTALACION-es.md`
+# Planejador de Aulas SENAI
 
-Estrutura: `src/` (código-fonte do app + shim) · `scripts/build.js` (gera `public/`) · `api/` (Vercel) · `netlify/functions/` (Netlify) · `lib/core.js` (API compartilhada) · `server.js` (servidor local/VPS) · `dados-atuais/` (seus lançamentos, para importar) · `banco/` (versão relacional SQLite/SQL).
+A documentação atual está em **[docs/MANUAL-COMPLETO.md](docs/MANUAL-COMPLETO.md)** e **[docs/MANUAL-COMPLETO.html](docs/MANUAL-COMPLETO.html)**. Abra o HTML para ler com sumário ou imprimir. O [índice](docs/README.md) reúne os guias, a referência técnica e o checklist de homologação.
 
-Novidades: `NOVIDADES.md` · Testes: `npm test`
+## Iniciar localmente
 
-## Gestão integrada de ambientes
-A aba **Ambientes** abre o painel diário, solicitações, notificações, manutenção e relatórios. Na aba **Acesso**, a senha mestre cria contas de **Administrador de ambientes**. Professores precisam de conta de Docente vinculada ao cadastro.
-Guias: `docs/AMBIENTES-pt-BR.md`, `docs/RESERVAS-pt-BR.md`, `docs/BACKUP-pt-BR.md`.
-Validação: 36 testes da API e fluxo de interface em computador/celular. `npm run test:ui` executa a integração visual (instale o Chromium com `npx playwright install chromium`).
-As abas **Chamada** e **Alunos** foram removidas, conforme solicitado. Os dados anteriores permanecem preservados.
+Use Node.js com suporte a `--env-file`, como Node.js 22, para estes comandos. Configure `.env` com ADMIN_PASSWORD, SESSION_SECRET e o banco escolhido; crie `data/` se usar SQLite local.
 
-Os testes de navegador exigem Node.js 20+. O servidor mantém compatibilidade com Node.js 18+; instalações de produção podem usar `npm ci --omit=dev`.
+```bash
+npm ci
+npm run build
+node --env-file=.env server.js
+```
 
-## Exportação do calendário
-No cabeçalho, clique em **Exportar calendário** e escolha a **Prévia do Excel da turma** ou do docente, **PDF** ou **HTML**. Se houver lançamentos fora do período, escolha se deseja incluí-los. O botão **Voltar** permite retornar à aba ou ao calendário conforme o perfil.
-Guia: `docs/EXPORTACAO-CALENDARIO.md`.
+Acesse `http://localhost:3000/#login`. A raiz do projeto contém `package.json`; `public/` é saída de build. Na hospedagem, publique o projeto completo e use banco remoto. Não publique segredos. Para importação e restauração, leia o manual antes de executar os scripts.
 
-## Aulas por horário
+## Testes
 
-No Calendário, abra um dia com a ferramenta Editar e escolha a disciplina de cada aula. Guia completo: `docs/HORARIOS-POR-AULA.md`. Os dados antigos não são redistribuídos automaticamente.
+```bash
+npm test
+npx playwright install chromium
+npm run test:ui
+```
 
-## Prévia antes do download
-Confira a planilha, escolha o mês e ajuste o zoom. Clique em **Baixar Excel** quando terminar. Se os dados mudarem, use **Atualizar prévia**. Consulte `docs/PREVIA-EXCEL.md`.
+A versão com correções da auditoria passou em 67 testes automatizados e integração de navegador em bancos temporários. A agenda pública publicada foi consultada; fluxos autenticados e provedores reais da hospedagem do usuário não foram validados nessa consulta.
 
-## Cadastro completo do docente
-Formulário com matrícula, contatos, unidade, área, formação, Meu SENAI, vínculo e observações, com validação e preservação dos cadastros existentes. Consulte `docs/CADASTRO-DOCENTE.md`.
+As abas Chamada e Alunos foram removidas. Dados antigos permanecem preservados. A confirmação ainda é por dia; novas funcionalidades por bloco não fazem parte desta edição.
 
-## Filtros do calendário
-Filtros combinados por docente, disciplina, sala/laboratório e situação, com contador mensal e limpeza. A agenda do docente também permite turma e turno. Consulte `docs/FILTROS-CALENDARIO.md`.
+## Conteúdo do pacote
 
-## Correção da abertura da prévia
-O código da prévia agora acompanha a página principal, evitando depender de um arquivo JavaScript separado. Falhas aparecem na janela de exportação, com opção **Baixar Excel sem prévia**. A prévia mostra o andamento e limita a espera por resposta do servidor.
+`src/`: fonte da interface; `lib/`: API/regras/modelos; `scripts/`: build/importação/restauração; `public/`: saída; `api/` e `netlify/functions/`: hospedagem; `tests/`: testes; `docs/`: documentação; `banco/` e `dados-atuais/`: arquivos de origem preservados.
 
-## Correções da auditoria
-Permissões por docente, privacidade, invalidação de sessões, identificadores permanentes, salvamento em lote com rollback, filtros de cancelamento e ambiente aprovado, e proteção dos CSVs. ADMIN_PASSWORD e SESSION_SECRET são obrigatórios. Após atualizar, entre novamente. Consulte `docs/CORRECOES-AUDITORIA.md`.
+O banco JSON utilizado pela API e os arquivos relacionais de `banco/` têm estruturas diferentes. Novas colunas/identificadores da aplicação são migrados automaticamente. Após atualizar a versão de segurança, entre novamente.

@@ -1,5 +1,8 @@
 # Excel no modelo anual do docente
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 A exportação usa o arquivo `Gizelle Karine Santos Alcantara.xlsx` enviado como referência, instalado em `lib/assets/calendario-docente-modelo.xlsx`. O arquivo enviado permanece intacto.
 
 ## Como baixar

@@ -1,5 +1,8 @@
 # Avisos automáticos por e-mail e WhatsApp
 
+> Guia especializado. Resultados de testes deste documento registram etapas anteriores. Para permissões, instalação e regras atuais, consulte o [Manual completo](MANUAL-COMPLETO.md), edição de 13/10/2026.
+
+
 O sistema monta e envia dois tipos de aviso por turma:
 - **Alterações do calendário:** todo dia às 20h (horário de Salvador), se algo mudou de hoje em diante (aula nova, cancelada, trocada, não dada, reposição, feriado).
 - **Lembrete de véspera:** às 20h do dia anterior a cada aula, para alunos e para o docente daquela aula.

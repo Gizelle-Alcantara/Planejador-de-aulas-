@@ -1,0 +1,69 @@
+/* Ajustes compartilhados: preservar calendário de sete colunas e tabelas. */
+@media screen and (max-width: 820px) {
+  body {margin:0}
+  .wrap, main, #view, #content, section, .row > *, .hbar > * {min-width:0}
+  nav.tabs {max-width:100%;overscroll-behavior-x:contain;scroll-padding-inline:12px}
+  .tw, .scroll, .xlsx-scroll {overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+  .hbar select {flex:1 1 180px;max-width:100%}
+  .calendar-filters .row {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:end}
+  .calendar-filters .f {min-width:0}
+  .calendar-filters .btn {grid-column:1/-1;justify-self:start}
+  .modal {min-width:0;overscroll-behavior:contain}
+}
+@media screen and (max-width: 620px) {
+  html body {padding:0 12px calc(24px + env(safe-area-inset-bottom,0px));font-size:16px}
+  header.top {padding-top:12px;gap:12px}
+  .brand {gap:10px}
+  .brand .id {gap:8px}
+  .id h1 {font-size:1.3rem}
+  .id .meta, .card, .banner, .notification {overflow-wrap:anywhere}
+  main {padding-block:14px}
+  #view, .grid2 {gap:14px}
+  .panel {padding:12px}
+  .btn, .pal button, nav.tabs button {min-height:44px;touch-action:manipulation}
+  .btn {white-space:normal;overflow-wrap:anywhere}
+  input:not([type=checkbox]):not([type=radio]), select, textarea {font-size:16px;max-width:100%}
+  .form {grid-template-columns:minmax(0,1fr)!important}
+  .modal .row > label.f {flex:1 1 100%;min-width:0!important}
+  .hbar {gap:8px}
+  .hbar > .btn {flex:1 1 130px}
+  .tiles {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .tile {padding:12px;overflow-wrap:anywhere}
+  .month-entry > input {flex:1 1 160px;min-width:0}
+  .calbar {gap:10px}
+  .calbar > .row {width:100%;justify-content:center;gap:6px}
+  .calbar h2 {font-size:1.1rem;min-width:0;flex:1}
+  .calendar-filters {padding:10px}
+  .calendar-filters label.f {font-size:.8rem}
+  .calendar-scroll .cal {gap:3px;grid-template-columns:repeat(7,minmax(0,1fr))}
+  .calendar-scroll .day {min-height:80px;padding:3px 2px}
+  .calendar-scroll .chip {font-size:.7rem;line-height:1.45;border-left-width:2px}
+  .calendar-scroll .next-label {font-size:.65rem;overflow-wrap:anywhere}
+  .calendar-scroll .cal > .h {padding:2px 0;text-align:center;letter-spacing:0}
+  .tw, .scroll {max-width:100%;min-width:0}
+  .ov {padding:10px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px))}
+  .modal {max-height:calc(100dvh - 24px);padding:14px!important;scroll-padding-block:14px}
+  .modal > .row > .btn, .xlsx-actions > .btn {flex:1 1 125px}
+  .xlsx-modal {max-height:calc(100dvh - 24px)}
+  .xlsx-tools {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+  .xlsx-tools label {min-width:0}
+  .xlsx-scroll {max-height:45dvh}
+  body:has(#module-main) {padding:0}
+  #module-main {padding:12px}
+  #module-main section {padding:14px;margin:14px 0}
+  #module-main h1 {font-size:1.5rem;overflow-wrap:anywhere}
+  #module-main .module-nav {position:static;gap:8px;padding:10px}
+  #module-main .module-nav a {display:flex;align-items:center;min-height:44px;padding:6px 8px}
+  #module-main .actions > button {flex:1 1 150px}
+  #module-main .scroll table {min-width:640px}
+  #module-main .scroll .board-table {min-width:760px}
+}
+@media screen and (max-width: 360px) {
+  .calendar-filters .row {grid-template-columns:minmax(0,1fr)}
+  .calendar-scroll .chip {font-size:.65rem}
+  .calendar-scroll .day .dn {font-size:.72rem}
+}
+@media screen and (max-height: 500px) and (orientation: landscape) {
+  .ov {padding:6px}
+  .modal {max-height:calc(100dvh - 12px)}
+}

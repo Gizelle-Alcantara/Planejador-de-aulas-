@@ -1,79 +1,11 @@
-# SENAI Class Planner — Installation (English)
+# Installation — current edition
 
-Runs on **Vercel**, **Netlify**, or any server with **Node.js 18+**. Data lives in a **Turso** database (cloud SQLite, free tier). Only the coordinator can edit (password); students and teachers open read-only links that refresh every ~5 s.
+The complete maintained reference is the [Portuguese manual](MANUAL-COMPLETO.md), edition 2026-10-13. This quick guide supersedes the original installation instructions.
 
-## 0. Requirements
-- Free accounts at [Turso](https://turso.tech), [GitHub](https://github.com) and [Vercel](https://vercel.com) **or** [Netlify](https://netlify.com)
-- Node.js 18+ (only to import the current data)
+Use a Node.js version supporting `--env-file`, such as Node.js 22. Work in the directory containing `package.json`. Install with `npm ci`, build with `npm run build`, create `data/` for local SQLite, and configure ADMIN_PASSWORD and SESSION_SECRET in a private environment file. Both are mandatory; do not commit credentials.
 
-## 1. Create the database (Turso)
-Dashboard: *Create database* → name `planejador` → copy the **URL** (`libsql://planejador-youruser.turso.io`) and *Generate token*.
-CLI alternative:
-```bash
-turso auth login
-turso db create planejador
-turso db show planejador --url
-turso db tokens create planejador
-```
+For local use, set TURSO_DATABASE_URL to `file:./data/planejador.db` and run `node --env-file=.env server.js`. Open `http://localhost:3000/#login`. For Vercel/Netlify, publish the whole project, configure remote Turso URL/token and the two secrets, preserve the workbook models, and redeploy.
 
-## 2. Prepare the project
-```bash
-cp .env.example .env      # fill in the 4 variables
-npm install
-node --env-file=.env scripts/import.js   # imports the current data (dados-atuais/)
-```
-| Variable | Purpose |
-|---|---|
-| `ADMIN_PASSWORD` | coordinator password (use a strong one) |
-| `SESSION_SECRET` | long random string that signs the login cookie |
-| `TURSO_DATABASE_URL` | URL from step 1 |
-| `TURSO_AUTH_TOKEN` | token from step 1 |
+Importing the original JSON files can replace existing documents. A v2 backup restore can remove documents/accounts created after the snapshot. Back up and verify the destination first. Password resets and account restoration invalidate old sessions. The relational files in `banco/` are distinct from the API document store.
 
-> To start empty, skip `import`: the app starts from the original spreadsheet.
-
-## 3A. Deploy on Vercel
-1. Push the folder to a GitHub repo (`.env` is git-ignored).
-2. Vercel: **Add New → Project** → pick the repo → **Framework Preset: Other**.
-3. Add the 4 **Environment Variables**.
-4. **Deploy** → `https://your-project.vercel.app`.
-
-CLI: `npm i -g vercel && vercel`, then `vercel env add ADMIN_PASSWORD` (and the others), then `vercel --prod`.
-
-## 3B. Deploy on Netlify
-1. Push to GitHub. Netlify: **Add new site → Import an existing project**.
-2. Build command `node scripts/build.js`, publish directory `public` (preset in `netlify.toml`).
-3. **Site configuration → Environment variables**: add the 4 variables.
-4. **Deploy** → `https://your-site.netlify.app`.
-
-CLI: `npm i -g netlify-cli && netlify deploy --prod` (set variables with `netlify env:set NAME value`).
-
-## 3C. Own server / VPS
-```bash
-npm install
-node --env-file=.env server.js        # http://localhost:3000
-```
-Without `TURSO_DATABASE_URL` it uses the local file `data/planejador.db`. Keep it alive with `pm2 start server.js` and put Nginx/Caddy with HTTPS in front.
-
-## 4. Using it
-- **Coordinator:** open `https://your-address/#login` and enter the password. A "Sair" (log out) button appears bottom-right.
-- **Students:** *Compartilhar* tab → class link / QR code.
-- **Teachers:** *Compartilhar* tab → general or personal link.
-- All links automatically use your site's address.
-
-## 5. Troubleshooting
-- **"Read-only" when editing:** you are not logged in; use `/#login`.
-- **500 error / "ADMIN_PASSWORD não configurada":** environment variables are missing; add them and redeploy.
-- **Empty calendar for students:** run `import`, or log in once as coordinator (it saves the initial spreadsheet).
-- **Change the password:** edit `ADMIN_PASSWORD` and redeploy.
-
-## 6. Security and backup
-The password is checked on the server; without it no write is accepted. Back up via *Dados → copy everything (JSON)* and/or `turso db shell planejador ".dump"`. The optional `banco/` folder has a relational SQLite/SQL schema for reporting.
-
-## 7. Accounts, history and calendar feeds (new)
-See `NOVIDADES.md` (Portuguese). Summary: log in at `/#login` with the master password, open the **Acesso** tab to create one account per coordinator and to restore earlier versions. The **Compartilhar** tab has calendar feed links to subscribe to on a phone.
-
-## 8. Automatic notices (e-mail / WhatsApp)
-See `docs/AVISOS-pt-BR.md` (Portuguese). Summary: set `RESEND_API_KEY` + `MAIL_FROM` (Resend) for e-mail, and `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_ID`, `WHATSAPP_TEMPLATE` (Meta WhatsApp Cloud API, approved template with one body variable) for WhatsApp. Set `CRON_SECRET` for the Vercel daily cron (Netlify and a self-hosted server schedule it automatically). Without keys, sending is simulated.
-
-## 9. Scheduled backup
-See `docs/BACKUP-pt-BR.md` (Portuguese): daily copy inside the database, weekly e-mail copy (`BACKUP_EMAIL`), restore from the Dados tab or with `scripts/restore-backup.js`.
+See the [technical reference](REFERENCIA-TECNICA.md), [validation checklist](CHECKLIST-VALIDACAO.md) and [documentation index](README.md) for current permissions, backups, scheduling and API contracts.
