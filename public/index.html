@@ -186,7 +186,7 @@ const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)
 const slug=s=>String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"")||"turma";
 const H0=location.hash;
 let MODE=H0.startsWith("#aluno")?"aluno":H0.startsWith("#docente")?"docente":"planner";
-const ALUNO_ID=MODE==="aluno"?H0.slice(7):"",DOC_ID=MODE==="docente"?H0.slice(9):"";
+let ALUNO_ID=MODE==="aluno"?H0.slice(7):"",DOC_ID=MODE==="docente"?H0.slice(9):"";
 let G={docentes:[],base:BASE0},T={},CUR="",S=null;
 const emptyTurma=()=>{const s=seedTurma();s.ucs=[];s.days={};return s};
 const seedAll=()=>({G:{docentes:[],base:BASE0},T:{"202629":seedTurma()},CUR:"202629"});
@@ -767,9 +767,9 @@ function vShare(){
     <label class="f">Link geral (o docente escolhe o nome)<input type="text" id="shDoc" value="${esc(G.base+"#docente")}" readonly></label>
     <div class="row" style="margin-top:8px"><button class="btn pri" data-act="copyv" data-v="${esc(G.base+"#docente")}">Copiar link geral</button></div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">${S.docentes.map(d=>`<div class="row"><span style="min-width:140px;flex:1">${esc(d.nome)}</span><button class="btn sm" data-act="copyv" data-v="${esc(G.base+"#docente-"+(d.id||slug(d.nome)))}">Copiar link</button></div>`).join("")}</div></section>
-  <section class="panel"><h2>Agenda no celular (assinar)</h2><p class="small muted" style="margin-top:-4px">Aluno ou docente assina uma vez e o calendário se atualiza sozinho no Google Agenda, Outlook ou iPhone, a cada alteração sua.</p>
+  <section class="panel"><h2>Agenda no celular (importar)</h2><p class="small muted" style="margin-top:-4px">Os arquivos de agenda exigem login. Baixe o arquivo e importe no Google Agenda, Outlook ou iPhone. A importação não é atualizada automaticamente.</p>
     <label class="f">Agenda da turma ${esc(S.cfg.turma)}<input type="text" id="shIcs" value="${esc(location.origin+"/api?ics=turma-"+CUR)}" readonly></label>
-    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="copy" data-id="shIcs">Copiar link da agenda</button><a class="btn" target="_blank" rel="noopener" href="https://calendar.google.com/calendar/r?cid=${encodeURIComponent("webcal://"+location.host+"/api?ics=turma-"+CUR)}">Adicionar ao Google Agenda</a></div>
+    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="copy" data-id="shIcs">Copiar link da agenda</button><a class="btn" href="/api?ics=turma-${esc(CUR)}" download>Baixar agenda (.ics)</a></div>
     <div style="display:flex;flex-direction:column;gap:6px;margin-top:14px">${S.docentes.map(d=>`<div class="row"><span style="min-width:140px;flex:1">${esc(d.nome)}</span><button class="btn sm" data-act="copyv" data-v="${esc(location.origin+"/api?ics=docente-"+(d.id||slug(d.nome)))}">Copiar agenda</button></div>`).join("")}</div></section>
   <section class="panel"><h2>Como compartilhar</h2><ol style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px">
     ${step(1,"Copie o link da turma ou do docente","Os links ficam nesta aba. Eles abrem sempre a visão somente leitura.")}
@@ -877,8 +877,8 @@ function copyValue(v){const f=()=>toast("Não foi possível copiar. Selecione o 
 function renderLanding(){
   document.getElementById("tabs").innerHTML="";
   document.getElementById("hdr").innerHTML='<h1>Calendário acadêmico</h1><span class="meta">Escolha como você quer acompanhar as aulas.</span>';
-  document.getElementById("view").innerHTML=`<div class="grid2"><a class="card" href="#aluno"><h2>Sou aluno</h2><p class="muted" style="margin-bottom:0">Próximas aulas, limite de faltas e calendário da sua turma.</p></a>
-    <a class="card" href="#docente"><h2>Sou docente</h2><p class="muted" style="margin-bottom:0">Suas aulas em todas as turmas, em um calendário só.</p></a></div>
+  document.getElementById("view").innerHTML=`<div class="grid2"><a class="card" href="#login"><h2>Coordenação</h2><p class="muted" style="margin-bottom:0">Entre para gerenciar turmas e calendários.</p></a>
+    <a class="card" href="#login-docente"><h2>Sou docente</h2><p class="muted" style="margin-bottom:0">Entre com sua conta para consultar suas aulas e reservar ambientes.</p></a></div>
     <p class="small muted">A edição do calendário é restrita à coordenação. <a href="#login">Acesso do coordenador</a></p>`;
 }
 const spanStr=c=>{const s=spanOf(c);return hm(s[0])+" às "+hm(s[1])};
@@ -897,15 +897,17 @@ function docAgg(d){
 function renderDocente(){
   const hdr=document.getElementById("hdr"),v=document.getElementById("view");
   document.getElementById("tabs").innerHTML="";
-  const back=UI.cw===false?"":'<a class="btn sm" href="#">Voltar ao planejador</a>';
-  if(!UI.loaded||UI.empty){hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;v.innerHTML=`<p class="muted">${UI.err||(UI.empty?"O calendário ainda não foi publicado. Volte mais tarde.":"Carregando…")}</p>`;return}
+  const back=UI.cw===false||UI.role==="docente"?"":'<a class="btn sm" href="#">Voltar ao planejador</a>';
+  if(!UI.me){hdr.innerHTML='<h1>Acesso do docente</h1>';v.innerHTML='<section class="panel"><p>Entre com usuário e senha para consultar sua agenda.</p><a class="btn pri" href="#login-docente">Entrar como docente</a></section>';return}
+  if(UI.role==='docente'&&!UI.me.docenteId){hdr.innerHTML='<h1>Meu calendário</h1>';v.innerHTML='<section class="panel"><p>Sua conta ainda não está vinculada a um docente. Solicite o vínculo à coordenação.</p></section>';return}
+  if(!UI.loaded||UI.empty){hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;v.innerHTML=`<p class="muted">${UI.err||(UI.empty?"Nenhuma aula vinculada ao seu cadastro. Consulte a coordenação.":"Carregando…")}</p>`;return}
   const matches=G.docentes.filter(x=>slug(x.nome)===DOC_ID),d=G.docentes.find(x=>x.id===DOC_ID)||(matches.length===1?matches[0]:null);
   if(!d){
     hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;
     v.innerHTML=`<section class="panel"><h2>Escolha seu nome</h2><div style="display:flex;flex-direction:column;gap:8px">${G.docentes.map(x=>`<a class="btn" href="#docente-${esc((x.id||slug(x.nome)))}">${esc(x.nome)}</a>`).join("")||'<span class="muted">Nenhum docente cadastrado.</span>'}</div></section>`;return;
   }
   const A=docAgg(d),t=todayISO();
-  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}<a class="btn sm" href="#docente">Trocar docente</a>${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
+  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}${UI.role==="docente"?'<a class="btn pri" href="/ambientes.html">Reservar salas e laboratórios</a>':'<a class="btn sm" href="#docente">Trocar docente</a>'}${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
   if(!A.turmas.length){v.innerHTML='<section class="panel"><p class="muted" style="margin:0">Você ainda não está associado a nenhuma disciplina. Fale com a coordenação.</p></section>';return}
   const ini=A.turmas.map(x=>x.st.cfg.inicio).sort()[0],fim=A.turmas.map(x=>x.st.cfg.termino).sort().pop(),ml=monthList(ini,fim);
   if(!UI.month||!ml.includes(UI.month)){const tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}
@@ -1257,11 +1259,12 @@ renderView();
   try{db=window.claude&&await window.claude.use("db")}catch(e){}
   try{u=window.claude&&await window.claude.use("user")}catch(e){}
   try{UI.cw=u?u.can("data.write"):null}catch(e){}
-  try{const me=window.PLAN&&await PLAN.me();UI.role=me&&me.role}catch(e){}
+  try{const me=window.PLAN&&await PLAN.me();UI.role=me&&me.role;UI.me=me;if(me?.role==="docente"){MODE="docente";DOC_ID=me.docenteId||""}}catch(e){}
   if(db&&UI.cw===false&&MODE==="planner"){MODE="landing";T={x:emptyTurma()};CUR="x";normalize()}
   try{DL=window.claude&&await window.claude.use("downloads")}catch(e){}
   UI.boot=false;
   if(!db){UI.err="Não foi possível carregar o calendário agora.";setStatus("local");renderView();return}
+  if(!UI.me&&MODE!=="landing"){MODE="landing";T={x:emptyTurma()};CUR="x";normalize()}
   if(MODE==="landing"){renderView();return}
   if(MODE==="planner")renderView();
   dref=db.collection("planejador");

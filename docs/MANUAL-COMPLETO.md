@@ -1,3 +1,5 @@
+> Atualização: agendas agora exigem login. Docentes consultam apenas a própria agenda. Consulte [Acesso privado dos docentes](ACESSO-DOCENTE.md), inclusive para configurar contas e vínculos.
+
 # Planejador de Aulas SENAI
 
 ## Manual completo — uso, instalação e manutenção
@@ -12,7 +14,7 @@ Para começar, leia as seções 1 a 4. Para operação diária, use as seções 
 
 ## 1. Finalidade e limites
 
-O sistema organiza turmas, disciplinas, docentes e aulas por horário. A programação da coordenação alimenta a agenda pública da turma, a agenda do docente e as solicitações de salas/laboratórios. A gestão decide os pedidos e acompanha ocupação, manutenção, notificações e relatórios.
+O sistema organiza turmas, disciplinas, docentes e aulas por horário. A programação da coordenação alimenta a agenda autenticada da turma, a agenda do docente e as solicitações de salas/laboratórios. A gestão decide os pedidos e acompanha ocupação, manutenção, notificações e relatórios.
 
 As abas Chamada e Alunos foram retiradas da interface. Dados antigos dessas áreas continuam preservados no armazenamento e em backups. Não há módulo de retirada/devolução de chaves, assinatura digital, controle físico de presença ou integração automática com o KeyControl nesta versão.
 
@@ -26,7 +28,7 @@ Excel, CSV, HTML e ICS são saídas do planejamento. Alterar um arquivo exportad
 | Conta de coordenação (`coord`) | Mesmos módulos de planejamento e gestão | Calendário, cadastros, decisões de reservas, relatórios, histórico e backups de documentos | Não cria/remove contas, não redefine senhas nem vincula contas; não restaura backup que contém contas |
 | Conta docente (`docente`) | `/ambientes.html` e agenda | Solicitar ambiente para suas aulas, acompanhar pedidos, reagendar/cancelar seus pedidos ativos, exportar agenda própria | Precisa estar vinculada ao cadastro; não planeja turmas nem altera alunos ou aulas de colegas |
 | Administração de ambientes (`ambientes`) | `/ambientes.html` | Cadastrar ambientes, bloquear períodos, decidir reservas e consultar relatórios | Não edita planejamento nem acessa a exportação Excel acadêmica |
-| Visitante | `/#aluno` e `/#docente` | Consultar agendas publicadas, meses e filtros; usar ICS público | Não grava nem acessa o download Excel autenticado |
+| Visitante | Página inicial | Entrar com sua conta | Não recebe calendários nem ICS |
 
 O cadastro profissional e a conta de acesso são registros distintos. Criar um docente não cria login. A referência permanente relaciona ambos, mesmo após renomear o cadastro. A API permite ao docente registrar apenas dias cujas disciplinas pertencem integralmente ao vínculo dele; a confirmação ainda é diária. Dias com docentes diferentes exigem registro pela coordenação. Não há uma nova tela de confirmação por bloco nesta versão.
 
@@ -154,7 +156,7 @@ Se os dados mudarem, use **Atualizar prévia**. A versão conferida acompanha o 
 
 A prévia lê o XLSX gerado; não reproduz imagens nem cada detalhe da impressão nativa do Excel. A planilha baixada preserva o modelo. O modelo por turma usa encontros equivalentes no resumo (aulas do bloco divididas por aulas/dia); o anual do docente conta aulas individuais. Não compare esses totais como se fossem a mesma unidade.
 
-HTML gera uma cópia independente. PDF é obtido pela impressão do navegador. CSV de turma/docente e relatórios protege textos que poderiam virar fórmulas. ICS permite importar/assinar a agenda; é público, e a frequência de atualização depende do aplicativo que assina. Copie os links em **Compartilhar**; não construa links de docentes pelo nome.
+HTML gera uma cópia independente. PDF é obtido pela impressão do navegador. CSV de turma/docente e relatórios protege textos que poderiam virar fórmulas. ICS exige login e permite importar uma cópia da agenda; não há assinatura pública automática. Copie os links em **Compartilhar**; não construa links de docentes pelo nome.
 
 ## 12. Instalação local — Windows, Linux ou macOS
 
@@ -300,9 +302,9 @@ As senhas de contas são derivadas com scrypt e salt aleatório. A sessão assin
 
 O planejamento usa revisão por documento e transações de escrita. O lote é desfeito em erro/conflito. Os modelos Excel ficam no servidor. A prévia verifica a versão do conteúdo da pasta de trabalho, não apenas o horário do download.
 
-O service worker tenta reutilizar conteúdo disponível quando não há rede; evita guardar a resposta geral autenticada. Offline não significa gravação sincronizada nem exportação disponível. Não use um computador compartilhado para guardar backups com dados pessoais. Faça logout e controle o acesso às cópias locais.
+O service worker tenta reutilizar conteúdo disponível quando não há rede; não guarda respostas da API. Offline não significa gravação sincronizada nem exportação disponível. Não use um computador compartilhado para guardar backups com dados pessoais. Faça logout e controle o acesso às cópias locais.
 
-A equipe técnica deve testar atualizações, conferir logs, observar falhas 401/409/422/500, verificar a rotina diária e ensaiar restauração em ambiente isolado. O uso público de agendas deve estar de acordo com a política da unidade; o sistema não comprova automaticamente conformidade jurídica.
+A equipe técnica deve testar atualizações, conferir logs, observar falhas 401/409/422/500, verificar a rotina diária e ensaiar restauração em ambiente isolado. O compartilhamento de cópias exportadas deve estar de acordo com a política da unidade; o sistema não comprova automaticamente conformidade jurídica.
 
 ## 18. Testes, suporte e limitações
 
@@ -336,7 +338,7 @@ A versão auditada passou em 67 testes automatizados e fluxos de navegador com c
 
 Ao pedir suporte, informe endereço, perfil, tela/ação, mensagem exata, horário e passos para reproduzir. Nunca envie senha, token de banco, SESSION_SECRET ou backup completo em uma conversa pública.
 
-Limitações atuais: confirmação/cancelamento por dia; disponibilidade docente por dia/período; capacidade de ambiente sem contagem de participantes; agendas e ICS públicos; filtros não limitam exportações; importação inicial por arquivo; ausência de integração de chaves, MFA, recuperação de senha, confirmação física e medição de carga em produção.
+Limitações atuais: confirmação/cancelamento por dia; disponibilidade docente por dia/período; capacidade de ambiente sem contagem de participantes; agendas e ICS exigem login; filtros não limitam exportações; importação inicial por arquivo; ausência de integração de chaves, MFA, recuperação de senha, confirmação física e medição de carga em produção.
 
 Para detalhes de implementação, contratos da API e tabelas, consulte [REFERENCIA-TECNICA.md](REFERENCIA-TECNICA.md). Para validação antes de publicar, consulte [CHECKLIST-VALIDACAO.md](CHECKLIST-VALIDACAO.md).
 

@@ -1,11 +1,11 @@
 // Cache simples: a tela e as últimas agendas lidas abrem sem internet. Nunca guarda respostas de coordenador logado.
-const CACHE = "planejador-v12-mobile";
+const CACHE = "planejador-v13-docente-privado";
 self.addEventListener("install", (e) => { self.skipWaiting(); });
 self.addEventListener("activate", (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (e) => {
   const r = e.request, u = new URL(r.url);
   if (r.method !== "GET" || u.origin !== location.origin) return;
-  if (u.pathname === "/api" && u.searchParams.has("ics")) return;
+  if (u.pathname === "/api") return;
   e.respondWith((async () => {
     try {
       const res = await fetch(r);

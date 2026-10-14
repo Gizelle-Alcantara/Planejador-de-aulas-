@@ -24,8 +24,8 @@ test("login mestre grava e lê", async () => {
   const { cookie } = await login({ password: "mestre-123" });
   const r = await call({ op: "set", id: "turma-t1", data: turma, base: 0 }, cookie);
   assert.equal((await r.json()).rev, 1);
-  const j = await (await get()).json();
-  assert.equal(j.admin, false);
+  const j = await (await get("",cookie)).json();
+  assert.equal(j.admin, true);
   assert.equal(j.docs[0].rev, 1);
 });
 test("conflito de edição simultânea devolve 409 com a versão atual", async () => {
@@ -42,7 +42,7 @@ test("histórico lista versões e restaura", async () => {
   assert.ok(h.items.length >= 2);
   const first = h.items[h.items.length - 1];
   assert.equal((await (await call({ op: "restore", hid: first.id }, cookie)).json()).ok, true);
-  const j = await (await get()).json();
+  const j = await (await get("",cookie)).json();
   assert.equal(j.docs.find((d) => d.id === "turma-t1").data.x, undefined);
 });
 test("exclusão guarda cópia no histórico", async () => {
@@ -66,13 +66,13 @@ test("contas: só a mestre cria; conta própria edita mas não gerencia", async 
 });
 test("agenda .ics da turma e do docente", async () => {
   await (async () => { const { cookie } = await login({ password: "mestre-123" }); await call({ op: "set", id: "geral", data: { docentes: [{ nome: "Ana" }] }, base: 1 }, cookie); })();
-  const t = await (await get("?ics=turma-t1")).text();
+  const t = await (await get("?ics=turma-t1",(await login({password:"mestre-123"})).cookie)).text();
   assert.match(t, /DTSTART;TZID=America\/Bahia:20270301T073000/);
   assert.match(t, /DTEND;TZID=America\/Bahia:20270301T114300|DTEND;TZID=America\/Bahia:20270301T113000/);
   assert.doesNotMatch(t, /20270302/);
-  const d = await (await get("?ics=docente-ana")).text();
+  const d = await (await get("?ics=docente-ana",(await login({password:"mestre-123"})).cookie)).text();
   assert.match(d, /SUMMARY:LOG/);
-  assert.equal((await get("?ics=turma-nao-existe")).status, 404);
+  assert.equal((await get("?ics=turma-nao-existe",(await login({password:"mestre-123"})).cookie)).status, 404);
 });
 
 test("visitante não recebe alunos nem faltas; logado recebe", async () => {
@@ -82,7 +82,7 @@ test("visitante não recebe alunos nem faltas; logado recebe", async () => {
   await call({ op: "set", id: "turma-t1", base: cur.rev, data: { state: st } }, m.cookie);
   const pub = JSON.stringify(await (await get()).json());
   assert.doesNotMatch(pub, /Aluno Secreto|faltas|Docente ausente|"obs"/);
-  assert.match(pub, /"dado":"nao"/);
+  assert.deepEqual(JSON.parse(pub).docs, []);
   assert.match(JSON.stringify(await (await get("", m.cookie)).json()), /Aluno Secreto/);
 });
 test("conta de docente só registra as próprias aulas", async () => {
@@ -101,7 +101,7 @@ test("conta de docente só registra as próprias aulas", async () => {
   assert.equal((await call({ op: "set", id: "geral", base: 1, data: { docentes: [] } }, d.cookie)).status, 403);
 });
 test("agenda ignora aula não dada", async () => {
-  const t = await (await get("?ics=turma-t1")).text();
+  const t = await (await get("?ics=turma-t1",(await login({password:"mestre-123"})).cookie)).text();
   assert.match(t, /20270301T/);
 });
 
@@ -322,7 +322,7 @@ test('reservas: docente solicita, coordenação decide, cancela e registra hist�
  const list=await (await call({op:'reservation_list'},d.cookie)).json();assert.deepEqual(list.items[0].historico.map(h=>h.status),['pendente','aprovada','cancelada']);
  const r2=await (await call({...request,data:'2099-04-02'},d.cookie)).json();
  assert.equal((await call({op:'reservation_decide',id:r2.item.id,status:'recusada',motivo:'Manutenção'},m.cookie)).status,200);
- const publicDocs=await (await get()).json();assert.deepEqual(publicDocs.docs.find(x=>x.id==='reservas').data.items,[]);
+ const publicDocs=await (await get()).json();assert.deepEqual(publicDocs.docs,[]);
 });
 test('reservas: aprovação concorrente bloqueia sobreposição; revalida aula e calendário',async()=>{
  const m=await login({password:'mestre-123'}),d=await login({login:'prof',password:'senha-docente-1'});
@@ -496,7 +496,7 @@ test('cadastro completo valida e preserva dados privados na consulta pública',a
  const docentes=[{nome:'Cadastro Teste',matricula:'987',emailInstitucional:'teste@senai.test',unidade:'Alagoinhas',meuSenai:'teste.senai',vinculo:'Horista',observacoes:'Dados internos',semana:[],bloqueios:[]}];
  assert.equal((await call({op:'set',id:'geral',base,data:{docentes}},cookie)).status,200);
  const saved=(await (await get('',cookie)).json()).docs.find(d=>d.id==='geral');assert.equal(saved.data.docentes[0].matricula,'987');
- const pub=(await (await get()).json()).docs.find(d=>d.id==='geral').data.docentes[0];assert.equal(pub.nome,'Cadastro Teste');for(const key of ['matricula','emailInstitucional','observacoes','meuSenai','unidade','vinculo'])assert.equal(pub[key],undefined);
+ assert.deepEqual((await (await get()).json()).docs,[]);
  assert.equal((await call({op:'set',id:'geral',base:saved.rev,data:{docentes:[{nome:'Teste',email:'invalido'}]}},cookie)).status,400);
 });
 
@@ -509,7 +509,7 @@ test('docente não recebe dados privados de colegas nem modifica aulas alheias',
  await setDoc(m.cookie,'turma-auditoria',{state});
  const a=await login({login:'auditoria_prof',password:'senha-auditoria'});
  let snapshot=await(await get('',a.cookie)).json(),view=snapshot.docs.find(d=>d.id==='turma-auditoria');
- assert.equal(view.data.state.alunos,undefined);assert.equal(snapshot.docs.find(d=>d.id==='geral').data.docentes.find(d=>d.nome==='Auditoria Beto').observacoes,undefined);
+ assert.equal(view.data.state.alunos,undefined);assert.equal(snapshot.docs.find(d=>d.id==='geral').data.docentes.find(d=>d.nome==='Auditoria Beto'),undefined);
  assert.equal((await call({op:'set',id:view.id,base:view.rev,data:{...view.data,state:{...view.data.state,reg:{'2027-03-02':{dado:'sim'}}}}},a.cookie)).status,403);
  assert.equal((await call({op:'set',id:view.id,base:view.rev,data:{...view.data,state:{...view.data.state,reg:{'2027-03-03':{dado:'sim'}}}}},a.cookie)).status,403);
  assert.equal((await call({op:'set',id:view.id,base:view.rev,data:{...view.data,state:{...view.data.state,reg:{'2027-03-01':{dado:'sim'}}}}},a.cookie)).status,200);
@@ -517,7 +517,7 @@ test('docente não recebe dados privados de colegas nem modifica aulas alheias',
  const geral=(await(await get('',m.cookie)).json()).docs.find(d=>d.id==='geral'),id=geral.data.docentes[0].id;
  const renamed={...geral.data,docentes:geral.data.docentes.map(d=>d.id===id?{...d,nome:'Auditoria Ana Silva'}:d)};
  assert.equal((await call({op:'set',id:'geral',base:geral.rev,data:renamed},m.cookie)).status,200);
- snapshot=await(await get('',a.cookie)).json();assert.equal(snapshot.user.docente,'Auditoria Ana Silva');assert.equal(snapshot.docs.find(d=>d.id===view.id).data.state.ucs[0].docente,'Auditoria Ana Silva');assert.equal((await get('?ics=docente-'+id)).status,200);
+ snapshot=await(await get('',a.cookie)).json();assert.equal(snapshot.user.docente,'Auditoria Ana Silva');assert.equal(snapshot.docs.find(d=>d.id===view.id).data.state.ucs[0].docente,'Auditoria Ana Silva');assert.equal((await get('?ics=docente-'+id,a.cookie)).status,200);
  await call({op:'user_pw',login:'auditoria_prof',password:'senha-atualizada'},m.cookie);assert.equal((await get('',a.cookie)).status,401);assert.equal((await login({login:'auditoria_prof',password:'senha-atualizada'})).r.status,200);
 });
 test('salvamento em lote desfaz todo o lote quando um documento falha',async()=>{
@@ -531,8 +531,30 @@ test('links permanentes distinguem nomes com o mesmo slug e configuração exige
  const {cookie}=await login({password:'mestre-123'});
  await setDoc(cookie,'geral',{docentes:[{nome:'José'},{nome:'Jose'}]});
  const teachers=(await(await get('',cookie)).json()).docs.find(d=>d.id==='geral').data.docentes;assert.notEqual(teachers[0].id,teachers[1].id);
- assert.equal((await get('?ics=docente-jose')).status,404);for(const d of teachers)assert.equal((await get('?ics=docente-'+d.id)).status,200);
+ assert.equal((await get('?ics=docente-jose',cookie)).status,404);for(const d of teachers)assert.equal((await get('?ics=docente-'+d.id,cookie)).status,200);
  const {spawnSync}=await import('node:child_process');
  const script=`process.env.SESSION_SECRET='';const {handle}=await import(${JSON.stringify(new URL('../lib/core.js',import.meta.url).href)});const r=await handle(new Request('http://x/api'));console.log(r.status);console.log((await r.json()).error)`;
  const result=spawnSync(process.execPath,['--input-type=module','-e',script],{encoding:'utf8',env:{...process.env,TURSO_DATABASE_URL:'file:'+join(mkdtempSync(join(tmpdir(),'pl-config-')),'config.db')}});assert.equal(result.status,0);assert.match(result.stdout,/500/);assert.match(result.stdout,/SESSION_SECRET/);
+});
+
+
+test('acesso privado: docente vê só suas disciplinas e horários, sem atalhos de exportação',async()=>{
+ const m=await login({password:'mestre-123'});
+ await setDoc(m.cookie,'geral',{docentes:[{nome:'Privada Ana'},{nome:'Privado Beto'}]});
+ await call({op:'user_add',login:'private_ana',nome:'Ana',password:'senha-privada-123',role:'docente'},m.cookie);
+ await call({op:'user_link',login:'private_ana',docente:'Privada Ana'},m.cookie);
+ const date='2099-12-29';
+ const state={cfg:{turma:'Privada',curso:'Teste',turno:'Matutino',aulasDia:4},ucs:[{sigla:'A',nome:'Aula Ana',docente:'Privada Ana',ch:10},{sigla:'B',nome:'Segredo Beto',docente:'Privado Beto',sala:'Lab Maker',ch:10}],days:{[date]:{s:['A','B'],grade:['A','A','B','B']}},reg:{}};
+ assert.equal((await setDoc(m.cookie,'turma-privada',{state})).status,200);
+ const a=await login({login:'private_ana',password:'senha-privada-123'}),snapshot=await(await get('',a.cookie)).json(),view=snapshot.docs.find(d=>d.id==='turma-privada');
+ assert.deepEqual(view.data.state.days[date].grade,['A','A',null,null]);assert.deepEqual(view.data.state.ucs.map(u=>u.sigla),['A']);assert.doesNotMatch(JSON.stringify(snapshot),/Privado Beto|Segredo Beto/);
+ const board=await(await call({op:'daily_board',data:date},a.cookie)).json();assert.ok(board.items.some(r=>r.docente==='Ocupado'));assert.doesNotMatch(JSON.stringify(board),/Privado Beto|Segredo Beto/);
+ assert.deepEqual((await(await get()).json()).docs,[]);assert.equal((await get('?ics=docente-'+snapshot.user.docenteId)).status,401);
+ assert.equal((await get('?ics=docente-'+snapshot.user.docenteId,a.cookie)).status,200);
+ assert.equal((await get('?ics=docente-outro',a.cookie)).status,403);
+ assert.equal((await get('?ics=turma-privada',a.cookie)).status,403);
+ assert.equal((await get('?export=xlsx&turma=turma-privada',a.cookie)).status,403);
+ assert.equal((await get('?export=turma-preview&turma=turma-privada',a.cookie)).status,403);
+ await call({op:'user_link',login:'private_ana',docente:''},m.cookie);
+ assert.equal((await(await get('',a.cookie)).json()).docs.some(d=>d.id.startsWith('turma-')),false);
 });

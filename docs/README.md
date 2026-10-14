@@ -23,3 +23,5 @@ Comece pelo **[Manual completo](MANUAL-COMPLETO.md)**. Para leitura em navegador
 | [Validação da integração](VALIDACAO-INTEGRACAO.md) | Registro histórico de verificações; não representa automaticamente a versão atual |
 
 Os guias em inglês/espanhol foram resumidos e atualizados como entrada para instalação. Para requisitos atuais, permissões e comandos, use o manual em português. Os registros históricos de testes não substituem uma homologação do ambiente publicado.
+
+- [Acesso privado dos docentes](ACESSO-DOCENTE.md) — configuração de contas, vínculos e reservas.

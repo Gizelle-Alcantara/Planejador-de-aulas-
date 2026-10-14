@@ -1,3 +1,5 @@
+> Política de acesso atual: [Acesso privado dos docentes](ACESSO-DOCENTE.md). Referências históricas a consultas públicas não se aplicam; ICS exige autenticação e exportações completas de turma são restritas à coordenação.
+
 # Referência técnica
 
 **Base:** implementação entregue em 13/10/2026. O contrato abaixo documenta a API atual; não é uma promessa de estabilidade entre versões. Para procedimentos de operação, consulte [MANUAL-COMPLETO.md](MANUAL-COMPLETO.md).
@@ -225,7 +227,7 @@ Escritas passam por transação libSQL/SQLite com contexto assíncrono. Resposta
 
 A inicialização migra colunas de usuários e IDs de docentes. As novas colunas toleram criação concorrente e a primeira migração de IDs confere a revisão. Renomear sincroniza rótulos e referências de contas/turmas/reservas. Validações e permissões são server-side; ocultar botões não é uma barreira de acesso.
 
-A projeção pública remove alunos, configurações de envio, dados pessoais do cadastro docente e campos privados de confirmação. A conta docente recebe o próprio cadastro completo e projeção dos demais; não recebe listas de alunos nem observações internas dos colegas. Os ambientes aprovados publicados são uma projeção mínima de calendário, não a reserva completa.
+Consultas anônimas retornam docs vazio. Docentes recebem somente seu cadastro e turmas filtradas para suas UCs, dias e posições da grade. Exportação de turma é restrita à coordenação. ICS exige login e, para docente, o identificador do próprio vínculo. Ocupação alheia é anonimizada na grade de ambientes.
 
 ## 7. Testes e verificação de entrega
 

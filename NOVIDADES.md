@@ -123,3 +123,6 @@ Manual operacional em português, referência técnica da API e banco, checklist
 Estilos compartilhados carregados após os estilos principais: filtros em duas colunas (uma em telas até 360px), formulários em uma coluna, campos de 16px, botões com área de toque de pelo menos 44px, janelas limitadas à altura visível e navegação de ambientes sem sobreposição fixa no celular. Calendário preservado em sete colunas e tabelas com rolagem interna. Cache atualizado para a nova versão.
 
 Validação: teste de interface completo, acessibilidade em temas claro/escuro e verificações de largura de 320, 360, 390, 430 e 768px nas telas de coordenação, docente e ambientes. Validação automatizada em Chromium; não substitui teste em aparelho iOS físico.
+
+## Autenticação e agenda privada de docentes
+Entrada por usuário e senha, agenda pessoal obrigatória, botão de reservas, filtragem no servidor por docente e anonimização da ocupação de terceiros. Agendas públicas desativadas; ICS autenticado e exportação completa de turma restrita à coordenação. Consulte docs/ACESSO-DOCENTE.html.
