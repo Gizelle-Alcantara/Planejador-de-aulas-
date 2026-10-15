@@ -126,3 +126,6 @@ Validação: teste de interface completo, acessibilidade em temas claro/escuro e
 
 ## Autenticação e agenda privada de docentes
 Entrada por usuário e senha, agenda pessoal obrigatória, botão de reservas, filtragem no servidor por docente e anonimização da ocupação de terceiros. Agendas públicas desativadas; ICS autenticado e exportação completa de turma restrita à coordenação. Consulte docs/ACESSO-DOCENTE.html.
+
+## Alunos: acesso por código de turma
+Coordenação gera, substitui e desativa códigos na aba Compartilhar. Cada sessão de aluno consulta somente a turma do código, sem edição, reservas ou exportações da API. Consulte docs/ACESSO-ALUNOS.html.

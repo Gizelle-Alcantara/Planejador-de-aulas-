@@ -558,3 +558,22 @@ test('acesso privado: docente vê só suas disciplinas e horários, sem atalhos 
  await call({op:'user_link',login:'private_ana',docente:''},m.cookie);
  assert.equal((await(await get('',a.cookie)).json()).docs.some(d=>d.id.startsWith('turma-')),false);
 });
+
+
+test('código de turma: escopo exclusivo, somente leitura, renovação e revogação',async()=>{
+ const m=await login({password:'mestre-123'});
+ const state={...turma.state,cfg:{...turma.state.cfg,turma:'CODIGO',destinatarios:'segredo@teste.test'},alunos:[{nome:'Aluno protegido'}],reg:{'2027-03-01':{dado:'sim',obs:'Observação privada',faltas:{a:1}}}};
+ await setDoc(m.cookie,'turma-codigo',{state});await setDoc(m.cookie,'turma-outra',{state:{...turma.state,cfg:{...turma.state.cfg,turma:'OUTRA'}}});
+ const generate=()=>call({op:'student_code_generate',turmaId:'turma-codigo'},m.cookie);
+ assert.equal((await call({op:'student_code_generate',turmaId:'turma-codigo'})).status,401);
+ const r=await generate(),first=await r.json();assert.equal(r.status,200);assert.match(first.code,/^[A-F0-9]{4}(-[A-F0-9]{4}){4}$/);
+ assert.equal((await call({op:'student_login',code:'errado'})).status,401);
+ const enter=async code=>{const r=await call({op:'student_login',code});assert.equal(r.status,200);return r.headers.get('set-cookie').split(';')[0]};
+ const cookie=await enter(first.code.toLowerCase());const snapshot=await(await get('',cookie)).json();
+ assert.equal(snapshot.user.role,'aluno');assert.equal(snapshot.admin,false);assert.deepEqual(snapshot.docs.filter(d=>d.id.startsWith('turma-')).map(d=>d.id),['turma-codigo']);assert.doesNotMatch(JSON.stringify(snapshot),/Aluno protegido|Observação privada|segredo@|OUTRA|code_hash|session_key/);
+ for(const body of [{op:'set',id:'turma-codigo',data:{}},{op:'reservation_request'},{op:'environment_list'},{op:'daily_board'},{op:'users'},{op:'backup_now'},{op:'student_code_generate',turmaId:'turma-codigo'}])assert.equal((await call(body,cookie)).status,403,body.op);
+ for(const query of ['?ics=turma-outra','?ics=turma-codigo','?export=xlsx&turma=turma-codigo','?export=docente-preview&docente=Ana&ano=2027'])assert.equal((await get(query,cookie)).status,403);
+ const second=await(await generate()).json();assert.notEqual(first.code,second.code);assert.equal((await get('',cookie)).status,401);assert.equal((await call({op:'student_login',code:first.code})).status,401);
+ const renewed=await enter(second.code);assert.equal((await call({op:'student_code_revoke',turmaId:'turma-codigo'},m.cookie)).status,200);assert.equal((await get('',renewed)).status,401);assert.equal((await call({op:'student_login',code:second.code})).status,401);
+ const third=await(await generate()).json();await call({op:'delete',id:'turma-codigo'},m.cookie);await setDoc(m.cookie,'turma-codigo',{state});assert.equal((await call({op:'student_login',code:third.code})).status,401);
+});

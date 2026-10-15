@@ -1,3 +1,5 @@
+> Alunos agora acessam uma única turma por código: veja [Acesso dos alunos](ACESSO-ALUNOS.md). A consulta anônima continua bloqueada.
+
 # Índice da documentação
 
 Comece pelo **[Manual completo](MANUAL-COMPLETO.md)**. Para leitura em navegador e impressão, abra **[MANUAL-COMPLETO.html](MANUAL-COMPLETO.html)**. A edição atual corresponde ao pacote com correções da auditoria de 13/10/2026.

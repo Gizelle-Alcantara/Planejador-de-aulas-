@@ -1,3 +1,5 @@
+> Alunos agora acessam uma única turma por código: veja [Acesso dos alunos](ACESSO-ALUNOS.md). A consulta anônima continua bloqueada.
+
 > Atualização: agendas agora exigem login. Docentes consultam apenas a própria agenda. Consulte [Acesso privado dos docentes](ACESSO-DOCENTE.md), inclusive para configurar contas e vínculos.
 
 # Planejador de Aulas SENAI

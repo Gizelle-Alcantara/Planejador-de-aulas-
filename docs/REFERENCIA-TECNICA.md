@@ -1,3 +1,5 @@
+> Alunos agora acessam uma única turma por código: veja [Acesso dos alunos](ACESSO-ALUNOS.md). A consulta anônima continua bloqueada.
+
 > Política de acesso atual: [Acesso privado dos docentes](ACESSO-DOCENTE.md). Referências históricas a consultas públicas não se aplicam; ICS exige autenticação e exportações completas de turma são restritas à coordenação.
 
 # Referência técnica

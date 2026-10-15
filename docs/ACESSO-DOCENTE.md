@@ -23,7 +23,7 @@ Criar o cadastro profissional não cria automaticamente uma conta. Uma conta sem
 
 A restrição é aplicada no servidor. Trocar o nome ou identificador no endereço não libera calendários de colegas. Em uma turma com vários docentes, a conta recebe apenas suas disciplinas e posições de horário. Na ocupação diária, horários de terceiros aparecem como ocupados, sem nome, turma ou disciplina.
 
-Agendas anônimas e ICS públicos foram desativados para impedir acesso alternativo às informações. Links antigos exigem login. A visão de aluno não é mais pública; não foi criado um novo perfil de conta de aluno. A coordenação continua consultando calendários completos.
+Agendas anônimas e ICS públicos foram desativados para impedir acesso alternativo às informações. Links antigos exigem login. A visão do aluno exige um código de turma; consulte ACESSO-ALUNOS.md. A coordenação continua consultando calendários completos.
 
 O docente pode exportar sua agenda anual em Excel e obter seu ICS autenticado, mas não exportar o calendário completo da turma. Importações de ICS no Google Agenda/Outlook são cópias: não há assinatura pública com atualização automática nesta versão. Respostas da API não são armazenadas pelo service worker.
 

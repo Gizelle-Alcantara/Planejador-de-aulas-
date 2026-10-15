@@ -36,7 +36,7 @@
             };
             const tick = async (initial) => {
               if (stop) return; clearTimeout(timer);
-              try { const j = initial ? await first() : await load(); if(session?.user&&(!j.user||j.user.docenteId!==session.user.docenteId||j.user.role!==session.user.role)){location.reload();return}session = keep(j); emit(j); } catch (e) { if (initial && errcb) errcb(e); }
+              try { const j = initial ? await first() : await load(); if(session?.user&&(!j.user||j.user.docenteId!==session.user.docenteId||j.user.role!==session.user.role||j.user.turmaId!==session.user.turmaId)){location.reload();return}session = keep(j); emit(j); } catch (e) { if (initial && errcb) errcb(e); }
               if (!stop) timer = setTimeout(() => tick(false), document.hidden ? 20000 : 5000);
             };
             poke = () => { last = null; tick(false); };
@@ -82,23 +82,25 @@
     document.head.appendChild(st);
     first().then((s) => {
       if (s.user && s.user.role === "ambientes" && new URLSearchParams(location.search).get("visao") !== "calendario") { location.replace("/ambientes.html"); return; }
-      if (s.admin) {
+      if (s.user) {
         const b = document.createElement("button"); b.className = "lg-out"; b.textContent = "Sair (" + ((s.user && s.user.nome) || "coordenador").split(" ")[0] + ")";
         b.onclick = async () => { await api({ op: "logout" }); location.hash = ""; location.reload(); };
         document.body.appendChild(b);
-      } else if (["#login","#login-docente"].includes(location.hash)) {
+      } else if (["#login","#login-docente","#login-aluno"].includes(location.hash)) {
         const ov = document.createElement("div"); ov.className = "lg-ov";
         ov.innerHTML = '<form class="lg-box" role="dialog" aria-modal="true" aria-label="Acesso ao sistema"><h2>Acesso ao sistema</h2><input type="text" class="lg-user" placeholder="Usuário (deixe vazio para a senha mestre)" autocomplete="username" aria-label="Usuário"><input type="password" placeholder="Senha" autocomplete="current-password" aria-label="Senha"><p class="lg-err" role="alert"></p><button type="submit">Entrar</button><button type="button" class="x">Cancelar</button></form>';
+        const student=location.hash==='#login-aluno';
+        if(student){ov.querySelector('h2').textContent='Acesso do aluno';ov.querySelector('form').setAttribute('aria-label','Acesso do aluno');ov.querySelector('.lg-user').outerHTML='<label>Código da turma<input class="lg-user" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required placeholder="Código fornecido pela coordenação"></label>';ov.querySelector('input[type=password]').hidden=true;}
         document.body.appendChild(ov);ov.querySelector("input").focus();
         const f = ov.firstChild, inp = f.querySelector("input[type=password]"), err = f.querySelector(".lg-err");
-        f.addEventListener("keydown",e=>{if(e.key==="Escape"){location.hash="";return}if(e.key!=="Tab")return;const c=[...f.querySelectorAll("input,button")];if(e.shiftKey&&document.activeElement===c[0]){e.preventDefault();c.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===c.at(-1)){e.preventDefault();c[0].focus()}});
+        f.addEventListener("keydown",e=>{if(e.key==="Escape"){location.hash="";return}if(e.key!=="Tab")return;const c=[...f.querySelectorAll("input:not([hidden]),button")];if(e.shiftKey&&document.activeElement===c[0]){e.preventDefault();c.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===c.at(-1)){e.preventDefault();c[0].focus()}});
         f.querySelector(".x").onclick = () => { location.hash = ""; };
         f.onsubmit = async (e) => {
           e.preventDefault(); err.textContent = "";
           const submit=f.querySelector('[type=submit]');submit.disabled=true;
           try {
-            const r = await api({ op: "login", login: f.querySelector(".lg-user").value, password: inp.value }); const j = await r.json().catch(() => ({}));
-            if (r.ok) { history.replaceState(null, "", j.user?.role==="docente"?"/#docente":location.pathname); location.reload(); } else err.textContent = j.error || "Não foi possível entrar.";
+            const r = await api(student?{op:"student_login",code:f.querySelector(".lg-user").value}:{ op: "login", login: f.querySelector(".lg-user").value, password: inp.value }); const j = await r.json().catch(() => ({}));
+            if (r.ok) { history.replaceState(null, "", student?"/#aluno":j.user?.role==="docente"?"/#docente":location.pathname); location.reload(); } else err.textContent = j.error || "Não foi possível entrar.";
           } catch {err.textContent="Não foi possível conectar. Tente novamente."} finally {submit.disabled=false}
 
         };

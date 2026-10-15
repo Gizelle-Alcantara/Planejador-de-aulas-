@@ -749,12 +749,12 @@ function vEnviar(){
 function vShare(){
   const lk=alunoLink(),plan=G.base;
   const step=(n,tt,d)=>`<li style="display:flex;gap:10px"><span class="mono" style="color:var(--accent);font-weight:600">${n}</span><span><b>${tt}</b><br><span class="muted">${d}</span></span></li>`;
-  return `<div class="grid2">
+  return `<section class="panel"><h2>Acesso dos alunos — turma ${esc(S.cfg.turma)}</h2><p>Gere um código e compartilhe somente com os alunos desta turma. Gerar outro código encerra os acessos anteriores.</p><div class="row"><button class="btn pri" data-act="studentcode">Gerar ou substituir código</button><button class="btn bad" data-act="studentrevoke">Desativar acesso dos alunos</button></div></section><div class="grid2">
   <section class="panel"><h2>Visão do aluno</h2>
     <label class="f">Link da turma ${esc(S.cfg.turma)} (abre a visão somente leitura)<input type="text" id="shLink" value="${esc(lk)}" readonly></label>
     <div class="row" style="margin-top:8px"><button class="btn pri" data-act="copy" data-id="shLink">Copiar link</button><a class="btn" href="#aluno-${esc(CUR)}">Abrir como aluno</a></div>
     <label class="f" style="margin-top:12px">Link do artefato (base de todos os links)<input type="text" id="shBase" data-gbase="1" value="${esc(G.base)}"></label>
-    <div style="margin-top:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div id="qr" style="background:#fff;padding:8px;border-radius:6px;width:184px;height:184px"></div><p class="small muted" style="flex:1;min-width:180px;margin:0">Projete o QR code na sala para os alunos abrirem o calendário da turma no celular. Cada turma tem o seu link.</p></div></section>
+    <div style="margin-top:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div id="qr" style="background:#fff;padding:8px;border-radius:6px;width:184px;height:184px"></div><p class="small muted" style="flex:1;min-width:180px;margin:0">Projete o QR code e forneça o código de acesso. Cada código libera somente o calendário da turma correspondente.</p></div></section>
   <section class="panel"><h2>Link do planejador</h2>
     <label class="f">Para docentes e coordenação que editam<input type="text" id="shPlan" value="${esc(plan)}" readonly></label>
     <div class="row" style="margin-top:8px"><button class="btn" data-act="copy" data-id="shPlan">Copiar link</button></div>
@@ -873,7 +873,7 @@ function copyValue(v){const f=()=>toast("Não foi possível copiar. Selecione o 
 function renderLanding(){
   document.getElementById("tabs").innerHTML="";
   document.getElementById("hdr").innerHTML='<h1>Calendário acadêmico</h1><span class="meta">Escolha como você quer acompanhar as aulas.</span>';
-  document.getElementById("view").innerHTML=`<div class="grid2"><a class="card" href="#login"><h2>Coordenação</h2><p class="muted" style="margin-bottom:0">Entre para gerenciar turmas e calendários.</p></a>
+  document.getElementById("view").innerHTML=`<div class="grid2"><a class="card" href="#login-aluno"><h2>Sou aluno</h2><p class="muted">Acesse o calendário da sua turma com o código fornecido pela coordenação.</p></a><a class="card" href="#login"><h2>Coordenação</h2><p class="muted" style="margin-bottom:0">Entre para gerenciar turmas e calendários.</p></a>
     <a class="card" href="#login-docente"><h2>Sou docente</h2><p class="muted" style="margin-bottom:0">Entre com sua conta para consultar suas aulas e reservar ambientes.</p></a></div>
     <p class="small muted">A edição do calendário é restrita à coordenação.</p>`;
 }
@@ -1247,6 +1247,16 @@ document.addEventListener("change",e=>{
 });
 document.addEventListener("input",e=>{if(e.target.id==="holName")UI.holName=e.target.value;if(e.target.id==="envMsg")UI.env.msg=e.target.value});
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal()});
+document.addEventListener('click',async e=>{
+ const button=e.target.closest('[data-act="studentcode"],[data-act="studentrevoke"]');if(!button)return;
+ const id='turma-'+CUR,revoke=button.dataset.act==='studentrevoke';
+ if(!confirm(revoke?'Desativar o código e encerrar o acesso dos alunos desta turma?':'Gerar um novo código? O código anterior e suas sessões deixarão de funcionar.'))return;
+ button.disabled=true;
+ try{const r=await PLAN.api({op:revoke?'student_code_revoke':'student_code_generate',turmaId:id});if(!r.ok)throw new Error(r.error||'Não foi possível atualizar o acesso.');
+ if(revoke){toast('Acesso dos alunos desativado.');return}
+ document.getElementById('modalRoot').innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Código de acesso da turma"><h2>Código de acesso da turma</h2><p>Copie agora: o código não será exibido novamente. Compartilhe com os alunos junto ao endereço do site.</p><label class="f">Código da turma<input id="student-code" type="text" readonly value="${esc(r.code)}"></label><button class="btn pri" data-act="copy" data-id="student-code">Copiar código</button><button class="btn" data-act="mclose2">Fechar</button></div></div>`;
+ }catch(error){toast(error.message)}finally{button.disabled=false}
+});
 window.addEventListener("beforeunload",e=>{if(MODE==="planner"&&(dirty||UI.status==="error")){e.preventDefault();e.returnValue=""}});
 window.addEventListener("hashchange",()=>location.reload());
 renderView();
@@ -1255,7 +1265,7 @@ renderView();
   try{db=window.claude&&await window.claude.use("db")}catch(e){}
   try{u=window.claude&&await window.claude.use("user")}catch(e){}
   try{UI.cw=u?u.can("data.write"):null}catch(e){}
-  try{const me=window.PLAN&&await PLAN.me();UI.role=me&&me.role;UI.me=me;if(me?.role==="docente"){MODE="docente";DOC_ID=me.docenteId||""}}catch(e){}
+  try{const me=window.PLAN&&await PLAN.me();UI.role=me&&me.role;UI.me=me;if(me?.role==="aluno"){MODE="aluno";ALUNO_ID=me.turmaId.slice(6)}if(me?.role==="docente"){MODE="docente";DOC_ID=me.docenteId||""}}catch(e){}
   if(db&&UI.cw===false&&MODE==="planner"){MODE="landing";T={x:emptyTurma()};CUR="x";normalize()}
   try{DL=window.claude&&await window.claude.use("downloads")}catch(e){}
   UI.boot=false;
