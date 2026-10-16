@@ -370,6 +370,11 @@ function renderHead(){
 }
 
 /* ---------- PAINEL ---------- */
+function vConflicts(){
+ const labels={docente:'Docente em duas turmas',ambiente:'Sala ou laboratório',indisponibilidade:'Docente indisponível',grade:'Distribuição de aulas'};
+ const all=SENAI_SCHEDULE.scheduleConflictDetails(uiDocs(),'turma-'+CUR,S),kind=UI.conflictKind||'',items=all.filter(c=>!kind||c.tipo===kind);
+ return `<section class="panel conflict-center" aria-labelledby="conflict-title"><div class="access-heading"><div><h2 id="conflict-title">Central de conflitos</h2><p class="small muted">Turma ${esc(S.cfg.turma)} · comparação com as demais turmas cadastradas, pelos horários e ambientes definidos nas disciplinas.</p></div><label class="f">Tipo de conflito<select id="conflict-kind" aria-label="Tipo de conflito"><option value="">Todos os tipos</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${key===kind?'selected':''}>${label}</option>`).join('')}</select></label></div><p class="small muted" role="status">${items.length} de ${all.length} ocorrência(s).${!all.length?' Nenhum conflito de horário identificado.':!items.length?' Nenhum conflito deste tipo.':''}</p><div class="conflict-list">${items.map(c=>`<article class="conflict-item"><div class="conflict-heading"><span class="pill conflict-badge">${labels[c.tipo]}</span><span class="mono small">${br(c.data)} · ${hm(c.inicio)} às ${hm(c.fim)}</span></div><h3>${esc(c.message)}</h3><ul class="conflict-lessons">${c.lessons.map(l=>`<li><div><strong>Turma ${esc(l.turma)} · ${esc(l.sigla)}</strong><span>${esc(l.disciplina)} · ${hm(l.inicio)} às ${hm(l.fim)}</span><span class="muted">${esc(l.docente||'Docente não definido')} · ${esc(l.sala||'Ambiente não definido')}</span></div><button class="btn sm" data-act="conflictreview" data-turma="${esc(l.turmaId.slice(6))}" data-iso="${esc(c.data)}" aria-label="Revisar lançamento da turma ${esc(l.turma)}, ${esc(l.sigla)}, ${br(c.data)}">Revisar lançamento</button></li>`).join('')}</ul></article>`).join('')}</div></section>`;
+}
 function vPainel(){
   const C=calc(),av=avisos(C),c=S.cfg;
   const pend=C.rows.reduce((a,r)=>a+Math.max(r.faltam,0),0);
@@ -390,6 +395,7 @@ function vPainel(){
   ];
   return `
   <section class="panel priorities" aria-labelledby="priorities-title"><div class="access-heading"><div><h2 id="priorities-title">Prioridades da coordenação</h2><p class="small muted">Planejamento da turma ${esc(c.turma)} · reservas de todas as turmas</p></div><a class="btn" href="/ambientes.html#reservations">Gerenciar reservas</a></div><div class="priority-grid">${tarefas.map(([n,title,help,tab,label])=>`<article class="priority-item"><strong class="priority-count ${n?'pending':''}">${n}</strong><h3>${title}</h3><p class="small muted">${help}</p><button class="btn sm" data-act="tab" data-k="${tab}">${label}</button></article>`).join('')}<article class="priority-item"><strong class="priority-count ${reservas.length?'pending':''}">${reservas.length}</strong><h3>Reservas para analisar</h3><p class="small muted">Solicitações pendentes ou que precisam de revisão.</p><a class="btn sm" href="/ambientes.html#reservations">Analisar reservas</a></article></div>${!pend&&!semDoc&&!erros&&!reservas.length?'<p class="priority-clear">Nenhuma pendência nestes indicadores.</p>':''}</section>
+  ${vConflicts()}
   <div class="banner ${pend===0&&!av.some(a=>a[0]==="err")?"ok":"warn"}">${pend===0?(av.some(a=>a[0]==="err")?"Calendário com erros: veja os avisos":"Calendário OK"):`Aviso: aulas pendentes de lançamento (${pend} aula${pend>1?"s":""})`}</div>
   <div class="tiles">
     <div class="tile"><b class="mono">${totA}/${totP}</b><span>aulas lançadas / previstas</span></div>
@@ -1165,6 +1171,11 @@ document.addEventListener("click",e=>{
   if(a==="mclose"){if(e.target===b)closeModal();return}
   if(a==="tab"){if(UI.tab!==b.dataset.k)UI.backTabs.push(UI.tab);UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
   else if(a==="day")dayClick(b.dataset.iso);
+  else if(a==="conflictreview"){
+    const id=b.dataset.turma,iso=b.dataset.iso;if(!T[id]?.days?.[iso]){toast('Este lançamento não está mais disponível. Atualize o painel.');return}
+    CUR=id;normalize();UI.backTabs.push('painel');UI.tab='calendario';UI.month=iso.slice(0,7);UI.tool='edit';UI.fUc='';UI.ucFilter='';Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');renderView();
+    document.querySelector(`[data-act="day"][data-iso="${iso}"]`)?.focus();openDayModal(iso);
+  }
   else if(a==="tool"){UI.tool=b.dataset.k;renderView()}
   else if(a==="mprev"){UI.month=shiftMonth(UI.month,-1);renderView()}
   else if(a==="mnext"){UI.month=shiftMonth(UI.month,1);renderView()}
@@ -1232,6 +1243,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("change",e=>{
   const t=e.target;
+  if(t.id==='conflict-kind'){UI.conflictKind=t.value;renderView();queueMicrotask(()=>document.getElementById('conflict-kind')?.focus());return}
   if(t.id==="turmaSel"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");CUR=t.value;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView()}
   else if(t.dataset.calfilter){const key=t.dataset.calfilter;UI.calFilters[key]=t.value;renderView();queueMicrotask(()=>document.querySelector(`[data-calfilter="${key}"]`)?.focus())}
   else if(t.id==="mjump"){UI.month=t.value;renderView()}

@@ -2,6 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agenda SENAI | Gestão acadêmica</title>
 <script src="/schedule.js"></script>
+<script src="/turma-copy.js"></script>
 <script src="/excel-preview.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -366,6 +367,11 @@ function renderHead(){
 }
 
 /* ---------- PAINEL ---------- */
+function vConflicts(){
+ const labels={docente:'Docente em duas turmas',ambiente:'Sala ou laboratório',indisponibilidade:'Docente indisponível',grade:'Distribuição de aulas'};
+ const all=SENAI_SCHEDULE.scheduleConflictDetails(uiDocs(),'turma-'+CUR,S),kind=UI.conflictKind||'',items=all.filter(c=>!kind||c.tipo===kind);
+ return `<section class="panel conflict-center" aria-labelledby="conflict-title"><div class="access-heading"><div><h2 id="conflict-title">Central de conflitos</h2><p class="small muted">Turma ${esc(S.cfg.turma)} · comparação com as demais turmas cadastradas, pelos horários e ambientes definidos nas disciplinas.</p></div><label class="f">Tipo de conflito<select id="conflict-kind" aria-label="Tipo de conflito"><option value="">Todos os tipos</option>${Object.entries(labels).map(([key,label])=>`<option value="${key}" ${key===kind?'selected':''}>${label}</option>`).join('')}</select></label></div><p class="small muted" role="status">${items.length} de ${all.length} ocorrência(s).${!all.length?' Nenhum conflito de horário identificado.':!items.length?' Nenhum conflito deste tipo.':''}</p><div class="conflict-list">${items.map(c=>`<article class="conflict-item"><div class="conflict-heading"><span class="pill conflict-badge">${labels[c.tipo]}</span><span class="mono small">${br(c.data)} · ${hm(c.inicio)} às ${hm(c.fim)}</span></div><h3>${esc(c.message)}</h3><ul class="conflict-lessons">${c.lessons.map(l=>`<li><div><strong>Turma ${esc(l.turma)} · ${esc(l.sigla)}</strong><span>${esc(l.disciplina)} · ${hm(l.inicio)} às ${hm(l.fim)}</span><span class="muted">${esc(l.docente||'Docente não definido')} · ${esc(l.sala||'Ambiente não definido')}</span></div><button class="btn sm" data-act="conflictreview" data-turma="${esc(l.turmaId.slice(6))}" data-iso="${esc(c.data)}" aria-label="Revisar lançamento da turma ${esc(l.turma)}, ${esc(l.sigla)}, ${br(c.data)}">Revisar lançamento</button></li>`).join('')}</ul></article>`).join('')}</div></section>`;
+}
 function vPainel(){
   const C=calc(),av=avisos(C),c=S.cfg;
   const pend=C.rows.reduce((a,r)=>a+Math.max(r.faltam,0),0);
@@ -386,6 +392,7 @@ function vPainel(){
   ];
   return `
   <section class="panel priorities" aria-labelledby="priorities-title"><div class="access-heading"><div><h2 id="priorities-title">Prioridades da coordenação</h2><p class="small muted">Planejamento da turma ${esc(c.turma)} · reservas de todas as turmas</p></div><a class="btn" href="/ambientes.html#reservations">Gerenciar reservas</a></div><div class="priority-grid">${tarefas.map(([n,title,help,tab,label])=>`<article class="priority-item"><strong class="priority-count ${n?'pending':''}">${n}</strong><h3>${title}</h3><p class="small muted">${help}</p><button class="btn sm" data-act="tab" data-k="${tab}">${label}</button></article>`).join('')}<article class="priority-item"><strong class="priority-count ${reservas.length?'pending':''}">${reservas.length}</strong><h3>Reservas para analisar</h3><p class="small muted">Solicitações pendentes ou que precisam de revisão.</p><a class="btn sm" href="/ambientes.html#reservations">Analisar reservas</a></article></div>${!pend&&!semDoc&&!erros&&!reservas.length?'<p class="priority-clear">Nenhuma pendência nestes indicadores.</p>':''}</section>
+  ${vConflicts()}
   <div class="banner ${pend===0&&!av.some(a=>a[0]==="err")?"ok":"warn"}">${pend===0?(av.some(a=>a[0]==="err")?"Calendário com erros: veja os avisos":"Calendário OK"):`Aviso: aulas pendentes de lançamento (${pend} aula${pend>1?"s":""})`}</div>
   <div class="tiles">
     <div class="tile"><b class="mono">${totA}/${totP}</b><span>aulas lançadas / previstas</span></div>
@@ -541,6 +548,31 @@ function saveTurma(){
   save();closeModal();renderView();toast(`Turma ${cod} criada`);
 }
 const closeModal=()=>document.getElementById("modalRoot").innerHTML="";
+function openDuplicateModal(id=CUR){
+ const source=T[id];if(!source)return;
+ document.getElementById('modalRoot').innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Duplicar turma" style="width:min(100%,640px)"><h2>Duplicar turma ${esc(source.cfg.turma)}</h2><p class="small muted">Crie uma turma independente a partir desta estrutura. As aulas do novo período serão planejadas em um calendário vazio; alunos, registros, reservas e códigos de acesso não são copiados.</p><form id="duplicate-form" data-source="${esc(id)}"><div class="form"><label class="f">Novo código da turma<input name="turma" type="text" maxlength="60" required autocomplete="off"></label><label class="f">Curso<input name="curso" type="text" value="${esc(source.cfg.curso)}" required></label><label class="f">Novo início<input name="inicio" type="date" required></label><label class="f">Novo término<input name="termino" type="date" required></label></div><fieldset class="duplicate-options"><legend>O que deseja reaproveitar?</legend>${[
+ ['configuracoes','Configurações de ensino','Turno, aulas por dia, módulo e coordenação.',true],
+ ['disciplinas','Disciplinas e cargas horárias',`${source.ucs.length} disciplina(s) cadastrada(s).`,true],
+ ['docentes','Docentes das disciplinas','Mantém os vínculos das disciplinas com os docentes cadastrados.',true],
+ ['ambientes','Ambientes','Local da turma e salas ou laboratórios das disciplinas.',true],
+ ['feriados','Feriados e dias sem aula','Somente nas mesmas datas que estiverem dentro do novo período. As datas não são deslocadas.',false]
+ ].map(([name,label,help,checked])=>`<label><input type="checkbox" name="${name}" aria-label="${label}" ${checked?'checked':''}><span><strong>${label}</strong><small>${esc(help)}</small></span></label>`).join('')}</fieldset><p class="small muted" id="duplicate-preview" role="status"></p><p class="form-feedback error" id="duplicate-error" role="alert"></p><div class="row"><button class="btn pri" type="submit">Criar cópia da turma</button><button class="btn" type="button" data-act="mclose2">Cancelar</button></div></form></div></div>`;
+ updateDuplicatePreview();
+}
+function updateDuplicatePreview(){
+ const form=document.getElementById('duplicate-form');if(!form)return;const source=T[form.dataset.source];if(!source)return;
+ const e=form.elements;e.docentes.disabled=!e.disciplinas.checked;e.termino.min=e.inicio.value;
+ const holidays=e.feriados.checked?Object.entries(source.days||{}).filter(([iso,d])=>['feriado','sem'].includes(d.t)&&iso>=e.inicio.value&&iso<=e.termino.value).length:0;
+ document.getElementById('duplicate-preview').textContent=`A cópia terá ${e.disciplinas.checked?source.ucs.length:0} disciplina(s), ${holidays} feriado(s) ou dia(s) sem aula e nenhum lançamento de aula.`;
+}
+document.addEventListener('submit',e=>{
+ if(e.target.id!=='duplicate-form')return;e.preventDefault();const form=e.target,fields=form.elements,error=document.getElementById('duplicate-error');error.textContent='';
+ try{const values=Object.fromEntries(new FormData(form)),id=slug(values.turma.trim());if(T[id]||Object.values(T).some(st=>slug(st.cfg.turma)===id))throw new Error('Já existe uma turma com esse código. Escolha outro código.');
+  const options=Object.fromEntries(['configuracoes','disciplinas','docentes','ambientes','feriados'].map(key=>[key,fields[key].checked]));
+  const copied=SENAI_TURMAS.duplicateTurma(T[form.dataset.source],values,options);T[id]=copied;CUR=id;normalize();UI.month=null;UI.ucFilter='';UI.fUc='';UI.tab='turma';UI.confirm=null;Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');save();closeModal();renderView();toast(`Turma ${copied.cfg.turma} duplicada. Aguarde a confirmação de gravação.`);
+ }catch(err){error.textContent=err.message||'Não foi possível duplicar a turma.'}
+});
+document.addEventListener('input',e=>{if(e.target.closest('#duplicate-form'))updateDuplicatePreview()});
 function autoAlloc(){
   const sg=document.getElementById("aUc").value,from=document.getElementById("aFrom").value;
   let qty=Math.floor(+document.getElementById("aQty").value);
@@ -1161,6 +1193,11 @@ document.addEventListener("click",e=>{
   if(a==="mclose"){if(e.target===b)closeModal();return}
   if(a==="tab"){if(UI.tab!==b.dataset.k)UI.backTabs.push(UI.tab);UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
   else if(a==="day")dayClick(b.dataset.iso);
+  else if(a==="conflictreview"){
+    const id=b.dataset.turma,iso=b.dataset.iso;if(!T[id]?.days?.[iso]){toast('Este lançamento não está mais disponível. Atualize o painel.');return}
+    CUR=id;normalize();UI.backTabs.push('painel');UI.tab='calendario';UI.month=iso.slice(0,7);UI.tool='edit';UI.fUc='';UI.ucFilter='';Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');renderView();
+    document.querySelector(`[data-act="day"][data-iso="${iso}"]`)?.focus();openDayModal(iso);
+  }
   else if(a==="tool"){UI.tool=b.dataset.k;renderView()}
   else if(a==="mprev"){UI.month=shiftMonth(UI.month,-1);renderView()}
   else if(a==="mnext"){UI.month=shiftMonth(UI.month,1);renderView()}
@@ -1228,6 +1265,7 @@ document.addEventListener("click",e=>{
 });
 document.addEventListener("change",e=>{
   const t=e.target;
+  if(t.id==='conflict-kind'){UI.conflictKind=t.value;renderView();queueMicrotask(()=>document.getElementById('conflict-kind')?.focus());return}
   if(t.id==="turmaSel"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");CUR=t.value;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView()}
   else if(t.dataset.calfilter){const key=t.dataset.calfilter;UI.calFilters[key]=t.value;renderView();queueMicrotask(()=>document.querySelector(`[data-calfilter="${key}"]`)?.focus())}
   else if(t.id==="mjump"){UI.month=t.value;renderView()}

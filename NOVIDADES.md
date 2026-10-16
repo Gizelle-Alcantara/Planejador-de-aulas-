@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Central de conflitos
+- **Ocorrências no painel.** A turma aberta é comparada com as demais por data e horário. A central identifica docente em duas turmas, ambientes definidos nas disciplinas ou no local da turma, indisponibilidade de docentes e distribuição antiga com disciplinas simultâneas.
+- **Detalhes e filtros.** Cada ocorrência mostra o intervalo em conflito e as turmas, disciplinas, docentes e ambientes envolvidos. O filtro separa os tipos de ocorrência.
+- **Revisão direta.** Revisar lançamento abre o calendário da turma escolhida no mês e dia corretos, com o editor do dia. A navegação não altera os dados; as ocorrências são recalculadas após a edição.
+- **Horários efetivos.** A comparação respeita blocos de aulas, intervalos e cancelamentos. Horários consecutivos sem sobreposição não geram conflito.
+
 ## Menus e formulários
 - **Áreas identificadas.** As abas agora ficam agrupadas em Acadêmico, Ambientes e Administração. A navegação por setas e as restrições por perfil foram preservadas.
 - **Validação junto ao campo.** Campos obrigatórios recebem um asterisco. Erros de preenchimento são associados ao campo para leitores de tela e desaparecem ao corrigir o valor.

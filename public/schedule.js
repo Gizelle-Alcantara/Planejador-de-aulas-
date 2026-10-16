@@ -24,4 +24,25 @@ function scheduleConflicts(docs,id,state,iso){
   for(const [otherId,doc] of Object.entries(docs)){if(otherId===id||!otherId.startsWith('turma-')||!doc.state)continue;for(const other of blocksForDay(doc.state,iso)){if(block.inicio>=other.fim||other.inicio>=block.fim)continue;const u=doc.state.ucs?.find(u=>u.sigla===other.sigla);if(!u)continue;if(uc.docente&&uc.docente===u.docente)messages.add(`${uc.docente} já leciona na turma ${doc.state.cfg.turma} neste horário.`);const room=uc.sala||state.cfg.local;if(room&&norm(room)===norm(u.sala||doc.state.cfg.local))messages.add(`O ambiente ${room} já está ocupado pela turma ${doc.state.cfg.turma} neste horário.`)}}
  }return [...messages];
 }
-;return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts}})();
+
+// Ocorrências estruturadas para revisão, sem alterar os dados ou as regras de gravação.
+function scheduleConflictDetails(docs,id,state,date){
+ const result=[],seen=new Set(),norm=s=>String(s||'').trim().toLowerCase();
+ const lesson=(key,st,iso,block)=>{const uc=st.ucs?.find(u=>u.sigla===block.sigla)||{};return {turmaId:key,turma:st.cfg?.turma||key,curso:st.cfg?.curso||'',data:iso,sigla:block.sigla,disciplina:uc.nome||block.sigla,docente:uc.docente||'',sala:uc.sala||st.cfg?.local||'',inicio:block.inicio,fim:block.fim,bloco:block.bloco}};
+ const add=(tipo,recurso,message,lessons)=>{const key=JSON.stringify([tipo,norm(recurso),lessons.map(l=>[l.turmaId,l.data,l.sigla,l.bloco].join('/')).sort()]);if(seen.has(key))return;seen.add(key);result.push({tipo,recurso,message,data:lessons[0].data,inicio:Math.max(...lessons.map(l=>l.inicio)),fim:Math.min(...lessons.map(l=>l.fim)),lessons})};
+ for(const iso of (date?[date]:Object.keys(state.days||{}).sort())){
+  const own=blocksForDay(state,iso).map(b=>lesson(id,state,iso,b));
+  const others=Object.entries(docs).filter(([key,doc])=>key!==id&&key.startsWith('turma-')&&doc.state).flatMap(([key,doc])=>blocksForDay(doc.state,iso).map(b=>lesson(key,doc.state,iso,b)));
+  for(let i=0;i<own.length;i++){
+   const a=own[i],teacher=docs.geral?.docentes?.find(d=>d.nome===a.docente),wd=new Date(iso+'T12:00:00Z').getUTCDay();
+   if(teacher&&((teacher.semana||[]).includes(wd)||(teacher.bloqueios||[]).some(b=>b.de&&iso>=b.de&&iso<=(b.ate||b.de))))add('indisponibilidade',a.docente,`${a.docente} está indisponível nesta data.`,[a]);
+   for(const b of own.slice(i+1))if(a.inicio<b.fim&&b.inicio<a.fim)add('grade','Grade de aulas','Mais de uma disciplina ocupa os mesmos horários nesta turma. Distribua as disciplinas por aula.',[a,b]);
+   for(const b of others){if(a.inicio>=b.fim||b.inicio>=a.fim)continue;
+    if(a.docente&&a.docente===b.docente)add('docente',a.docente,`${a.docente} está em duas turmas no mesmo horário.`,[a,b]);
+    if(norm(a.sala)&&norm(a.sala)===norm(b.sala))add('ambiente',a.sala,`O ambiente ${a.sala} está em duas turmas no mesmo horário.`,[a,b]);
+   }
+  }
+ }
+ return result.sort((a,b)=>a.data.localeCompare(b.data)||a.inicio-b.inicio||a.tipo.localeCompare(b.tipo));
+}
+;return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails}})();

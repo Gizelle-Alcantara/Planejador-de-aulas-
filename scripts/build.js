@@ -28,4 +28,6 @@ for (const f of readdirSync(new URL("../src/static/", import.meta.url))) copyFil
 console.log("public/index.html gerado (" + Math.round(t.length / 1024) + " KB)");
 
 const schedule=readFileSync(new URL("../lib/schedule.js",import.meta.url),"utf8").replace(/export /g,"");
-writeFileSync(new URL("../public/schedule.js",import.meta.url),`window.SENAI_SCHEDULE=(()=>{${schedule};return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts}})();`);
+writeFileSync(new URL("../public/schedule.js",import.meta.url),`window.SENAI_SCHEDULE=(()=>{${schedule};return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails}})();`);
+const turmaCopy=readFileSync(new URL('../lib/turma-copy.js',import.meta.url),'utf8').replace(/export /g,'');
+writeFileSync(new URL('../public/turma-copy.js',import.meta.url),`window.SENAI_TURMAS=(()=>{${turmaCopy};return {duplicateTurma}})();`);
