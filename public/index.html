@@ -2,6 +2,7 @@
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Agenda SENAI | Gestão acadêmica</title>
 <script src="/schedule.js"></script>
+<script src="/turma-copy.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -406,7 +407,7 @@ function vPainel(){
   <section class="panel"><h2>Turmas</h2><div class="tw"><table><thead><tr><th>Turma</th><th>Curso</th><th>Turno</th><th>Período</th><th class="n">Aulas</th><th class="n">Pendentes</th><th></th></tr></thead><tbody>
   ${Object.entries(T).map(([id,st])=>{const cc=calcOf(st),al=cc.rows.reduce((a,r)=>a+r.aloc,0),pr=cc.rows.reduce((a,r)=>a+r.P,0),pe=cc.rows.reduce((a,r)=>a+Math.max(r.faltam,0),0);
    return `<tr><td class="mono">${esc(st.cfg.turma)}${id===CUR?" · atual":""}</td><td>${esc(st.cfg.curso)}</td><td>${esc(st.cfg.turno)}</td><td class="mono">${br(st.cfg.inicio)} a ${br(st.cfg.termino)}</td><td class="n mono">${al}/${pr}</td><td class="n mono">${pe}</td><td>${id===CUR?"":`<button class="btn sm" data-act="turmago" data-id="${esc(id)}">Abrir</button>`}</td></tr>`}).join("")}
-  </tbody></table></div><div class="row" style="margin-top:10px"><button class="btn pri" data-act="turmanew">Adicionar turma</button></div></section>
+  </tbody></table></div><div class="row" style="margin-top:10px"><button class="btn pri" data-act="turmanew">Adicionar turma</button><button class="btn" data-act="turmaduplicate">Duplicar turma atual</button></div></section>
   <section class="panel"><h2>Controle por unidade curricular</h2>
     <div class="tw"><table><thead><tr><th>UC</th><th>Sigla</th><th>Docente</th><th class="n">CH</th><th class="n">Aulas</th><th>Aulas</th><th class="n">Alocado</th><th class="n">Faltam</th><th class="n">Lim. faltas</th><th>Início</th><th>Fim</th><th>Status</th></tr></thead><tbody>
     ${C.rows.map(r=>`<tr><td>${esc(r.u.nome)}</td><td>${sig(r.u.sigla)}</td><td>${esc(r.u.docente)||'<span class="muted">-</span>'}</td><td class="n mono">${r.u.ch}</td><td class="n mono">${r.Q}</td>
@@ -551,6 +552,31 @@ function saveTurma(){
   save();closeModal();renderView();toast(`Turma ${cod} criada`);
 }
 const closeModal=()=>document.getElementById("modalRoot").innerHTML="";
+function openDuplicateModal(id=CUR){
+ const source=T[id];if(!source)return;
+ document.getElementById('modalRoot').innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Duplicar turma" style="width:min(100%,640px)"><h2>Duplicar turma ${esc(source.cfg.turma)}</h2><p class="small muted">Crie uma turma independente a partir desta estrutura. As aulas do novo período serão planejadas em um calendário vazio; alunos, registros, reservas e códigos de acesso não são copiados.</p><form id="duplicate-form" data-source="${esc(id)}"><div class="form"><label class="f">Novo código da turma<input name="turma" type="text" maxlength="60" required autocomplete="off"></label><label class="f">Curso<input name="curso" type="text" value="${esc(source.cfg.curso)}" required></label><label class="f">Novo início<input name="inicio" type="date" required></label><label class="f">Novo término<input name="termino" type="date" required></label></div><fieldset class="duplicate-options"><legend>O que deseja reaproveitar?</legend>${[
+ ['configuracoes','Configurações de ensino','Turno, aulas por dia, módulo e coordenação.',true],
+ ['disciplinas','Disciplinas e cargas horárias',`${source.ucs.length} disciplina(s) cadastrada(s).`,true],
+ ['docentes','Docentes das disciplinas','Mantém os vínculos das disciplinas com os docentes cadastrados.',true],
+ ['ambientes','Ambientes','Local da turma e salas ou laboratórios das disciplinas.',true],
+ ['feriados','Feriados e dias sem aula','Somente nas mesmas datas que estiverem dentro do novo período. As datas não são deslocadas.',false]
+ ].map(([name,label,help,checked])=>`<label><input type="checkbox" name="${name}" aria-label="${label}" ${checked?'checked':''}><span><strong>${label}</strong><small>${esc(help)}</small></span></label>`).join('')}</fieldset><p class="small muted" id="duplicate-preview" role="status"></p><p class="form-feedback error" id="duplicate-error" role="alert"></p><div class="row"><button class="btn pri" type="submit">Criar cópia da turma</button><button class="btn" type="button" data-act="mclose2">Cancelar</button></div></form></div></div>`;
+ updateDuplicatePreview();
+}
+function updateDuplicatePreview(){
+ const form=document.getElementById('duplicate-form');if(!form)return;const source=T[form.dataset.source];if(!source)return;
+ const e=form.elements;e.docentes.disabled=!e.disciplinas.checked;e.termino.min=e.inicio.value;
+ const holidays=e.feriados.checked?Object.entries(source.days||{}).filter(([iso,d])=>['feriado','sem'].includes(d.t)&&iso>=e.inicio.value&&iso<=e.termino.value).length:0;
+ document.getElementById('duplicate-preview').textContent=`A cópia terá ${e.disciplinas.checked?source.ucs.length:0} disciplina(s), ${holidays} feriado(s) ou dia(s) sem aula e nenhum lançamento de aula. Turno: ${e.configuracoes.checked?source.cfg.turno||'Matutino':'Matutino'} · ${e.configuracoes.checked?source.cfg.aulasDia||4:4} aulas por dia.`;
+}
+document.addEventListener('submit',e=>{
+ if(e.target.id!=='duplicate-form')return;e.preventDefault();const form=e.target,fields=form.elements,error=document.getElementById('duplicate-error');error.textContent='';
+ try{const values=Object.fromEntries(new FormData(form)),id=slug(values.turma.trim());if(T[id]||Object.values(T).some(st=>slug(st.cfg.turma)===id))throw new Error('Já existe uma turma com esse código. Escolha outro código.');
+  const options=Object.fromEntries(['configuracoes','disciplinas','docentes','ambientes','feriados'].map(key=>[key,fields[key].checked]));
+  const copied=SENAI_TURMAS.duplicateTurma(T[form.dataset.source],values,options);T[id]=copied;CUR=id;normalize();UI.month=null;UI.ucFilter='';UI.fUc='';UI.tab='turma';UI.confirm=null;Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');save();closeModal();renderView();toast(`Turma ${copied.cfg.turma} duplicada. Aguarde a confirmação de gravação.`);
+ }catch(err){error.textContent=err.message||'Não foi possível duplicar a turma.'}
+});
+document.addEventListener('input',e=>{if(e.target.closest('#duplicate-form')){document.getElementById('duplicate-error').textContent='';updateDuplicatePreview()}});
 function autoAlloc(){
   const sg=document.getElementById("aUc").value,from=document.getElementById("aFrom").value;
   let qty=Math.floor(+document.getElementById("aQty").value);
@@ -649,6 +675,7 @@ function vTurma(){
     <p class="form-hint">Campos com * são obrigatórios. As alterações válidas são salvas automaticamente.</p><p class="stat" role="status" aria-live="polite" data-save-status data-k="${UI.status}">${esc(STAT[UI.status]||'')}</p>
     <p class="small muted">A hora-aula é de 50 min no turno Matutino NEM e de 60 min nos demais. Mudar turno ou aulas por dia recalcula aulas e horários.</p></section>
   <section class="panel"><h2>Horário das aulas</h2>${horTable()}</section>
+  <section class="panel"><h2>Reaproveitar esta turma</h2><p class="muted">Crie uma nova turma escolhendo o período e quais configurações, disciplinas, docentes e ambientes deseja copiar.</p><button class="btn pri" data-act="turmaduplicate">Duplicar turma</button></section>
   <section class="panel"><h2>Excluir turma</h2><p class="small muted">Remove a turma ${esc(c.turma)} com todos os lançamentos. Os docentes continuam cadastrados.</p>
     <button class="btn bad" data-act="turmadel" ${Object.keys(T).length<2?"disabled":""}>${UI.confirm==="turmadel"?"Confirmar exclusão":"Excluir turma"}</button>${Object.keys(T).length<2?' <span class="small muted">É preciso ter ao menos uma turma.</span>':""}</section>`;
 }
@@ -1208,6 +1235,7 @@ document.addEventListener("click",e=>{
   else if(a==="bddel"){S.docentes[+b.dataset.i].bloqueios.splice(+b.dataset.j,1);save();renderView()}
   else if(a==="fuc"){UI.fUc=b.dataset.k;renderView()}
   else if(a==="turmanew")openTurmaModal();
+  else if(a==="turmaduplicate")openDuplicateModal(b.dataset.id||CUR);
   else if(a==="turmasave")saveTurma();
   else if(a==="turmago"){CUR=b.dataset.id;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView();window.scrollTo(0,0)}
   else if(a==="turmadel"){if(UI.confirm==="turmadel"){delete T[CUR];CUR=Object.keys(T)[0];normalize();UI.confirm=null;UI.month=null;UI.tab="painel";save();toast("Turma excluída")}else UI.confirm="turmadel";renderView()}

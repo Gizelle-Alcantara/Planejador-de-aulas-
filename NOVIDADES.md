@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Duplicação de turmas
+- **Entrada no painel e na aba Turma.** Duplicar turma atual abre um formulário com novo código, curso e período. Códigos já utilizados são recusados.
+- **Cópia seletiva.** Escolha configurações de ensino, disciplinas e cargas horárias, docentes, ambientes e feriados. Sem disciplinas, a opção de docentes fica desabilitada.
+- **Novo planejamento independente.** Aulas, alunos, chamadas, faltas, reservas, histórico de envios e códigos de acesso não são copiados. Avisos automáticos começam desativados, e os destinatários ficam vazios.
+- **Feriados com datas explícitas.** Quando selecionados, somente feriados e dias sem aula nas mesmas datas dentro do novo período são copiados. O sistema não desloca datas de um ano para outro.
+
 ## Central de conflitos
 - **Ocorrências no painel.** A turma aberta é comparada com as demais por data e horário. A central identifica docente em duas turmas, ambientes definidos nas disciplinas ou no local da turma, indisponibilidade de docentes e distribuição antiga com disciplinas simultâneas.
 - **Detalhes e filtros.** Cada ocorrência mostra o intervalo em conflito e as turmas, disciplinas, docentes e ambientes envolvidos. O filtro separa os tipos de ocorrência.

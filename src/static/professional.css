@@ -24,6 +24,13 @@ nav.tabs button{padding:9px 11px}
 .form-feedback{font-size:.85rem;min-height:1.5em;line-height:1.6}
 .form-feedback.error{color:var(--bad)}
 .form-feedback.success{color:var(--ok)}
+.duplicate-options{border:1px solid var(--line);border-radius:10px;margin:20px 0 14px;padding:16px;min-width:0}
+.duplicate-options legend{font-weight:600;padding:0 6px}
+.duplicate-options label{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:10px 0;align-items:start}
+.duplicate-options input{margin:4px 0 0;accent-color:var(--accent)}
+.duplicate-options strong{font-weight:600;font-size:.85rem}
+.duplicate-options small{display:block;color:var(--muted);line-height:1.6;margin-top:4px}
+.duplicate-options label:has(input:disabled){opacity:.6}
 @media(max-width:620px){nav.tabs{gap:14px}.nav-group,.nav-group:first-child{flex:1 1 100%}.nav-group [role=tablist]{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:3px 0 6px}.nav-group-title{margin-left:0}}
 main{padding-block:24px}
 .panel,.tile,.card{border-radius:12px;box-shadow:0 3px 12px rgb(12 35 64 / 3%)}
