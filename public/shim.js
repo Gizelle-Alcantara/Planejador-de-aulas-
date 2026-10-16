@@ -52,6 +52,8 @@
     save({ filename, data }) {
       return new Promise((ok) => {
         const a = document.createElement("a");
+        a.hidden = true;
+        a.setAttribute('aria-label', 'Baixar ' + filename);
         a.href = URL.createObjectURL(new Blob([data], { type: "application/octet-stream" }));
         a.download = filename; document.body.appendChild(a); a.click();
         setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000); ok({ status: "saved" });

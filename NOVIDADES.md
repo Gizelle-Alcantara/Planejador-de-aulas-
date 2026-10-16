@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Relatórios gerenciais
+- **Período e turma.** A aba Relatórios da coordenação reúne aulas programadas, realizadas, canceladas, sem confirmação, conflitos e reservas para analisar, em intervalos de até 366 dias.
+- **Carga corrigida.** Horas por docente usam a duração de cada aula, sem multiplicar novamente pelas aulas do dia. O intervalo do Matutino NEM não entra na carga de ensino. Aulas futuras não contam como realizadas.
+- **Ocupação sem duplicidade.** Une horários de calendário e reservas aprovadas por ambiente e considera a sala efetiva da reserva. Mostra horas ocupadas; não presume horários de funcionamento para calcular percentuais.
+- **Exportação e impressão.** CSV e visualização para impressão/PDF usam o resultado gerado. Não incluem alunos, contatos ou observações privadas. A carga a planejar e as disciplinas sem docente referem-se à turma inteira, com identificação explícita nas tabelas.
+
 ## Planejamento assistido
 - **Prévia antes de gravar.** Em Calendário → Planejamento assistido, selecione disciplina, intervalo, quantidade e dias da semana. Confira as sugestões e aplique quando estiverem adequadas.
 - **Disponibilidade por horário.** Considera o cadastro do docente, seus bloqueios, aulas de outras turmas, ambientes ativos, bloqueios de ambientes e reservas aprovadas. A disciplina precisa ter docente e ambiente cadastrados.
