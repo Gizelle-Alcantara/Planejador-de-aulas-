@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Busca rápida
+- **Turmas.** No Painel, pesquise por código ou curso e combine a busca com o turno.
+- **Docentes.** Na aba Docentes, pesquise por nome ou matrícula. A edição continua vinculada ao cadastro correto após filtrar.
+- **Ambientes.** Na gestão de ambientes, combine nome, tipo e disponibilidade.
+- **Uso contínuo.** As buscas ignoram acentos e maiúsculas, aceitam várias palavras e mostram a quantidade de resultados. Limpar busca restaura a lista e devolve o foco ao campo. A digitação não recria formulários nem altera dados; os filtros permanecem ao alternar abas na mesma página.
+
 ## Duplicação de turmas
 - **Entrada no painel e na aba Turma.** Duplicar turma atual abre um formulário com novo código, curso e período. Códigos já utilizados são recusados.
 - **Cópia seletiva.** Escolha configurações de ensino, disciplinas e cargas horárias, docentes, ambientes e feriados. Sem disciplinas, a opção de docentes fica desabilitada.

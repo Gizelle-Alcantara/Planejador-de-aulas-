@@ -3,6 +3,7 @@
 <title>Agenda SENAI | Gestão acadêmica</title>
 <script src="/schedule.js"></script>
 <script src="/turma-copy.js"></script>
+<script src="/search.js"></script>
 <script src="/excel-preview.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -400,9 +401,9 @@ function vPainel(){
     <div class="tile"><b class="mono">${chTot} h</b><span>carga horária prevista</span></div>
     <div class="tile"><b class="mono">${prox?br(prox):"-"}</b><span>${prox?"próxima aula · "+(S.days[prox].s||[]).join(" + "):"sem próxima aula"}</span></div>
   </div>
-  <section class="panel"><h2>Turmas</h2><div class="tw"><table><thead><tr><th>Turma</th><th>Curso</th><th>Turno</th><th>Período</th><th class="n">Aulas</th><th class="n">Pendentes</th><th></th></tr></thead><tbody>
+  <section class="panel"><h2>Turmas</h2><div class="quick-search" data-quick-search="turmas"><div class="row"><label class="f">Buscar turmas<input type="search" data-search-query aria-label="Buscar turmas" placeholder="Código ou curso"></label><label class="f">Turno<select data-search-field="turno" aria-label="Filtrar turmas por turno"><option value="">Todos os turnos</option>${TURNOS.map(turno=>`<option>${esc(turno)}</option>`).join('')}</select></label><button class="btn" type="button" data-search-clear>Limpar busca</button></div><p class="small muted" role="status" aria-live="polite" data-search-status></p></div><div class="tw"><table><thead><tr><th>Turma</th><th>Curso</th><th>Turno</th><th>Período</th><th class="n">Aulas</th><th class="n">Pendentes</th><th></th></tr></thead><tbody>
   ${Object.entries(T).map(([id,st])=>{const cc=calcOf(st),al=cc.rows.reduce((a,r)=>a+r.aloc,0),pr=cc.rows.reduce((a,r)=>a+r.P,0),pe=cc.rows.reduce((a,r)=>a+Math.max(r.faltam,0),0);
-   return `<tr><td class="mono">${esc(st.cfg.turma)}${id===CUR?" · atual":""}</td><td>${esc(st.cfg.curso)}</td><td>${esc(st.cfg.turno)}</td><td class="mono">${br(st.cfg.inicio)} a ${br(st.cfg.termino)}</td><td class="n mono">${al}/${pr}</td><td class="n mono">${pe}</td><td>${id===CUR?"":`<button class="btn sm" data-act="turmago" data-id="${esc(id)}">Abrir</button>`}</td></tr>`}).join("")}
+   return `<tr data-search-row="${esc(JSON.stringify({text:[st.cfg.turma,st.cfg.curso],turno:st.cfg.turno}))}"><td class="mono">${esc(st.cfg.turma)}${id===CUR?" · atual":""}</td><td>${esc(st.cfg.curso)}</td><td>${esc(st.cfg.turno)}</td><td class="mono">${br(st.cfg.inicio)} a ${br(st.cfg.termino)}</td><td class="n mono">${al}/${pr}</td><td class="n mono">${pe}</td><td>${id===CUR?"":`<button class="btn sm" data-act="turmago" data-id="${esc(id)}">Abrir</button>`}</td></tr>`}).join("")}
   </tbody></table></div><div class="row" style="margin-top:10px"><button class="btn pri" data-act="turmanew">Adicionar turma</button><button class="btn" data-act="turmaduplicate">Duplicar turma atual</button></div></section>
   <section class="panel"><h2>Controle por unidade curricular</h2>
     <div class="tw"><table><thead><tr><th>UC</th><th>Sigla</th><th>Docente</th><th class="n">CH</th><th class="n">Aulas</th><th>Aulas</th><th class="n">Alocado</th><th class="n">Faltam</th><th class="n">Lim. faltas</th><th>Início</th><th>Fim</th><th>Status</th></tr></thead><tbody>
@@ -638,10 +639,11 @@ function saveDocCadastro(){
 function vDoc(){
   const C=calc(),t=todayISO();
   return `<section class="panel"><div class="row" style="justify-content:space-between;margin-bottom:10px"><h2>Docentes</h2><button class="btn pri" data-act="docadd">Adicionar docente</button></div>
+  <div class="quick-search" data-quick-search="docentes"><div class="row"><label class="f">Buscar docentes<input type="search" data-search-query aria-label="Buscar docentes" placeholder="Nome ou matrícula"></label><button class="btn" type="button" data-search-clear>Limpar busca</button></div><p class="small muted" role="status" aria-live="polite" data-search-status></p></div>
   <div class="tw"><table><thead><tr><th>Nome</th><th>E-mail</th><th>WhatsApp</th><th>Disciplinas</th><th class="n">CH</th><th class="n">Aulas</th><th>Próxima aula</th><th></th></tr></thead><tbody>
   ${S.docentes.map((d,i)=>{const rs=[];for(const st of Object.values(T))calcOf(st).rows.filter(r=>r.u.docente===d.nome).forEach(r=>rs.push({st,r}));
    const all=rs.flatMap(x=>x.r.ds.map(y=>[y,x.r.u.sigla])).sort();const nx=all.find(x=>x[0]>=t);
-   return `<tr><td><input type="text" data-doc="${i}" data-f="nome" value="${esc(d.nome)}" style="min-width:180px" aria-label="Nome"></td>
+   return `<tr data-search-row="${esc(JSON.stringify({text:[d.nome,d.matricula]}))}"><td><input type="text" data-doc="${i}" data-f="nome" value="${esc(d.nome)}" style="min-width:180px" aria-label="Nome"></td>
    <td><input type="email" data-doc="${i}" data-f="email" value="${esc(d.email||"")}" style="min-width:200px" aria-label="E-mail"></td>
    <td><input type="tel" data-doc="${i}" data-f="tel" value="${esc(d.tel||"")}" placeholder="(75) 99999-9999" style="width:150px" aria-label="WhatsApp"></td>
    <td>${rs.map(x=>`<span class="sig" style="--c:var(--accent)" title="${esc(x.r.u.nome)}">${esc(x.st.cfg.turma)} · ${esc(x.r.u.sigla)}</span>`).join(" ")||'<span class="muted">-</span>'}</td><td class="n mono">${rs.reduce((a,x)=>a+(+x.r.u.ch||0),0)}</td><td class="n mono">${all.length}</td><td class="mono">${nx?br(nx[0])+" · "+nx[1]:"-"}</td>
@@ -1368,4 +1370,5 @@ renderView();
 
 <script src="/accessibility.js" defer></script>
 <script src="/forms.js" defer></script>
+<script src="/quick-search.js" defer></script>
 </body></html>

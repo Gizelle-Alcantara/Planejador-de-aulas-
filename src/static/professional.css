@@ -44,6 +44,14 @@ main{padding-block:24px}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{border-radius:8px;min-height:40px}
 input[type=password]{background:var(--surface,#fff);border:1px solid var(--line,#bbc9d8);border-radius:8px;min-height:40px;padding:7px 9px;width:100%;min-width:0;color:inherit;font:inherit;font-weight:400}
+input[type=search]{background:var(--surface,#fff);border:1px solid var(--line,#bbc9d8);border-radius:8px;min-height:40px;padding:7px 9px;width:100%;min-width:0;color:inherit;font:inherit;font-weight:400}
+.quick-search{border:1px solid var(--line,#dce4ee);border-radius:10px;padding:14px;margin:16px 0;background:var(--surface2,#f6f8fb)}
+.quick-search .row{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.quick-search label{flex:1 1 170px;min-width:0;display:flex;flex-direction:column;gap:6px;font-size:.8rem}
+.quick-search select{width:100%;min-width:0}
+.quick-search [data-search-status]{margin:10px 0 0}
+[data-search-row][hidden],[data-search-empty][hidden]{display:none!important}
+@media(max-width:620px){.quick-search{padding:12px}.quick-search label{flex:1 1 100%}.quick-search button{width:100%;min-height:44px}}
 label.f{gap:7px}
 th{background:var(--surface2);padding:12px}
 td{padding:12px}

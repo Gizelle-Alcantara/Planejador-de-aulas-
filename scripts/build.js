@@ -31,3 +31,5 @@ const schedule=readFileSync(new URL("../lib/schedule.js",import.meta.url),"utf8"
 writeFileSync(new URL("../public/schedule.js",import.meta.url),`window.SENAI_SCHEDULE=(()=>{${schedule};return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails}})();`);
 const turmaCopy=readFileSync(new URL('../lib/turma-copy.js',import.meta.url),'utf8').replace(/export /g,'');
 writeFileSync(new URL('../public/turma-copy.js',import.meta.url),`window.SENAI_TURMAS=(()=>{${turmaCopy};return {duplicateTurma}})();`);
+const search=readFileSync(new URL('../lib/search.js',import.meta.url),'utf8').replace(/export /g,'');
+writeFileSync(new URL('../public/search.js',import.meta.url),`window.SENAI_SEARCH=(()=>{${search};return {normalizeSearch,matchesSearch}})();`);
