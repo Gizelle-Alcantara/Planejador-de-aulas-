@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Planejador de Turma</title>
+<title>Agenda SENAI | Gestão acadêmica</title>
 <script src="/schedule.js"></script>
 <script src="/excel-preview.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -129,6 +129,7 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 @media (prefers-reduced-motion:no-preference){.day,.btn{transition:border-color .12s}}
 </style>
 <link rel="stylesheet" href="/responsive.css">
+<link rel="stylesheet" href="/professional.css">
 </head><body>
 <div class="wrap">
 <header class="top">
@@ -873,9 +874,9 @@ function copyValue(v){const f=()=>toast("Não foi possível copiar. Selecione o 
 function renderLanding(){
   document.getElementById("tabs").innerHTML="";
   document.getElementById("hdr").innerHTML='<h1>Calendário acadêmico</h1><span class="meta">Escolha como você quer acompanhar as aulas.</span>';
-  document.getElementById("view").innerHTML=`<div class="grid2"><a class="card" href="#login-aluno"><h2>Sou aluno</h2><p class="muted">Acesse o calendário da sua turma com o código fornecido pela coordenação.</p></a><a class="card" href="#login"><h2>Coordenação</h2><p class="muted" style="margin-bottom:0">Entre para gerenciar turmas e calendários.</p></a>
-    <a class="card" href="#login-docente"><h2>Sou docente</h2><p class="muted" style="margin-bottom:0">Entre com sua conta para consultar suas aulas e reservar ambientes.</p></a></div>
-    <p class="small muted">A edição do calendário é restrita à coordenação.</p>`;
+  document.getElementById("view").innerHTML=`<section class="welcome" aria-labelledby="welcome-title"><div><span class="eyebrow">AGENDA SENAI · GESTÃO ACADÊMICA</span><h2 id="welcome-title">Seu próximo passo<br>começa aqui.</h2><p>Calendários, aulas e ambientes em um só lugar. Selecione seu perfil para acessar as ferramentas do seu dia a dia.</p></div><div class="welcome-note"><span class="welcome-mark" aria-hidden="true">↗</span><strong>Mais organização.<br>Mais tempo para ensinar e aprender.</strong><span>Acompanhe a programação da sua instituição.</span></div></section>
+    <section class="access-section" aria-labelledby="access-title"><div class="access-heading"><h2 id="access-title">Como você deseja acessar?</h2><span class="muted small">Escolha seu perfil</span></div><div class="access-grid"><a class="card access-card" href="#login-aluno"><span class="profile-icon" aria-hidden="true">01</span><h3>Sou aluno</h3><p class="muted">Consulte as aulas, os horários e o calendário da sua turma.</p><span class="access-detail">Tenha em mãos o código fornecido pela coordenação.</span><span class="access-link">Acessar minha turma <span aria-hidden="true">→</span></span></a><a class="card access-card" href="#login-docente"><span class="profile-icon" aria-hidden="true">02</span><h3>Sou docente</h3><p class="muted">Acompanhe sua agenda e solicite salas e laboratórios.</p><span class="access-detail">Entre com seu usuário e senha.</span><span class="access-link">Acessar minha agenda <span aria-hidden="true">→</span></span></a><a class="card access-card" href="#login"><span class="profile-icon" aria-hidden="true">03</span><h3>Coordenação</h3><p class="muted">Organize turmas, planeje aulas e gerencie calendários.</p><span class="access-detail">Acesso de gestão com credenciais da coordenação.</span><span class="access-link">Acessar gestão <span aria-hidden="true">→</span></span></a></div></section>
+    <footer class="portal-footer"><span>Agenda SENAI · Planejamento e organização acadêmica</span><span>Precisa de acesso? Procure a coordenação.</span></footer>`;
 }
 const spanStr=c=>{const s=spanOf(c);return hm(s[0])+" às "+hm(s[1])};
 function docAgg(d){

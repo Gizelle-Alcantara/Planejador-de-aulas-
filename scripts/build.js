@@ -18,7 +18,6 @@ rep('step(1,"Abra o menu Compartilhar do artefato","Fica no cabeçalho da págin
 rep('step(2,"Alunos e docentes: acesso de Visualizador","Convide por e-mail ou use o link geral. Quem só visualiza escolhe entre a visão do aluno e a do docente e não altera nada.")', 'step(2,"Alunos e docentes: só visualizam","Alunos entram com o código da turma; docentes entram com usuário e senha. Ambos têm acesso restrito aos seus calendários.")');
 rep('step(3,"Coordenação: o único acesso de Editor","Só o nível Editor edita o calendário. Dê esse acesso apenas ao coordenador. Contribuidores, Comentaristas e Visualizadores ficam sem edição. Quem criou o artefato continua podendo editar.")', 'step(3,"Coordenação: a única que edita","A edição exige a senha do coordenador (variável ADMIN_PASSWORD do servidor). Para entrar, abra o endereço do site seguido de #login.")');
 rep("A permissão de acesso é definida no menu Compartilhar. Este planejador não consegue mudá-la. Quem abre precisa estar com a conta ativa para ver os dados ao vivo.", "A permissão é verificada no servidor: sem a senha, nenhuma alteração é gravada.");
-rep("A edição do calendário é restrita à coordenação.</p>", 'A edição do calendário é restrita à coordenação. <a href="#login">Acesso do coordenador</a></p>');
 mkdirSync(new URL("../public/", import.meta.url), { recursive: true });
 const bodyEnd=t.lastIndexOf("</body>");
 if(bodyEnd<0)throw new Error("Fechamento da página não encontrado");
