@@ -65,7 +65,7 @@
     if(!response.ok){if(response.status===409){window.dispatchEvent(new Event('plan-conflict'));if(poke)poke()}throw new Error(result.error==='conflict'?'Outra pessoa alterou os dados. Recarregue e confira antes de salvar novamente.':result.error||'Não foi possível salvar.');}
     Object.assign(revs,result.revs||{});for(const id of deleted)delete revs[id];
   }
-  window.PLAN = {saveDocs, api: (b) => api(b).then(async (r) => ({ ok: r.ok, status: r.status, ...(await r.json().catch(() => ({}))) })), me: () => first().then((s) => s.user || null) };
+  window.PLAN = {saveDocs, refresh:async()=>{session=keep(await load());if(poke)poke();return session}, api: (b) => api(b).then(async (r) => ({ ok: r.ok, status: r.status, ...(await r.json().catch(() => ({}))) })), me: () => first().then((s) => s.user || null) };
   window.claude = {
     async use(name) {
       if (name === "db") return db();

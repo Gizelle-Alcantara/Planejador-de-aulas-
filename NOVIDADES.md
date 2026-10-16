@@ -1,5 +1,12 @@
 # Novidades desta versão
 
+## Planejamento assistido
+- **Prévia antes de gravar.** Em Calendário → Planejamento assistido, selecione disciplina, intervalo, quantidade e dias da semana. Confira as sugestões e aplique quando estiverem adequadas.
+- **Disponibilidade por horário.** Considera o cadastro do docente, seus bloqueios, aulas de outras turmas, ambientes ativos, bloqueios de ambientes e reservas aprovadas. A disciplina precisa ter docente e ambiente cadastrados.
+- **Carga e registros preservados.** Usa somente dias vazios, preserva observações e dias com registros, respeita o período da turma e limita a quantidade à carga ainda pendente. Suporta a conversão de aulas e o intervalo do Matutino NEM.
+- **Conferência ao aplicar.** Se os documentos mudarem desde a prévia, é necessário gerar sugestões novamente. A aplicação grava uma versão no histórico e alimenta os avisos internos. As sugestões não criam reservas de ambientes.
+- **Limites da sugestão.** Planeja uma disciplina por vez em intervalos de até 366 dias e pedidos de até 1000 aulas. Mostra os horários descartados e o que ficou pendente quando não há disponibilidade suficiente.
+
 ## Central de notificações
 - **Acesso unificado.** O atalho Notificações no planejador e na gestão de ambientes abre uma central com contador de não lidas, filtros por tipo e situação e paginação.
 - **Leitura individual.** Marque um aviso ou os avisos exibidos como lidos. A leitura de uma conta não altera a leitura das demais; avisos que chegam depois não são marcados pelo lote anterior.
