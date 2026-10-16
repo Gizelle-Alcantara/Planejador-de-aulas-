@@ -91,9 +91,9 @@
         ov.innerHTML = '<form class="lg-box" role="dialog" aria-modal="true" aria-label="Acesso ao sistema"><h2>Acesso ao sistema</h2><input type="text" class="lg-user" placeholder="Usuário (deixe vazio para a senha mestre)" autocomplete="username" aria-label="Usuário"><input type="password" placeholder="Senha" autocomplete="current-password" aria-label="Senha"><p class="lg-err" role="alert"></p><button type="submit">Entrar</button><button type="button" class="x">Cancelar</button></form>';
         const student=location.hash==='#login-aluno';
         if(student){ov.querySelector('h2').textContent='Acesso do aluno';ov.querySelector('form').setAttribute('aria-label','Acesso do aluno');ov.querySelector('.lg-user').outerHTML='<label>Código da turma<input class="lg-user" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required placeholder="Código fornecido pela coordenação"></label>';ov.querySelector('input[type=password]').hidden=true;}
-        document.body.appendChild(ov);ov.querySelector("input").focus();
+        if(!student){const help=document.createElement("p"),a=document.createElement("a");a.href="/recuperar.html";a.textContent="Esqueci minha senha";help.append(a);ov.firstChild.append(help)}document.body.appendChild(ov);ov.querySelector("input").focus();
         const f = ov.firstChild, inp = f.querySelector("input[type=password]"), err = f.querySelector(".lg-err");
-        f.addEventListener("keydown",e=>{if(e.key==="Escape"){location.hash="";return}if(e.key!=="Tab")return;const c=[...f.querySelectorAll("input:not([hidden]),button")];if(e.shiftKey&&document.activeElement===c[0]){e.preventDefault();c.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===c.at(-1)){e.preventDefault();c[0].focus()}});
+        f.addEventListener("keydown",e=>{if(e.key==="Escape"){location.hash="";return}if(e.key!=="Tab")return;const c=[...f.querySelectorAll("input:not([hidden]),button,a[href]")];if(e.shiftKey&&document.activeElement===c[0]){e.preventDefault();c.at(-1).focus()}else if(!e.shiftKey&&document.activeElement===c.at(-1)){e.preventDefault();c[0].focus()}});
         f.querySelector(".x").onclick = () => { location.hash = ""; };
         f.onsubmit = async (e) => {
           e.preventDefault(); err.textContent = "";

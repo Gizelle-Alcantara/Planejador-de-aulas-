@@ -1,10 +1,11 @@
 // Cache simples: a tela e as últimas agendas lidas abrem sem internet. Nunca guarda respostas de coordenador logado.
-const CACHE = "planejador-v20-visao-geral";
+const CACHE = "planejador-v21-recuperacao-acesso";
 self.addEventListener("install", (e) => { self.skipWaiting(); });
 self.addEventListener("activate", (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (e) => {
   const r = e.request, u = new URL(r.url);
   if (r.method !== "GET" || u.origin !== location.origin) return;
+  if(u.pathname==='/recuperar.html'||u.pathname==='/recovery.js')return;
   if (u.pathname === "/api") return;
   e.respondWith((async () => {
     try {

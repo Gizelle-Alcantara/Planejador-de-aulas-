@@ -1,5 +1,13 @@
 # Novidades desta versão
 
+## Recuperação de acesso
+- **Esqueci minha senha.** Os acessos de coordenadores, docentes e ambientes levam à página de recuperação. Informe usuário e o e-mail cadastrado para a conta.
+- **Cadastro pela senha mestre.** Na aba Acesso, a senha mestre cadastra ou altera o e-mail de recuperação. O campo é independente do contato do cadastro docente.
+- **Link temporário.** O link expira em 15 minutos, funciona uma única vez e é substituído quando outro é solicitado. Trocar a senha encerra as sessões anteriores da conta.
+- **Configuração de envio.** Exige PUBLIC_URL em HTTPS (localhost aceita HTTP), RESEND_API_KEY e MAIL_FROM. Sem o serviço configurado, o sistema informa a indisponibilidade e orienta procurar a coordenação; não simula envio em produção.
+- **Proteções.** Somente o hash do token fica no banco. O token é removido do endereço assim que a página abre. Respostas de solicitação não identificam contas existentes; limites são persistidos no banco. Alterar e-mail, senha ou restaurar contas invalida links pendentes.
+- **Senha mestre.** Continua gerenciada na configuração do servidor e não pode ser redefinida pelo link de recuperação.
+
 ## Visão geral da coordenação
 - **Todas as turmas.** A aba Visão geral consolida aulas para planejar, excedentes, disciplinas sem docente, conflitos e reservas para análise.
 - **Conflitos sem duplicação.** Uma ocorrência entre duas turmas aparece nas duas linhas, mas é contada uma única vez nos indicadores e na central global.

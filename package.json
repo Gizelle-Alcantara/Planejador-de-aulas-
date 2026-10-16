@@ -10,10 +10,11 @@
     "build": "node scripts/build.js",
     "start": "node server.js",
     "import": "node scripts/import.js",
-    "test": "node --test tests/api.test.mjs tests/calendar-export.test.mjs tests/teacher-calendar-export.test.mjs tests/schedule.test.mjs tests/excel-preview.test.mjs tests/docentes.test.mjs tests/turma-copy.test.mjs tests/search.test.mjs",
+    "test": "node --test tests/api.test.mjs tests/calendar-export.test.mjs tests/teacher-calendar-export.test.mjs tests/schedule.test.mjs tests/excel-preview.test.mjs tests/docentes.test.mjs tests/turma-copy.test.mjs tests/search.test.mjs tests/password-reset.test.mjs",
     "test:ui": "npm run build && node tests/ui.smoke.mjs",
     "test:ui:copy": "npm run build && node tests/turma-copy.ui.mjs",
-    "test:ui:search": "npm run build && node tests/search.ui.mjs"
+    "test:ui:search": "npm run build && node tests/search.ui.mjs",
+    "test:ui:recovery": "npm run build && node tests/recovery.ui.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
