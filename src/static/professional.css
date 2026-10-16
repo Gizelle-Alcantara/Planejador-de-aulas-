@@ -17,6 +17,7 @@ nav.tabs{flex-wrap:wrap;align-items:flex-start;overflow:visible;gap:18px}
 .nav-group [role=tablist]{display:flex;flex-wrap:wrap;gap:4px}
 nav.tabs button{padding:9px 11px}
 .required-marker{color:var(--bad);font-weight:700;display:inline}
+.required-marker::after{content:' *'}
 .field-error{font-size:.78rem;color:var(--bad,#a52222);line-height:1.5;font-weight:500}
 .form-hint{font-size:.8rem;color:var(--muted,#526579);margin:0 0 16px}
 [aria-invalid=true]{border-color:var(--bad,#a52222)!important;box-shadow:0 0 0 1px var(--bad,#a52222)}
@@ -35,6 +36,7 @@ main{padding-block:24px}
 .btn.pri{box-shadow:0 2px 4px rgb(11 92 171 / 12%)}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{border-radius:8px;min-height:40px}
+input[type=password]{background:var(--surface,#fff);border:1px solid var(--line,#bbc9d8);border-radius:8px;min-height:40px;padding:7px 9px;width:100%;min-width:0;color:inherit;font:inherit;font-weight:400}
 label.f{gap:7px}
 th{background:var(--surface2);padding:12px}
 td{padding:12px}

@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Menus e formulários
+- **Áreas identificadas.** As abas agora ficam agrupadas em Acadêmico, Ambientes e Administração. A navegação por setas e as restrições por perfil foram preservadas.
+- **Validação junto ao campo.** Campos obrigatórios recebem um asterisco. Erros de preenchimento são associados ao campo para leitores de tela e desaparecem ao corrigir o valor.
+- **Cadastro de contas.** O formulário valida usuário e senha antes do envio, impede envios duplicados e mantém os dados quando o servidor recusa o cadastro ou a conexão falha.
+- **Dados da turma.** Alterações inválidas de campos obrigatórios, datas, e-mail e quantidade de aulas não são gravadas. O estado de salvamento aparece junto ao formulário.
+
 ## Painel da coordenação e navegação
 - **Prioridades com atalhos.** O painel destaca aulas para planejar, disciplinas sem docente, erros no calendário e reservas pendentes ou em revisão. Os três primeiros indicadores se referem à turma aberta; reservas incluem todas as turmas acessíveis à coordenação.
 - **Reservas atualizadas.** Alterações nas reservas atualizam o painel na próxima sincronização, mesmo sem mudanças nas turmas.

@@ -138,7 +138,7 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 <div class="wrap">
 <header class="top">
   <div class="brand"><img id="logo" class="logo" alt="SENAI" width="142" height="38"><div class="id" id="hdr"></div><button id="themeBtn" class="btn sm" type="button"></button></div>
-  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <nav class="tabs" id="tabs" aria-label="Áreas do sistema"></nav>
 </header>
 <a class="skip-link" href="#main-content">Pular para o conteúdo</a><main id="main-content" tabindex="-1"><div id="view"></div></main>
 </div>
@@ -218,7 +218,7 @@ normalize();
 /* ---------- salvamento: banco do artefato (db) + cópia local ---------- */
 let dref=null,saveTimer=null,saving=Promise.resolve(),dirty=false,lastJson={};
 const STAT={local:"Salvo só neste navegador",saving:"Salvando…",saved:"Todos os lançamentos salvos",error:"Erro ao salvar. Tentaremos de novo na próxima alteração.",ro:"Somente leitura: você não tem permissão para salvar"};
-function setStatus(k){UI.status=k;const el=document.getElementById("stat");if(el){el.textContent=STAT[k]||"";el.dataset.k=k}}
+function setStatus(k){UI.status=k;document.querySelectorAll('#stat,[data-save-status]').forEach(el=>{el.textContent=STAT[k]||"";el.dataset.k=k})}
 const docItems=()=>[["geral",{docentes:G.docentes,base:G.base}],...Object.entries(T).map(([id,st])=>["turma-"+id,{state:stripT(st)}])];
 function persistLocal(){try{localStorage.setItem(KEY2,JSON.stringify({G,T:strippedT(),CUR}))}catch(e){}}
 function save(){
@@ -365,7 +365,8 @@ function renderHead(){
   const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
   document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><button class="btn sm" data-act="back">Voltar</button><button class="btn sm pri" data-act="export">Exportar calendário</button><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
   setStatus(UI.status);
-  document.getElementById("tabs").innerHTML=TABS.filter(x=>UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])).map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join("");
+  const available=TABS.filter(x=>UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0]));
+  document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','dados'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','dados'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
 }
 
 /* ---------- PAINEL ---------- */
@@ -512,22 +513,25 @@ function saveModal(){const iso=document.querySelector(".modal").dataset.iso,day=
 function openTurmaModal(){
   document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Nova turma">
     <h3>Nova turma</h3>
-    <label class="f">Código da turma<input type="text" id="ntCod" placeholder="ex.: 202630"></label>
-    <label class="f">Curso<input type="text" id="ntCurso" value="${esc(S?S.cfg.curso:"")}"></label>
+    <p class="form-hint">Campos com * são obrigatórios.</p>
+    <label class="f">Código da turma<input type="text" id="ntCod" placeholder="ex.: 202630" required></label>
+    <label class="f">Curso<input type="text" id="ntCurso" value="${esc(S?S.cfg.curso:"")}" required></label>
     <div class="form" style="grid-template-columns:1fr 1fr">
       <label class="f">Turno<select id="ntTurno">${TURNOS.map(x=>`<option ${S&&x===S.cfg.turno?"selected":""}>${x}</option>`).join("")}</select></label>
       <label class="f">Módulo<input type="text" id="ntMod" value="I"></label>
-      <label class="f">Início<input type="date" id="ntIni"></label>
-      <label class="f">Término<input type="date" id="ntFim"></label>
-      <label class="f">Aulas por dia<input type="number" id="ntAulas" min="1" max="8" value="4"></label>
+      <label class="f">Início<input type="date" id="ntIni" required></label>
+      <label class="f">Término<input type="date" id="ntFim" required></label>
+      <label class="f">Aulas por dia<input type="number" id="ntAulas" min="1" max="8" value="4" required></label>
       <label class="f">Coordenador<input type="text" id="ntCoord" value="${esc(S?S.cfg.coord:"")}"></label></div>
     <label class="f">Disciplinas e feriados<select id="ntCopy"><option value="">Começar vazia</option>${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}">Copiar da turma ${esc(st.cfg.turma)}</option>`).join("")}</select></label>
     <p class="small muted" style="margin:0">Copiar traz as disciplinas (com docente) e os feriados. As aulas ficam em branco para você lançar.</p>
-    <div id="ntErr" class="small" style="color:var(--bad)"></div>
+    <div id="ntErr" class="small" role="alert" style="color:var(--bad)"></div>
     <div class="row"><button class="btn pri" data-act="turmasave">Criar turma</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;
 }
 function saveTurma(){
   const v=id=>document.getElementById(id).value.trim(),err=m=>{document.getElementById("ntErr").textContent=m};
+  document.getElementById('ntFim').min=v('ntIni');
+  const invalid=[...document.querySelectorAll('.modal input')].find(input=>!input.checkValidity());if(invalid){invalid.reportValidity();return}
   const cod=v("ntCod"),id=slug(cod);
   if(!cod)return err("Informe o código da turma.");
   if(T[id])return err("Já existe uma turma com esse código.");
@@ -627,15 +631,16 @@ function vDoc(){
 /* ---------- TURMA ---------- */
 function vTurma(){
   const c=S.cfg,chT=S.ucs.reduce((a,u)=>a+(+u.ch||0),0);
-  const fld=(k,l,t="text")=>`<label class="f">${l}<input type="${t}" data-cfg="${k}" value="${esc(c[k])}"></label>`;
+  const fld=(k,l,t="text")=>`<label class="f">${l}<input type="${t}" data-cfg="${k}" value="${esc(c[k])}" ${['turma','curso','inicio','termino'].includes(k)?'required':''} ${k==='termino'?`min="${esc(c.inicio)}"`:k==='inicio'?`max="${esc(c.termino)}"`:''}></label>`;
   return `<section class="panel"><h2>Dados da turma</h2><div class="form">
     ${fld("turma","Turma")}${fld("curso","Curso")}
     <label class="f">Turno<select data-cfg="turno">${TURNOS.map(t=>`<option ${t===c.turno?"selected":""}>${t}</option>`).join("")}</select></label>
     ${fld("coord","Coordenador")}${fld("email","E-mail","email")}${fld("modulo","Módulo")}${fld("local","Local")}
     ${fld("inicio","Data de início","date")}${fld("termino","Data de término","date")}
-    <label class="f">Aulas por dia<input type="number" min="1" max="8" data-cfg="aulasDia" value="${c.aulasDia}"></label>
+    <label class="f">Aulas por dia<input type="number" min="1" max="8" data-cfg="aulasDia" value="${c.aulasDia}" required></label>
     <label class="f">Hora-aula (min)<input type="text" value="${horaAula()}" readonly></label>
     <label class="f">CH prevista (h)<input type="text" value="${chT}" readonly></label></div>
+    <p class="form-hint">Campos com * são obrigatórios. As alterações válidas são salvas automaticamente.</p><p class="stat" role="status" aria-live="polite" data-save-status data-k="${UI.status}">${esc(STAT[UI.status]||'')}</p>
     <p class="small muted">A hora-aula é de 50 min no turno Matutino NEM e de 60 min nos demais. Mudar turno ou aulas por dia recalcula aulas e horários.</p></section>
   <section class="panel"><h2>Horário das aulas</h2>${horTable()}</section>
   <section class="panel"><h2>Excluir turma</h2><p class="small muted">Remove a turma ${esc(c.turma)} com todos os lançamentos. Os docentes continuam cadastrados.</p>
@@ -1129,8 +1134,8 @@ function vAcesso(){
   const when=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}};
   const users=A.me&&A.me.master?`<section class="panel"><h2>Contas dos coordenadores</h2><p class="small muted" style="margin-top:-4px">Cada pessoa entra com o próprio usuário e senha, e o histórico mostra quem alterou o quê. A senha mestre continua valendo para você.</p>
     <div class="tw"><table><thead><tr><th>Usuário</th><th>Nome</th><th>Tipo</th><th>Nova senha</th><th></th></tr></thead><tbody>${(A.users||[]).map(u=>`<tr><td class="mono">${esc(u.login)}</td><td>${esc(u.nome)}</td><td>${u.role==="docente"?"Docente":u.role==="ambientes"?"Administrador de ambientes":"Coordenador"}</td><td><input type="password" id="pw_${esc(u.login)}" placeholder="mín. 8 caracteres" autocomplete="new-password" aria-label="Nova senha de ${esc(u.nome)}" style="width:170px"> <button class="btn sm" data-act="usrpw" data-l="${esc(u.login)}">Alterar</button></td><td><button class="btn sm bad" data-act="usrdel" data-l="${esc(u.login)}">${UI.confirm==="u"+u.login?"Confirmar":"Remover"}</button></td></tr>`).join("")||'<tr><td colspan="5" class="muted">Nenhuma conta ainda.</td></tr>'}</tbody></table></div>
-    <h3 style="margin:16px 0 8px">Nova conta</h3><div class="form"><label class="f">Usuário (letras minúsculas)<input type="text" id="uLogin" autocomplete="off"></label><label class="f">Nome<input type="text" id="uNome" autocomplete="off"></label><label class="f">Senha (mín. 8)<input type="password" id="uPw" autocomplete="new-password"></label><label class="f">Tipo de conta<select id="uRole"><option value="coord">Coordenador (edita tudo)</option><option value="docente">Docente (ambientes e relatórios)</option><option value="ambientes">Administrador de ambientes</option></select></label></div>
-    <div class="row" style="margin-top:8px"><button class="btn pri" data-act="usradd">Criar conta</button></div></section>`:`<section class="panel"><h2>Contas</h2><p class="small muted">Você entrou como ${esc((A.me&&A.me.nome)||"coordenador")}. Só quem usa a senha mestre cria e remove contas.</p></section>`;
+    <h3 style="margin:16px 0 8px">Nova conta</h3><form id="account-form"><div class="form"><label class="f">Usuário (letras minúsculas)<input type="text" id="uLogin" autocomplete="off" required minlength="3" maxlength="40" pattern="[a-z0-9._\\-]{3,40}" title="Use de 3 a 40 letras minúsculas, números, ponto, traço ou underline."></label><label class="f">Nome<input type="text" id="uNome" autocomplete="off" maxlength="80"></label><label class="f">Senha (mín. 8)<input type="password" id="uPw" autocomplete="new-password" required minlength="8"></label><label class="f">Tipo de conta<select id="uRole"><option value="coord">Coordenador (edita tudo)</option><option value="docente">Docente (ambientes e relatórios)</option><option value="ambientes">Administrador de ambientes</option></select></label></div>
+    <p id="account-feedback" class="form-feedback" role="status" aria-live="polite"></p><div class="row" style="margin-top:8px"><button type="submit" class="btn pri">Criar conta</button></div></form></section>`:`<section class="panel"><h2>Contas</h2><p class="small muted">Você entrou como ${esc((A.me&&A.me.nome)||"coordenador")}. Só quem usa a senha mestre cria e remove contas.</p></section>`;
   const hist=`<section class="panel"><div class="row" style="justify-content:space-between"><h2>Histórico de alterações</h2><button class="btn sm" data-act="histload">Atualizar</button></div><p class="small muted" style="margin-top:-4px">As últimas versões de cada turma ficam guardadas. Restaurar volta a turma (ou a lista de docentes) ao estado daquela hora; a versão atual também fica no histórico.</p>
     <div class="tw"><table><thead><tr><th>Quando</th><th>Quem</th><th>O quê</th><th></th></tr></thead><tbody>${(A.hist||[]).map(h=>`<tr><td class="mono">${when(h.at)}</td><td>${esc(h.by||"-")}</td><td>${esc(h.label)}${h.note?` <span class="muted">(${esc(h.note)})</span>`:""}</td><td><button class="btn sm" data-act="histrestore" data-h="${h.id}">${UI.confirm==="h"+h.id?"Confirmar restauração":"Restaurar"}</button></td></tr>`).join("")||'<tr><td colspan="4" class="muted">Sem alterações registradas.</td></tr>'}</tbody></table></div></section>`;
   return `<div class="grid2" style="grid-template-columns:1fr"><section class="panel"><a class="btn" href="/ambientes.html">Ambientes e vínculos de docentes</a></section>${users}${hist}</div>`;
@@ -1148,6 +1153,12 @@ function renderView(){
   afterRender();
 }
 const view=document.getElementById("view");
+document.addEventListener("submit",async e=>{
+ if(e.target.id!=="account-form")return;e.preventDefault();const form=e.target,feedback=form.querySelector('#account-feedback'),button=form.querySelector('[type=submit]');
+ if(button.disabled)return;button.disabled=true;feedback.className='form-feedback';feedback.textContent='Criando conta…';
+ try{const g=id=>form.querySelector('#'+id).value;const r=await PLAN.api({op:'user_add',login:g('uLogin'),nome:g('uNome'),password:g('uPw'),role:g('uRole')});if(!r.ok){feedback.className='form-feedback error';feedback.textContent=r.error||'Não foi possível criar a conta. Tente novamente.';return}await loadAcc();const next=document.getElementById('account-feedback');if(next){next.className='form-feedback success';next.textContent='Conta criada com sucesso.'}toast('Conta criada')}
+ catch{feedback.className='form-feedback error';feedback.textContent='Não foi possível conectar. Seus dados foram mantidos; tente novamente.'}finally{button.disabled=false}
+});
 document.addEventListener("click",e=>{
   const b=e.target.closest("[data-act]");if(!b)return;
   const a=b.dataset.act;
@@ -1191,7 +1202,6 @@ document.addEventListener("click",e=>{
   else if(a==="turmadel"){if(UI.confirm==="turmadel"){delete T[CUR];CUR=Object.keys(T)[0];normalize();UI.confirm=null;UI.month=null;UI.tab="painel";save();toast("Turma excluída")}else UI.confirm="turmadel";renderView()}
   else if(a==="print"){const w=window.open("","_blank");if(!w){toast("Libere os pop-ups do navegador para imprimir.");return}w.document.write(htmlCalendario());w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch(e){}},400)}
   else if(a==="bkfull"){const o=JSON.stringify({geral:G,turmas:strippedT()},null,1);DL.save({filename:`backup-planejador-${todayISO()}.json`,data:o}).then(()=>toast("Backup salvo"),er=>{if(!er||er.code!=="declined")toast("Não foi possível salvar o arquivo.")})}
-  else if(a==="usradd"){const g=id=>document.getElementById(id).value;PLAN.api({op:"user_add",login:g("uLogin"),nome:g("uNome"),password:g("uPw"),role:g("uRole")}).then(r=>{toast(r.ok?"Conta criada":r.error||"Erro ao criar a conta");if(r.ok)loadAcc()})}
   else if(a==="usrdel"){const lg=b.dataset.l;if(UI.confirm==="u"+lg){UI.confirm=null;PLAN.api({op:"user_del",login:lg}).then(r=>{toast(r.ok?"Conta removida":r.error||"Erro");loadAcc()})}else{UI.confirm="u"+lg;renderView()}}
   else if(a==="usrpw"){const lg=b.dataset.l,pw=document.getElementById("pw_"+lg).value;PLAN.api({op:"user_pw",login:lg,password:pw}).then(r=>toast(r.ok?"Senha alterada":r.error||"Erro"))}
   else if(a==="histload")loadAcc();
@@ -1235,7 +1245,7 @@ document.addEventListener("change",e=>{
   else if(t.id==="mFill"){document.querySelectorAll("[data-slot]").forEach(x=>x.value=t.value);updModalInfo()}
   else if(t.hasAttribute("data-slot")||t.id==="mT")updModalInfo();
   else if(t.id==="fImp"&&t.files[0]){const fr=new FileReader();fr.onload=()=>{document.getElementById("tImp").value=fr.result};fr.readAsText(t.files[0])}
-  else if(t.dataset.cfg){const k=t.dataset.cfg;S.cfg[k]=k==="aulasDia"?Math.max(1,+t.value||1):t.value;if(k==="inicio")UI.month=null;
+  else if(t.dataset.cfg){if(!t.reportValidity())return;const k=t.dataset.cfg;S.cfg[k]=k==="aulasDia"?Math.max(1,+t.value||1):t.value;if(k==="inicio")UI.month=null;
     if(k==="turma"){const nid=String(t.value).trim().replace(/[^\w.-]/g,"").slice(0,60);if(nid&&nid!==CUR&&!T[nid]){T[nid]=T[CUR];delete T[CUR];CUR=nid;normalize();toast("Código da turma atualizado. Os links antigos dessa turma deixam de valer.")}}
     save();renderView()}
   else if(t.dataset.bw!==undefined){
@@ -1321,6 +1331,7 @@ renderView();
 </script>
 
 <script src="/accessibility.js" defer></script>
+<script src="/forms.js" defer></script>
 <script>/* Prévia do arquivo gerado no servidor. A versão conferida acompanha o download. */
 (()=>{
  let current=null,returnMarkup='',returnFocus='',returnValues=[],sheetIndex=0,month='',zoom=1.25;
