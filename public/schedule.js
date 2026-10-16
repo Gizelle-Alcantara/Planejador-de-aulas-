@@ -45,4 +45,22 @@ function scheduleConflictDetails(docs,id,state,date){
  }
  return result.sort((a,b)=>a.data.localeCompare(b.data)||a.inicio-b.inicio||a.tipo.localeCompare(b.tipo));
 }
-;return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails}})();
+
+function coordinationOverview(docs){
+ const classes=Object.entries(docs).filter(([id,doc])=>id.startsWith('turma-')&&doc.state),conflicts=[],seen=new Set();
+ for(const [id,doc] of classes)for(const conflict of scheduleConflictDetails(docs,id,doc.state)){
+  const key=JSON.stringify([conflict.tipo,String(conflict.recurso||'').trim().toLowerCase(),conflict.lessons.map(l=>[l.turmaId,l.data,l.sigla,l.bloco]).sort((a,b)=>JSON.stringify(a).localeCompare(JSON.stringify(b)))]);
+  if(!seen.has(key)){seen.add(key);conflicts.push(conflict)}
+ }
+ conflicts.sort((a,b)=>a.data.localeCompare(b.data)||a.inicio-b.inicio||a.tipo.localeCompare(b.tipo));
+ const requests=(docs.reservas?.items||[]).filter(r=>['pendente','revisao'].includes(r.status));
+ const rows=classes.map(([id,{state:st}])=>{
+  const allocated={};for(const iso of Object.keys(st.days||{}))for(const b of blocksForDay(st,iso))allocated[b.sigla]=(allocated[b.sigla]||0)+b.quantidade;
+  let pendentes=0,excedentes=0,previstas=0,lancadas=0;for(const uc of st.ucs||[]){const expected=Math.ceil((Number(uc.ch)||0)*(st.cfg?.turno==='Matutino NEM'?1.2:1)),actual=allocated[uc.sigla]||0;previstas+=expected;lancadas+=actual;pendentes+=Math.max(0,expected-actual);excedentes+=Math.max(0,actual-expected)}
+  const semDocente=(st.ucs||[]).filter(u=>!u.docente).length,ocorrencias=conflicts.filter(c=>c.lessons.some(l=>l.turmaId===id)).length,reservas=requests.filter(r=>r.turmaId===id).length;
+  return {id,turma:st.cfg?.turma||id,curso:st.cfg?.curso||'',turno:st.cfg?.turno||'',pendentes,excedentes,previstas,lancadas,semDocente,conflitos:ocorrencias,reservas,atencao:!!(pendentes||excedentes||semDocente||ocorrencias||reservas)};
+ });
+ rows.sort((a,b)=>Number(b.atencao)-Number(a.atencao)||String(a.turma).localeCompare(String(b.turma),'pt-BR',{numeric:true}));
+ return {rows,conflicts,totals:{turmas:rows.length,atencao:rows.filter(r=>r.atencao).length,pendentes:rows.reduce((n,r)=>n+r.pendentes,0),excedentes:rows.reduce((n,r)=>n+r.excedentes,0),semDocente:rows.reduce((n,r)=>n+r.semDocente,0),conflitos:conflicts.length,reservas:requests.length}};
+}
+;return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails,coordinationOverview}})();

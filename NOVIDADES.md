@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Visão geral da coordenação
+- **Todas as turmas.** A aba Visão geral consolida aulas para planejar, excedentes, disciplinas sem docente, conflitos e reservas para análise.
+- **Conflitos sem duplicação.** Uma ocorrência entre duas turmas aparece nas duas linhas, mas é contada uma única vez nos indicadores e na central global.
+- **Acompanhamento com filtros.** Busque por código ou curso e combine turno e situação. Os filtros se aplicam à lista; os totais e a central abrangem todas as turmas.
+- **Atalhos de revisão.** Abra o painel, calendário ou disciplinas da turma e retorne à visão geral pelo botão Voltar. Reservas são atualizadas pela sincronização já existente.
+
 ## Busca rápida
 - **Turmas.** No Painel, pesquise por código ou curso e combine a busca com o turno.
 - **Docentes.** Na aba Docentes, pesquise por nome ou matrícula. A edição continua vinculada ao cadastro correto após filtrar.

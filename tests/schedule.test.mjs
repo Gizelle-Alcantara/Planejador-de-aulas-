@@ -2,6 +2,16 @@ import test from 'node:test';import assert from 'node:assert/strict';import{slot
 const day='2099-11-20',state={cfg:{turma:'T-HORA',curso:'Curso',turno:'Matutino',aulasDia:4,inicio:day,termino:day},ucs:[{sigla:'LOG',nome:'Lógica',docente:'Ana',ch:40},{sigla:'IHC',nome:'Interface',docente:'Ana',ch:40}],days:{[day]:{s:['LOG','IHC'],grade:['LOG','LOG','IHC','IHC'],t:'nota',h:'Prática'}},reg:{}};
 const docs={geral:{docentes:[{nome:'Ana',semana:[],bloqueios:[]}]},'turma-hora':{state},ambientes:{items:[{id:'lab',nome:'Maker',ativo:true}]},reservas:{items:[]}};
 const {scheduleConflictDetails}=await import('../lib/schedule.js');
+const {coordinationOverview}=await import('../lib/schedule.js');
+test('visão geral consolida pendências e conta conflitos entre turmas uma única vez',()=>{
+ const a={...state,ucs:[{...state.ucs[0],ch:8,sala:'Sala A'}],days:{[day]:{s:['LOG']}}},b={...a,cfg:{...a.cfg,turma:'B'}},input={geral:docs.geral,'turma-a':{state:a},'turma-b':{state:b},reservas:{items:[{id:'r',turmaId:'turma-a',status:'pendente'},{id:'ok',turmaId:'turma-a',status:'aprovada'}]}},before=JSON.stringify(input);
+ const overview=coordinationOverview(input);assert.equal(overview.totals.turmas,2);assert.equal(overview.totals.pendentes,8);assert.equal(overview.totals.conflitos,2);assert.equal(overview.totals.reservas,1);assert.equal(overview.totals.atencao,2);assert.ok(overview.rows.every(r=>r.conflitos===2));assert.equal(JSON.stringify(input),before);
+});
+test('visão geral separa excesso de aulas, disciplinas sem docente e cancelamentos',()=>{
+ const st={cfg:{...state.cfg,turno:'Matutino NEM'},ucs:[{sigla:'A',ch:1,docente:''},{sigla:'B',ch:5,docente:'Bia'}],days:{[day]:{s:['A'],grade:['A','A','A','A']}},reg:{}};
+ const overview=coordinationOverview({'turma-a':{state:st}});assert.equal(overview.totals.semDocente,1);assert.equal(overview.totals.excedentes,2);assert.equal(overview.totals.pendentes,6);
+ const cancelled=coordinationOverview({'turma-a':{state:{...st,reg:{[day]:{dado:'nao'}}}}});assert.equal(cancelled.totals.excedentes,0);assert.equal(cancelled.totals.pendentes,8);assert.equal(coordinationOverview({}).totals.turmas,0);
+});
 test('central detalha docente e ambiente com as duas turmas, sem alterar os dados',()=>{
  const a={...state,cfg:{...state.cfg,local:'Laboratório A'},days:{[day]:{s:['LOG'],grade:['LOG','LOG','','']}}};
  const b={...a,cfg:{...a.cfg,turma:'T2',local:' laboratório a '},days:{[day]:{s:['LOG'],grade:['','LOG','LOG','']}}};
