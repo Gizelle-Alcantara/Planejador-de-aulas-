@@ -15,7 +15,8 @@
     "test:ui": "npm run build && node tests/ui.smoke.mjs",
     "test:ui:copy": "npm run build && node tests/turma-copy.ui.mjs",
     "test:ui:search": "npm run build && node tests/search.ui.mjs",
-    "test:ui:recovery": "npm run build && node tests/recovery.ui.mjs"
+    "test:ui:recovery": "npm run build && node tests/recovery.ui.mjs",
+    "test:ui:history": "npm run build && node tests/history.ui.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

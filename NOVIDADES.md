@@ -1,5 +1,10 @@
 # Novidades desta versão
 
+## Histórico detalhado
+- **Comparação de versões.** Em Acesso, use “Ver alterações” para consultar os campos anteriores e novos, junto do autor, data e hora da edição.
+- **Inclusões e remoções.** As comparações identificam campos incluídos, removidos e alterados; códigos e credenciais são protegidos.
+- **Limites explícitos.** Até 200 campos por comparação. Se a versão anterior já saiu da retenção, a tela informa que ela não está disponível. A restauração continua acessível.
+
 ## Preparação para publicação
 - **Aba Publicação.** Disponível apenas à senha mestre, reúne configuração, conexão com o banco e verificação do último backup completo.
 - **Backup conferido.** Verifica leitura, hash, idade e correspondência com os dados atuais. A criação de backup exige clicar no botão; a consulta não modifica registros.

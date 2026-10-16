@@ -52,6 +52,40 @@ test("exclusão guarda cópia no histórico", async () => {
   const h = await (await call({ op: "history" }, cookie)).json();
   assert.ok(h.items.some((i) => i.doc === "turma-del" && i.note === "excluída"));
 });
+
+test('histórico detalhado compara a versão anterior, protege códigos e exige coordenação',async()=>{
+ const {cookie}=await login({password:'mestre-123'});
+ const original=structuredClone(turma);original.state.cfg.curso='Curso anterior';original.codigo='segredo-antigo';
+ await call({op:'set',id:'turma-diff',data:original,base:0},cookie);
+ const next=structuredClone(original);next.state.cfg.curso='Curso atualizado';next.codigo='segredo-novo';
+ await call({op:'set',id:'turma-diff',data:next,base:1},cookie);
+ const list=(await(await call({op:'history'},cookie)).json()).items.filter(h=>h.doc==='turma-diff');
+ const detail=await(await call({op:'history_detail',hid:list[0].id},cookie)).json();
+ assert.equal(detail.available,true);assert.equal(detail.rev,2);assert.ok(detail.by);assert.ok(detail.at);
+ assert.ok(detail.changes.some(c=>c.field==='Turma › Configuração › Curso'&&c.before==='"Curso anterior"'&&c.after==='"Curso atualizado"'));
+ assert.ok(!JSON.stringify(detail).includes('segredo-'));
+ const created=await(await call({op:'history_detail',hid:list[1].id},cookie)).json();assert.ok(created.changes.every(c=>c.kind==='incluído'));
+ assert.equal((await call({op:'history_detail',hid:list[0].id})).status,401);
+ assert.equal((await call({op:'history_detail',hid:'abc'},cookie)).status,400);
+ assert.equal((await call({op:'history_detail',hid:999999},cookie)).status,404);
+ await call({op:'delete',id:'turma-diff'},cookie);
+ const deleted=(await(await call({op:'history'},cookie)).json()).items.find(h=>h.doc==='turma-diff');
+ const removed=await(await call({op:'history_detail',hid:deleted.id},cookie)).json();assert.equal(removed.deleted,true);assert.ok(removed.changes.every(c=>c.kind==='removido'));
+ const {historyDiff}=await import('../lib/history-diff.js');
+ const many=historyDiff({},Object.fromEntries(Array.from({length:205},(_,i)=>['campo'+i,i])));
+ assert.equal(many.total,205);assert.equal(many.changes.length,200);assert.equal(many.truncated,true);
+ assert.ok(!JSON.stringify(historyDiff({x:1},{x:{password:'nao-expor'}})).includes('nao-expor'));
+});
+
+test('histórico informa quando a retenção removeu a versão anterior',async()=>{
+ const {cookie}=await login({password:'mestre-123'});
+ for(let rev=0;rev<61;rev++)await call({op:'set',id:'turma-retencao',data:{...turma,edicao:rev},base:rev},cookie);
+ const list=(await(await call({op:'history'},cookie)).json()).items.filter(h=>h.doc==='turma-retencao');
+ assert.equal(list.length,60);
+ const oldest=list.at(-1);assert.equal(oldest.rev,2);
+ const detail=await(await call({op:'history_detail',hid:oldest.id},cookie)).json();
+ assert.equal(detail.available,false);assert.deepEqual(detail.changes,[]);assert.match(detail.message,/versão anterior/);
+});
 test("contas: só a mestre cria; conta própria edita mas não gerencia", async () => {
   const m = await login({ password: "mestre-123" });
   assert.equal((await call({ op: "user_add", login: "maria", nome: "Maria", password: "curta" }, m.cookie)).status, 400);
@@ -98,6 +132,7 @@ test("conta de docente só registra as próprias aulas", async () => {
   assert.equal(bad.status, 403);
   assert.equal((await call({ op: "delete", id: "turma-t1" }, d.cookie)).status, 403);
   assert.equal((await call({ op: "history" }, d.cookie)).status, 403);
+  assert.equal((await call({ op: "history_detail",hid:1 }, d.cookie)).status, 403);
   assert.equal((await call({ op: "set", id: "geral", base: 1, data: { docentes: [] } }, d.cookie)).status, 403);
 });
 test("agenda ignora aula não dada", async () => {
