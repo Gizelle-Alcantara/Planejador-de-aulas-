@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Painel da coordenação e navegação
+- **Prioridades com atalhos.** O painel destaca aulas para planejar, disciplinas sem docente, erros no calendário e reservas pendentes ou em revisão. Os três primeiros indicadores se referem à turma aberta; reservas incluem todas as turmas acessíveis à coordenação.
+- **Reservas atualizadas.** Alterações nas reservas atualizam o painel na próxima sincronização, mesmo sem mudanças nas turmas.
+- **Retorno ao calendário.** O botão Voltar da gestão de ambientes respeita a aba indicada no endereço. Atalhos de reservas levam à seção correspondente e posicionam o foco para navegação por teclado.
+- **Carregamento independente do QR code.** A biblioteca externa de QR code carrega em paralelo, sem bloquear a inicialização do sistema.
+
 ## Segurança e trabalho em equipe
 - **Contas por coordenador.** Aba *Acesso*: a senha mestre (`ADMIN_PASSWORD`) cria contas com usuário e senha (mín. 8 caracteres). Cada pessoa entra em `/#login` com o próprio usuário. Só a senha mestre cria, troca senha e remove contas.
 - **Histórico e desfazer.** Cada gravação guarda uma versão (últimas 60 por turma), com data e autor. Aba *Acesso → Histórico → Restaurar* volta a turma ou a lista de docentes àquele ponto. Turmas excluídas também ficam no histórico.

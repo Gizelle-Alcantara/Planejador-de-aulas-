@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script id="qr-library" src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" async></script>
 <link rel="stylesheet" href="/accessibility.css">
 <style>
 /* Layout: cabeçalho da turma + abas; calendário mensal com pincel de disciplinas; tabelas densas para controle de aulas */
@@ -134,7 +134,7 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 <div class="wrap">
 <header class="top">
   <div class="brand"><img id="logo" class="logo" alt="SENAI" width="142" height="38"><div class="id" id="hdr"></div><button id="themeBtn" class="btn sm" type="button"></button></div>
-  <nav class="tabs" id="tabs" role="tablist"></nav>
+  <nav class="tabs" id="tabs" aria-label="Áreas do sistema"></nav>
 </header>
 <a class="skip-link" href="#main-content">Pular para o conteúdo</a><main id="main-content" tabindex="-1"><div id="view"></div></main>
 </div>
@@ -243,6 +243,8 @@ function fromDocs(docs){
 let EXPORT_RESERVAS=[];
 const UI={calFilters:{docente:"",disciplina:"",sala:"",situacao:"",turma:"",turno:""},fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",backTabs:[],month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
 try{const t=localStorage.getItem(KEY+"-tab");if(t&&TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
+const requestedTab=new URLSearchParams(location.search).get("aba");
+if(TABS.some(([key])=>key===requestedTab))UI.tab=requestedTab;
 
 try{const t=new URLSearchParams(location.search).get("aba");if(TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
 
@@ -359,7 +361,8 @@ function renderHead(){
   const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
   document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><button class="btn sm" data-act="back">Voltar</button><button class="btn sm pri" data-act="export">Exportar calendário</button><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
   setStatus(UI.status);
-  document.getElementById("tabs").innerHTML=TABS.filter(x=>UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])).map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join("");
+  const available=TABS.filter(x=>UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0]));
+  document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','dados'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','dados'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
 }
 
 /* ---------- PAINEL ---------- */
@@ -373,10 +376,19 @@ function vPainel(){
   const chTot=S.ucs.reduce((a,u)=>a+(+u.ch||0),0);
   const docs={};
   C.rows.forEach(r=>{const n=r.u.docente||"(sem docente)";(docs[n]=docs[n]||[]).push(r)});
+  const semDoc=C.rows.filter(r=>!r.u.docente).length;
+  const erros=av.filter(([k])=>k==="err").length;
+  const reservas=EXPORT_RESERVAS.filter(r=>r.status==="pendente"||r.status==="revisao");
+  const tarefas=[
+    [pend,"Aulas para planejar","Distribua as aulas que faltam no calendário.","calendario","Planejar aulas"],
+    [semDoc,"Disciplinas sem docente","Vincule um docente às disciplinas da turma.","disciplinas","Definir docentes"],
+    [erros,"Erros no calendário","Confira os avisos abaixo e ajuste os lançamentos.","calendario","Revisar calendário"]
+  ];
   return `
+  <section class="panel priorities" aria-labelledby="priorities-title"><div class="access-heading"><div><h2 id="priorities-title">Prioridades da coordenação</h2><p class="small muted">Planejamento da turma ${esc(c.turma)} · reservas de todas as turmas</p></div><a class="btn" href="/ambientes.html#reservations">Gerenciar reservas</a></div><div class="priority-grid">${tarefas.map(([n,title,help,tab,label])=>`<article class="priority-item"><strong class="priority-count ${n?'pending':''}">${n}</strong><h3>${title}</h3><p class="small muted">${help}</p><button class="btn sm" data-act="tab" data-k="${tab}">${label}</button></article>`).join('')}<article class="priority-item"><strong class="priority-count ${reservas.length?'pending':''}">${reservas.length}</strong><h3>Reservas para analisar</h3><p class="small muted">Solicitações pendentes ou que precisam de revisão.</p><a class="btn sm" href="/ambientes.html#reservations">Analisar reservas</a></article></div>${!pend&&!semDoc&&!erros&&!reservas.length?'<p class="priority-clear">Nenhuma pendência nestes indicadores.</p>':''}</section>
   <div class="banner ${pend===0&&!av.some(a=>a[0]==="err")?"ok":"warn"}">${pend===0?(av.some(a=>a[0]==="err")?"Calendário com erros: veja os avisos":"Calendário OK"):`Aviso: aulas pendentes de lançamento (${pend} aula${pend>1?"s":""})`}</div>
   <div class="tiles">
-    <div class="tile"><b class="mono">${totA}/${totP}</b><span>aulas lançados</span></div>
+    <div class="tile"><b class="mono">${totA}/${totP}</b><span>aulas lançadas / previstas</span></div>
     <div class="tile"><b class="mono">${diasLet}</b><span>dias letivos no calendário</span></div>
     <div class="tile"><b class="mono">${chTot} h</b><span>carga horária prevista</span></div>
     <div class="tile"><b class="mono">${prox?br(prox):"-"}</b><span>${prox?"próxima aula · "+(S.days[prox].s||[]).join(" + "):"sem próxima aula"}</span></div>
@@ -779,6 +791,7 @@ function afterRender(){
   if(MODE==="planner"&&UI.tab==="compartilhar"){const el=document.getElementById("qr");if(el&&!window.QRCode){el.innerHTML='<span style="color:#444;font-size:.75rem">QR code indisponível</span>'}
     if(el&&window.QRCode){el.innerHTML="";try{new QRCode(el,{text:alunoLink(),width:168,height:168,correctLevel:QRCode.CorrectLevel.M})}catch(e){}}}
 }
+document.getElementById("qr-library")?.addEventListener("load",afterRender);
 
 /* ---------- DADOS ---------- */
 function csvCell(value){let v=String(value??'');if(/^[\s\u0000-\u001f]*[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
@@ -1278,7 +1291,7 @@ renderView();
   let first=true;
   dref.onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
-    const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});EXPORT_RESERVAS=[...(Array.isArray(docs.reservas?.items)?docs.reservas.items:[]),...(Array.isArray(docs.reservas?.calendario)?docs.reservas.calendario:[])];
+    const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});const previousReservations=canon(EXPORT_RESERVAS);EXPORT_RESERVAS=[...(Array.isArray(docs.reservas?.items)?docs.reservas.items:[]),...(Array.isArray(docs.reservas?.calendario)?docs.reservas.calendario:[])];const reservationsChanged=previousReservations!==canon(EXPORT_RESERVAS);
     const r=fromDocs(docs);
     if(MODE==="aluno"||MODE==="docente"){
       if(!Object.keys(r.t).length){UI.loaded=true;UI.empty=true;renderView();return}
@@ -1297,7 +1310,7 @@ renderView();
     const now=docItems();
     lastJson={};now.forEach(([k,d])=>{lastJson[k]=canon(d)});
     if(r.legacy)delete lastJson.geral;
-    if(canon([now])===cur&&!r.legacy){setStatus("saved");return}
+    if(canon([now])===cur&&!r.legacy&&!reservationsChanged){setStatus("saved");return}
     persistLocal();renderView();
     if(r.legacy)save();else setStatus("saved");
   },()=>{if(MODE!=="planner"){UI.err="Não foi possível carregar o calendário agora.";renderView()}else setStatus("error")});
@@ -1305,4 +1318,5 @@ renderView();
 </script>
 
 <script src="/accessibility.js" defer></script>
+<script src="/forms.js" defer></script>
 </body></html>

@@ -6,7 +6,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script id="qr-library" src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" async></script>
 <link rel="stylesheet" href="/accessibility.css">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0b5cab">
@@ -247,6 +247,8 @@ function fromDocs(docs){
 let EXPORT_RESERVAS=[];
 const UI={calFilters:{docente:"",disciplina:"",sala:"",situacao:"",turma:"",turno:""},fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",backTabs:[],month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
 try{const t=localStorage.getItem(KEY+"-tab");if(t&&TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
+const requestedTab=new URLSearchParams(location.search).get("aba");
+if(TABS.some(([key])=>key===requestedTab))UI.tab=requestedTab;
 
 try{const t=new URLSearchParams(location.search).get("aba");if(TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
 
@@ -377,10 +379,19 @@ function vPainel(){
   const chTot=S.ucs.reduce((a,u)=>a+(+u.ch||0),0);
   const docs={};
   C.rows.forEach(r=>{const n=r.u.docente||"(sem docente)";(docs[n]=docs[n]||[]).push(r)});
+  const semDoc=C.rows.filter(r=>!r.u.docente).length;
+  const erros=av.filter(([k])=>k==="err").length;
+  const reservas=EXPORT_RESERVAS.filter(r=>r.status==="pendente"||r.status==="revisao");
+  const tarefas=[
+    [pend,"Aulas para planejar","Distribua as aulas que faltam no calendário.","calendario","Planejar aulas"],
+    [semDoc,"Disciplinas sem docente","Vincule um docente às disciplinas da turma.","disciplinas","Definir docentes"],
+    [erros,"Erros no calendário","Confira os avisos abaixo e ajuste os lançamentos.","calendario","Revisar calendário"]
+  ];
   return `
+  <section class="panel priorities" aria-labelledby="priorities-title"><div class="access-heading"><div><h2 id="priorities-title">Prioridades da coordenação</h2><p class="small muted">Planejamento da turma ${esc(c.turma)} · reservas de todas as turmas</p></div><a class="btn" href="/ambientes.html#reservations">Gerenciar reservas</a></div><div class="priority-grid">${tarefas.map(([n,title,help,tab,label])=>`<article class="priority-item"><strong class="priority-count ${n?'pending':''}">${n}</strong><h3>${title}</h3><p class="small muted">${help}</p><button class="btn sm" data-act="tab" data-k="${tab}">${label}</button></article>`).join('')}<article class="priority-item"><strong class="priority-count ${reservas.length?'pending':''}">${reservas.length}</strong><h3>Reservas para analisar</h3><p class="small muted">Solicitações pendentes ou que precisam de revisão.</p><a class="btn sm" href="/ambientes.html#reservations">Analisar reservas</a></article></div>${!pend&&!semDoc&&!erros&&!reservas.length?'<p class="priority-clear">Nenhuma pendência nestes indicadores.</p>':''}</section>
   <div class="banner ${pend===0&&!av.some(a=>a[0]==="err")?"ok":"warn"}">${pend===0?(av.some(a=>a[0]==="err")?"Calendário com erros: veja os avisos":"Calendário OK"):`Aviso: aulas pendentes de lançamento (${pend} aula${pend>1?"s":""})`}</div>
   <div class="tiles">
-    <div class="tile"><b class="mono">${totA}/${totP}</b><span>aulas lançados</span></div>
+    <div class="tile"><b class="mono">${totA}/${totP}</b><span>aulas lançadas / previstas</span></div>
     <div class="tile"><b class="mono">${diasLet}</b><span>dias letivos no calendário</span></div>
     <div class="tile"><b class="mono">${chTot} h</b><span>carga horária prevista</span></div>
     <div class="tile"><b class="mono">${prox?br(prox):"-"}</b><span>${prox?"próxima aula · "+(S.days[prox].s||[]).join(" + "):"sem próxima aula"}</span></div>
@@ -783,6 +794,7 @@ function afterRender(){
   if(MODE==="planner"&&UI.tab==="compartilhar"){const el=document.getElementById("qr");if(el&&!window.QRCode){el.innerHTML='<span style="color:#444;font-size:.75rem">QR code indisponível</span>'}
     if(el&&window.QRCode){el.innerHTML="";try{new QRCode(el,{text:alunoLink(),width:168,height:168,correctLevel:QRCode.CorrectLevel.M})}catch(e){}}}
 }
+document.getElementById("qr-library")?.addEventListener("load",afterRender);
 
 /* ---------- DADOS ---------- */
 function csvCell(value){let v=String(value??'');if(/^[\s\u0000-\u001f]*[=+\-@]/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"'}
@@ -1282,7 +1294,7 @@ renderView();
   let first=true;
   dref.onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
-    const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});EXPORT_RESERVAS=[...(Array.isArray(docs.reservas?.items)?docs.reservas.items:[]),...(Array.isArray(docs.reservas?.calendario)?docs.reservas.calendario:[])];
+    const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});const previousReservations=canon(EXPORT_RESERVAS);EXPORT_RESERVAS=[...(Array.isArray(docs.reservas?.items)?docs.reservas.items:[]),...(Array.isArray(docs.reservas?.calendario)?docs.reservas.calendario:[])];const reservationsChanged=previousReservations!==canon(EXPORT_RESERVAS);
     const r=fromDocs(docs);
     if(MODE==="aluno"||MODE==="docente"){
       if(!Object.keys(r.t).length){UI.loaded=true;UI.empty=true;renderView();return}
@@ -1301,7 +1313,7 @@ renderView();
     const now=docItems();
     lastJson={};now.forEach(([k,d])=>{lastJson[k]=canon(d)});
     if(r.legacy)delete lastJson.geral;
-    if(canon([now])===cur&&!r.legacy){setStatus("saved");return}
+    if(canon([now])===cur&&!r.legacy&&!reservationsChanged){setStatus("saved");return}
     persistLocal();renderView();
     if(r.legacy)save();else setStatus("saved");
   },()=>{if(MODE!=="planner"){UI.err="Não foi possível carregar o calendário agora.";renderView()}else setStatus("error")});

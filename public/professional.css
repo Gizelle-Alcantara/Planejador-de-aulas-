@@ -50,6 +50,19 @@ tbody tr:hover{background:color-mix(in srgb,var(--accent) 3%,var(--surface))}
 .lg-ov .lg-box{width:min(92vw,420px);padding:30px;border-radius:16px}
 .lg-ov .lg-box h2{font-size:1.4rem;margin-bottom:24px}
 .lg-box label{display:flex;flex-direction:column;gap:8px;font-size:.85rem}
+.priorities{margin-bottom:20px}
+.priorities .access-heading h2{margin:0}
+.priorities .access-heading p{margin:6px 0 0}
+.priority-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.priority-item{display:flex;flex-direction:column;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:18px;min-width:0}
+.priority-count{font:600 1.8rem var(--f-display);color:var(--ok);margin-bottom:12px;font-variant-numeric:tabular-nums}
+.priority-count.pending{color:var(--warn)}
+.priority-item h3{font-size:.95rem}
+.priority-item p{line-height:1.6;margin:10px 0 18px}
+.priority-item .btn{margin-top:auto}
+.priority-clear{color:var(--ok);font-weight:500;margin-bottom:0}
+@media(max-width:960px){.priority-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.priority-grid{grid-template-columns:1fr}}
 #module-main{max-width:1280px}
 #module-main>header{padding:10px 0 24px;border-bottom:1px solid #dce4ee}
 #module-main h1{letter-spacing:-.035em;margin:8px 0}

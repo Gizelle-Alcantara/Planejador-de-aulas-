@@ -1,5 +1,5 @@
 // Cache simples: a tela e as últimas agendas lidas abrem sem internet. Nunca guarda respostas de coordenador logado.
-const CACHE = "planejador-v14-aluno-codigo";
+const CACHE = "planejador-v15-prioridades";
 self.addEventListener("install", (e) => { self.skipWaiting(); });
 self.addEventListener("activate", (e) => e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())));
 self.addEventListener("fetch", (e) => {
