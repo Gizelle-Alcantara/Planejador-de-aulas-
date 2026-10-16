@@ -10,16 +10,19 @@ Use uma cópia isolada do banco para testes que criem ou alterem registros. Não
 - [ ] Definir ADMIN_PASSWORD e SESSION_SECRET fortes/diferentes.
 - [ ] Conferir Turso remoto na hospedagem ou diretório/volume SQLite local.
 - [ ] Confirmar que modelos Excel, API e código-fonte acompanham o pacote.
+- [ ] Executar `npm run check:publish` com as variáveis do destino (usar `-- --serverless` para hospedagem sem servidor).
+- [ ] Consultar a aba Publicação com a senha mestre e corrigir os bloqueios automáticos. Os alertas e a homologação manual continuam necessários.
 
 ## Acesso e cadastros
 
-- [ ] Visitante vê agendas, mas não grava nem baixa Excel autenticado.
+- [ ] Visitante vê somente a entrada; aluno acessa apenas sua turma com código válido, e docente entra com sua conta.
 - [ ] Senha mestre cria conta; coordenação comum não administra contas.
 - [ ] Docente novo é cadastrado, vinculado e encontra as próprias aulas.
 - [ ] Nome, matrícula, e-mails, telefone e vínculo são validados.
 - [ ] Renomear mantém conta/disciplinas/reservas e o link permanente.
 - [ ] Remover vínculo impede novos pedidos daquele docente.
 - [ ] Trocar senha encerra a sessão anterior e permite novo login.
+- [ ] Homologar recuperação com e-mail real: link expira, funciona uma única vez e encerra sessões antigas. A senha mestre permanece gerenciada no servidor.
 - [ ] Conta docente não recebe alunos/observações de colegas nem altera aulas alheias.
 
 ## Planejamento

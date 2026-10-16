@@ -5,6 +5,19 @@ import { unzipSync, strFromU8 } from 'fflate';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 const state={cfg:{turma:'T-EXPORT',curso:'Desenvolvimento de Sistemas',turno:'Matutino',modulo:'I',coord:'Coordenação',inicio:'2028-02-01',termino:'2028-03-31',aulasDia:4},ucs:[{sigla:'LOG',nome:'Lógica',ch:40,docente:'Ana',sala:'Sala 1'}],days:{'2028-02-29':{s:['LOG']},'2028-03-01':{s:['LOG'],h:'Atividade prática'}},reg:{}};
 const getCell=(text,ref)=>text.match(new RegExp(`<c\\b[^>]*r="${ref}"[^>]*?(?:/>|>[\\s\\S]*?</c>)`))?.[0];
+
+test('modelos incorporados funcionam sem arquivos externos ou localização do módulo', async()=>{
+ const source=readFileSync(new URL('../lib/excel-templates.js',import.meta.url),'utf8');
+ // Uma URL de dados não possui diretório de assets nem acesso relativo ao projeto.
+ const {excelTemplate}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
+ for(const name of ['docente','senai']){
+  const original=readFileSync(new URL(`../lib/assets/calendario-${name}-modelo.xlsx`,import.meta.url));
+  assert.deepEqual(excelTemplate(name),original);
+  const first=excelTemplate(name);first[0]=0;
+  assert.deepEqual(excelTemplate(name),original,'cada exportação recebe bytes independentes');
+ }
+ assert.throws(()=>excelTemplate('inexistente'),/desconhecido/);
+});
 test('exportação Excel mantém o modelo original e preenche cabeçalho, datas, salas e fórmulas',()=>{
  const result=unzipSync(calendarXlsx(state,[{status:'aprovada',data:'2028-02-29',sigla:'LOG',ambienteNome:'Maker'}]));
  const template=unzipSync(new Uint8Array(readFileSync(new URL('../lib/assets/calendario-senai-modelo.xlsx',import.meta.url))));

@@ -1,4 +1,5 @@
 // Gera public/index.html e public/shim.js a partir de src/
+import './build-excel-templates.js';
 import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync } from "node:fs";
 const rd = (p) => readFileSync(new URL("../src/" + p, import.meta.url), "utf8");
 let t = rd("tpl.html");

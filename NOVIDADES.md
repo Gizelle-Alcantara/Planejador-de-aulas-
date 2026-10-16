@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Preparação para publicação
+- **Aba Publicação.** Disponível apenas à senha mestre, reúne configuração, conexão com o banco e verificação do último backup completo.
+- **Backup conferido.** Verifica leitura, hash, idade e correspondência com os dados atuais. A criação de backup exige clicar no botão; a consulta não modifica registros.
+- **Checagem por comando.** `npm run check:publish` verifica variáveis e arquivos sem acessar banco ou serviços externos e sem imprimir segredos. Use `-- --serverless` para hospedagem sem servidor.
+- **Homologação explícita.** Entrega de e-mail, agendamento, cópia externa e restauração no destino permanecem na lista manual. Consulte [Publicação](docs/PUBLICACAO.md).
+
 ## Recuperação de acesso
 - **Esqueci minha senha.** Os acessos de coordenadores, docentes e ambientes levam à página de recuperação. Informe usuário e o e-mail cadastrado para a conta.
 - **Cadastro pela senha mestre.** Na aba Acesso, a senha mestre cadastra ou altera o e-mail de recuperação. O campo é independente do contato do cadastro docente.

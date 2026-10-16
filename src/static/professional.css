@@ -24,6 +24,12 @@ nav.tabs button{padding:9px 11px}
 .form-feedback{font-size:.85rem;min-height:1.5em;line-height:1.6}
 .form-feedback.error{color:var(--bad)}
 .form-feedback.success{color:var(--ok)}
+.publication-checks{display:grid;gap:12px;margin:24px 0}
+.publication-check{display:flex;align-items:flex-start;gap:14px;border:1px solid var(--line);padding:16px;border-radius:10px;min-width:0}
+.publication-check .pill{flex-shrink:0}.publication-check p{margin:6px 0 0;color:var(--muted);font-size:.85rem;line-height:1.7;overflow-wrap:anywhere}
+.publication-ok{color:var(--ok)}.publication-warn{color:var(--warn)}.publication-error{color:var(--bad)}
+.publication-manual{padding-left:22px;line-height:1.8}.publication-manual li{margin-bottom:12px}
+@media(max-width:620px){.publication-check{flex-direction:column;gap:10px}}
 .duplicate-options{border:1px solid var(--line);border-radius:10px;margin:20px 0 14px;padding:16px;min-width:0}
 .duplicate-options legend{font-weight:600;padding:0 6px}
 .duplicate-options label{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;padding:10px 0;align-items:start}

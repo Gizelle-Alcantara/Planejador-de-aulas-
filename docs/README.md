@@ -9,6 +9,7 @@ Comece pelo **[Manual completo](MANUAL-COMPLETO.md)**. Para leitura em navegador
 | [Manual completo](MANUAL-COMPLETO.md) | Operação por perfil, instalação, configuração, reservas, arquivos, segurança, backup e suporte |
 | [Referência técnica](REFERENCIA-TECNICA.md) | Arquitetura, banco, regras, API, respostas, transações e testes |
 | [Checklist](CHECKLIST-VALIDACAO.md) | Homologação e verificação antes de publicar |
+| [Publicação](PUBLICACAO.md) | Diagnóstico de configuração, integridade do backup e homologação no destino |
 | [Instalação](INSTALACAO-pt-BR.md) | Entrada para instalação local e hospedagem |
 | [Cadastro docente](CADASTRO-DOCENTE.md) | Formulário e integração com contas/exportação |
 | [Horários](HORARIOS-POR-AULA.md) | Grade por posição e compatibilidade com dados antigos |

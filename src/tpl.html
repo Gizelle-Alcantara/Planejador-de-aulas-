@@ -162,7 +162,7 @@ const WD=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const WDL=["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const TURNOS=["Matutino","Matutino NEM","Vespertino","Vespertino NEM","Noturno (Técnico)","Noturno (Comunidade)","Diurno"];
-const TABS=[["painel","Painel"],["geral","Visão geral"],["calendario","Calendário"],["cronograma","Cronograma"],["enviar","Enviar"],["avisos","Avisos"],["compartilhar","Compartilhar"],["disciplinas","Disciplinas"],["docentes","Docentes"],["relatorios","Relatórios"],["turma","Turma"],["ambientes","Ambientes"],["acesso","Acesso"],["dados","Dados"]];
+const TABS=[["painel","Painel"],["geral","Visão geral"],["calendario","Calendário"],["cronograma","Cronograma"],["enviar","Enviar"],["avisos","Avisos"],["compartilhar","Compartilhar"],["disciplinas","Disciplinas"],["docentes","Docentes"],["relatorios","Relatórios"],["turma","Turma"],["ambientes","Ambientes"],["acesso","Acesso"],["dados","Dados"],["publicacao","Publicação"]];
 
 /* ---------- estado ---------- */
 function seedTurma(){
@@ -360,11 +360,12 @@ const rowHorario=()=>{const h=horarios();return h.length?`${hm(h[0].i)} às ${hm
 /* ---------- cabeçalho / abas ---------- */
 const DOCTABS=["relatorios","ambientes"];
 function renderHead(){
+  if(UI.tab==='publicacao'&&!UI.me?.master)UI.tab='painel';
   const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
   document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><button class="btn sm" data-act="back">Voltar</button><button class="btn sm pri" data-act="export">Exportar calendário</button><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
   setStatus(UI.status);
-  const available=TABS.filter(x=>UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0]));
-  document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','dados'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','dados'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
+  const available=TABS.filter(x=>(x[0]!=="publicacao"||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
+  document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','dados','publicacao'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','dados','publicacao'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
 }
 
 /* ---------- PAINEL ---------- */
@@ -1164,6 +1165,19 @@ async function loadAcc(){
   if(me&&me.master){const u=await PLAN.api({op:"users"});A.users=u.users||[]}
   UI.acc=A;if(MODE==="planner"&&UI.tab==="acesso")renderView();
 }
+async function loadPublication(){
+ try{const result=await PLAN.api({op:'publication_status'});UI.publication=result.ok?result:{error:result.error||'Não foi possível verificar o ambiente.'}}catch{UI.publication={error:'Não foi possível conectar. Tente novamente.'}}
+ if(MODE==='planner'&&UI.tab==='publicacao')renderView();
+}
+function vPublication(){
+ if(!UI.me?.master)return '<section class="panel"><h2>Publicação</h2><p>Esta verificação exige a senha mestre.</p></section>';
+ if(!UI.publication){UI.publication={loading:true};loadPublication()}
+ const report=UI.publication,header='<div class="access-heading"><div><h2>Preparação para publicação</h2><p class="muted">Verificações automáticas do ambiente e do último backup, sem modificar os dados.</p></div><button class="btn" data-act="publicationcheck">Atualizar verificação</button></div>';
+ if(report.loading)return `<section class="panel">${header}<p role="status">Verificando configuração e backup…</p></section>`;
+ if(report.error)return `<section class="panel">${header}<p role="alert">${esc(report.error)}</p></section>`;
+ const labels={ok:'Conferido',warn:'Atenção',error:'Corrigir'};
+ return `<section class="panel">${header}<p class="small muted">Última verificação: ${esc(fdt(report.checkedAt))}</p><div class="tiles"><div class="tile"><b>${report.errors}</b><span>Bloqueios automáticos</span></div><div class="tile"><b>${report.warnings}</b><span>Alertas para revisar</span></div><div class="tile"><b>${report.checks.filter(c=>c.status==='ok').length}</b><span>Itens conferidos</span></div></div><div class="publication-checks">${report.checks.map(check=>`<article class="publication-check"><span class="pill ${check.status==='ok'?'publication-ok':check.status==='warn'?'publication-warn':'publication-error'}">${labels[check.status]}</span><div><h3>${esc(check.title)}</h3><p>${esc(check.detail)}</p></div></article>`).join('')}</div><div class="row"><button class="btn pri" data-act="publicationbackup">Criar backup completo</button><button class="btn" data-act="tab" data-k="dados">Abrir backups e restauração</button></div></section><section class="panel"><h2>Homologação antes de publicar</h2><p class="muted">Estes itens precisam ser confirmados no ambiente de destino. As verificações automáticas não comprovam entrega de e-mail, restauração ou funcionamento da hospedagem.</p><ul class="publication-manual">${report.manual.map(item=>`<li>${esc(item)}</li>`).join('')}</ul></section>`;
+}
 function vAcesso(){
   if(!UI.acc){UI.acc={loading:true};loadAcc()}
   const A=UI.acc;if(A.loading)return '<section class="panel"><p class="muted">Carregando…</p></section>';
@@ -1185,7 +1199,7 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   renderHead();
   const v=document.getElementById("view");
-  v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,dados:vDados,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
+  v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,dados:vDados,publicacao:vPublication,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
   afterRender();
 }
 const view=document.getElementById("view");
@@ -1201,6 +1215,8 @@ document.addEventListener("click",e=>{
   if(a==="mclose"){if(e.target===b)closeModal();return}
   if(a==="tab"){if(UI.tab!==b.dataset.k)UI.backTabs.push(UI.tab);UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
   else if(a==="day")dayClick(b.dataset.iso);
+  else if(a==='publicationcheck'){UI.publication=null;renderView()}
+  else if(a==='publicationbackup'){b.disabled=true;PLAN.api({op:'backup_now'}).then(async result=>{if(!result.ok){toast(result.error||'Não foi possível criar o backup.');return}UI.bk=null;toast(result.skipped?'Nenhum dado disponível para backup.':'Backup completo criado. Baixe e guarde uma cópia externa.');await loadPublication()}).catch(()=>toast('Não foi possível conectar. Tente novamente.')).finally(()=>b.disabled=false)}
   else if(a==='overviewopen'){
     if(!T[b.dataset.id]){toast('Turma não disponível. Atualize a visão geral.');return}
     UI.backTabs.push('geral');CUR=b.dataset.id;normalize();UI.tab=['painel','calendario','disciplinas'].includes(b.dataset.tab)?b.dataset.tab:'painel';UI.month=null;UI.ucFilter='';UI.fUc='';Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');persistLocal();renderView();window.scrollTo(0,0);
