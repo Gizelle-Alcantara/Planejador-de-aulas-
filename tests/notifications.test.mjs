@@ -1,0 +1,90 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtempSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {calendarNotifications} from '../lib/calendar-notifications.js';
+process.env.TURSO_DATABASE_URL='file:'+join(mkdtempSync(join(tmpdir(),'senai-notifications-')),'test.db');
+process.env.ADMIN_PASSWORD='senha-notifications-teste';process.env.SESSION_SECRET='segredo-notifications-teste';
+const {handle,restoreBackupPayload}=await import('../lib/core.js');
+const call=(body,cookie)=>handle(new Request('http://local/api',{method:'POST',headers:{'content-type':'application/json',...cookie?{cookie}:{}},body:JSON.stringify(body)}));
+const api=async(body,cookie)=>{const r=await call(body,cookie);assert.equal(r.status,200,await r.clone().text());return r.json()};
+const login=async body=>{const r=await call({op:'login',...body});assert.equal(r.status,200);return r.headers.get('set-cookie').split(';')[0]};
+const state={cfg:{turma:'NOT',curso:'Curso',turno:'Matutino',aulasDia:4,inicio:'2099-01-01',termino:'2099-12-31'},ucs:[{sigla:'A',nome:'Aula Ana',docente:'Ana',ch:40,sala:'Sala 1'},{sigla:'B',nome:'Aula Bia',docente:'Bia',ch:40,sala:'Sala 2'}],days:{'2099-03-01':{s:['A']},'2099-03-02':{s:['B']}},reg:{},alunos:[]};
+const accounts=[{login:'ana',role:'docente',docente:'Ana'},{login:'bia',role:'docente',docente:'Bia'},{login:'semvinculo',role:'docente'}];
+test('avisos comparam apenas aulas do docente afetado e ignoram dados privados e passado',()=>{
+ const changed=structuredClone(state);changed.ucs[0].sala='Sala 3';
+ const notices=calendarNotifications(state,changed,accounts,'2099-01-01');assert.deepEqual(notices.map(n=>n.target),['@coordenacao','ana']);assert.match(notices[1].message,/01\/03\/2099/);assert.ok(!notices[1].message.includes('02/03/2099'));
+ const privateChange=structuredClone(state);privateChange.alunos=[{nome:'Privado'}];privateChange.reg['2099-03-01']={obs:'Observação privada'};privateChange.days['2099-03-01'].h='Nota interna';
+ assert.deepEqual(calendarNotifications(state,privateChange,accounts,'2099-01-01'),[]);
+ assert.deepEqual(calendarNotifications(state,changed,accounts,'2100-01-01'),[]);
+ const cancelled=structuredClone(state);cancelled.reg['2099-03-01']={dado:'nao'};assert.deepEqual(calendarNotifications(state,cancelled,accounts,'2099-01-01').map(n=>n.target),['@coordenacao','ana']);
+ assert.equal(calendarNotifications(state,undefined,accounts,'2099-01-01').length,3);
+});
+let master,coord,ana,bia,env,rev=0;
+test('calendário gera avisos sem e-mail e restringe os destinatários por perfil',async()=>{
+ master=await login({password:process.env.ADMIN_PASSWORD});
+ await api({op:'set',id:'geral',data:{docentes:[{nome:'Ana'},{nome:'Bia'}]},base:0},master);
+ for(const [name,role] of [['ana','docente'],['bia','docente'],['coord','coord'],['env','ambientes']])await api({op:'user_add',login:name,nome:name,password:'senha-notificacao',role},master);
+ for(const docente of ['Ana','Bia'])await api({op:'user_link',login:docente.toLowerCase(),docente},master);
+ ana=await login({login:'ana',password:'senha-notificacao'});bia=await login({login:'bia',password:'senha-notificacao'});coord=await login({login:'coord',password:'senha-notificacao'});env=await login({login:'env',password:'senha-notificacao'});
+ rev=(await api({op:'set',id:'turma-not',data:{state},base:0},master)).rev;
+ assert.equal((await api({op:'notification_list'},ana)).unread,1);assert.equal((await api({op:'notification_list'},bia)).unread,1);
+ const initial=await api({op:'notification_list'},master);assert.equal(initial.unread,1);assert.equal(initial.items[0].kind,'calendario');assert.equal(initial.items[0].docId,'turma-not');
+ assert.equal((await api({op:'notification_list'},env)).items.length,0);
+ const changed=structuredClone(state);changed.ucs[0].sala='Sala 3';rev=(await api({op:'set',id:'turma-not',data:{state:changed},base:rev},master)).rev;
+ assert.equal((await api({op:'notification_list'},ana)).unread,2);assert.equal((await api({op:'notification_list'},bia)).unread,1);
+ assert.equal((await call({op:'notification_list'})).status,401);
+});
+test('leitura é individual, persistente e lotes sem autorização são revertidos',async()=>{
+ const shared=(await api({op:'notification_list'},master)).items[0];
+ await Promise.all([api({op:'notification_read',id:shared.id},master),api({op:'notification_read',id:shared.id},coord)]);
+ assert.equal((await api({op:'notification_list'},master)).items[0].lida,true);assert.equal((await api({op:'notification_list'},coord)).items[0].lida,true);
+ const second=(await api({op:'notification_list'},master)).items[1];await api({op:'notification_read',id:second.id},master);assert.equal((await api({op:'notification_list'},coord)).items[1].lida,false);
+ const own=(await api({op:'notification_list'},ana)).items;
+ assert.equal((await call({op:'notification_read_many',ids:[own[0].id,shared.id]},ana)).status,404);
+ assert.equal((await api({op:'notification_list'},ana)).items[0].lida,false);
+ await api({op:'notification_read_many',ids:own.map(n=>n.id)},ana);assert.equal((await api({op:'notification_list'},ana)).unread,0);
+ assert.equal((await call({op:'notification_read',id:own[0].id},bia)).status,404);
+ assert.equal((await call({op:'notification_read_many',ids:[]},ana)).status,400);
+ assert.equal((await call({op:'notification_list',kind:'invalido'},ana)).status,400);
+});
+test('lote recusado reverte também os avisos de calendário',async()=>{
+ await api({op:'set',id:'controle-not',data:{value:1},base:0},master);
+ const before=await api({op:'notification_list'},ana),changed=structuredClone(state);changed.ucs[0].sala='Alteração que será revertida';
+ assert.equal((await call({op:'set_many',items:[{id:'turma-not',data:{state:changed},base:rev},{id:'controle-not',data:{value:2},base:999}]},master)).status,409);
+ assert.deepEqual((await api({op:'notification_list'},ana)).items,before.items);
+});
+test('paginação e contador abrangem mais de 100 avisos sem marcar avisos novos',async()=>{
+ // Um backup com volume representativo exercita a paginação sem criar 105 edições artificiais.
+ const backup=await api({op:'backup_now'},master),payload=JSON.parse((await api({op:'backup_download',id:backup.id},master)).data);
+ const last=Math.max(0,...payload.notifications.map(n=>n.id));
+ for(let i=1;i<=105;i++)payload.notifications.push({id:last+i,target:'ana',message:'Calendário atualizado · teste '+i,kind:'calendario',doc_id:'turma-not',at:new Date().toISOString(),seen:'[]'});
+ await restoreBackupPayload(payload);
+ ana=await login({login:'ana',password:'senha-notificacao'});bia=await login({login:'bia',password:'senha-notificacao'});coord=await login({login:'coord',password:'senha-notificacao'});env=await login({login:'env',password:'senha-notificacao'});
+ const first=await api({op:'notification_list',kind:'calendario',unreadOnly:true},ana);
+ assert.equal(first.items.length,100);assert.equal(first.unread,105);assert.ok(first.nextCursor);
+ const second=await api({op:'notification_list',kind:'calendario',unreadOnly:true,before:first.nextCursor},ana);
+ assert.equal(second.items.length,5);assert.equal(second.nextCursor,null);assert.ok(!second.items.some(n=>first.items.some(f=>f.id===n.id)));
+ await api({op:'notification_read_many',ids:first.items.map(n=>n.id)},ana);
+ assert.equal((await api({op:'notification_list',unreadOnly:true},ana)).unread,5);
+ assert.equal((await api({op:'notification_list',kind:'reserva'},ana)).items.length,0);
+});
+test('avisos de reserva chegam à gestão sem colisão com logins pessoais',async()=>{
+ await api({op:'user_add',login:'gestores',nome:'Docente com nome de grupo',password:'senha-notificacao',role:'docente'},master);
+ const collision=await login({login:'gestores',password:'senha-notificacao'});
+ await api({op:'environment_save',items:[{id:'lab-not',nome:'Laboratório notificações',tipo:'laboratorio',capacidade:20,ativo:true}],base:0},master);
+ const reservation=await api({op:'reservation_request',turmaId:'turma-not',data:'2099-03-01',sigla:'A',ambienteId:'lab-not',finalidade:'Prática'},ana);
+ const management=await api({op:'notification_list',kind:'reserva'},env);assert.equal(management.items.length,1);assert.equal(management.items[0].reservaId,reservation.item.id);
+ assert.equal((await api({op:'notification_list'},collision)).items.length,0);
+ await api({op:'reservation_cancel',id:reservation.item.id},ana);
+});
+test('remoção da turma avisa docentes e backup preserva o tipo, referência e leitura',async()=>{
+ await api({op:'delete',id:'turma-not'},master);
+ const notice=(await api({op:'notification_list'},ana)).items[0];assert.equal(notice.kind,'calendario');assert.match(notice.message,/Turma NOT/);
+ await api({op:'notification_read',id:notice.id},ana);
+ const backup=await api({op:'backup_now'},master);await api({op:'backup_restore',id:backup.id},master);
+ ana=await login({login:'ana',password:'senha-notificacao'});
+ const restored=(await api({op:'notification_list'},ana)).items.find(n=>n.id===notice.id);
+ assert.equal(restored.docId,'turma-not');assert.equal(restored.kind,'calendario');assert.equal(restored.lida,true);
+});

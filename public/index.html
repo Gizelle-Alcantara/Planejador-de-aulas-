@@ -139,7 +139,7 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 </head><body>
 <div class="wrap">
 <header class="top">
-  <div class="brand"><img id="logo" class="logo" alt="SENAI" width="142" height="38"><div class="id" id="hdr"></div><button id="themeBtn" class="btn sm" type="button"></button></div>
+  <div class="brand"><img id="logo" class="logo" alt="SENAI" width="142" height="38"><div class="id" id="hdr"></div><a href="/notificacoes.html" class="btn sm notification-shortcut" data-notification-shortcut hidden>Notificações</a><button id="themeBtn" class="btn sm" type="button"></button></div>
   <nav class="tabs" id="tabs" aria-label="Áreas do sistema"></nav>
 </header>
 <a class="skip-link" href="#main-content">Pular para o conteúdo</a><main id="main-content" tabindex="-1"><div id="view"></div></main>
@@ -250,6 +250,7 @@ let EXPORT_RESERVAS=[];
 const UI={calFilters:{docente:"",disciplina:"",sala:"",situacao:"",turma:"",turno:""},fUc:"",env:{periodo:"sem2",canal:"zap",msg:null},boot:true,loaded:false,empty:false,savedAt:"",live:false,err:"",cw:null,status:"local",tab:"painel",backTabs:[],month:null,tool:"edit",holName:"",ucFilter:"",confirm:null};
 try{const t=localStorage.getItem(KEY+"-tab");if(t&&TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
 const requestedTab=new URLSearchParams(location.search).get("aba");
+let requestedTurma=new URLSearchParams(location.search).get('turma');
 if(TABS.some(([key])=>key===requestedTab))UI.tab=requestedTab;
 
 try{const t=new URLSearchParams(location.search).get("aba");if(TABS.some(x=>x[0]===t))UI.tab=t}catch(e){}
@@ -1402,7 +1403,7 @@ renderView();
     first=false;UI.loaded=true;UI.empty=false;
     if(dirty||document.querySelector(".modal"))return;
     const cand={G:r.g,T:r.t},cur=canon([docItems()]);
-    const keep=CUR;G=r.g;T=r.t;CUR=T[keep]?keep:Object.keys(T)[0];normalize();
+    const keep=requestedTurma&&r.t[requestedTurma]?requestedTurma:CUR;requestedTurma=null;G=r.g;T=r.t;CUR=T[keep]?keep:Object.keys(T)[0];normalize();
     const now=docItems();
     lastJson={};now.forEach(([k,d])=>{lastJson[k]=canon(d)});
     if(r.legacy)delete lastJson.geral;
@@ -1416,6 +1417,7 @@ renderView();
 <script src="/accessibility.js" defer></script>
 <script src="/forms.js" defer></script>
 <script src="/quick-search.js" defer></script>
+<script src="/notification-badge.js" defer></script>
 <script>/* Prévia do arquivo gerado no servidor. A versão conferida acompanha o download. */
 (()=>{
  let current=null,returnMarkup='',returnFocus='',returnValues=[],sheetIndex=0,month='',zoom=1.25;

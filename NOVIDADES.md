@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Central de notificações
+- **Acesso unificado.** O atalho Notificações no planejador e na gestão de ambientes abre uma central com contador de não lidas, filtros por tipo e situação e paginação.
+- **Leitura individual.** Marque um aviso ou os avisos exibidos como lidos. A leitura de uma conta não altera a leitura das demais; avisos que chegam depois não são marcados pelo lote anterior.
+- **Mudanças de aulas.** A partir desta versão, inclusões, remoções e alterações em aulas atuais ou futuras geram avisos internos para a coordenação e para as contas dos docentes afetados. Dados de alunos e observações privadas não entram nas mensagens. Não há envio externo nesta central.
+- **Reservas preservadas.** Os avisos existentes continuam disponíveis e os novos metadados acompanham o backup e a restauração.
+
 ## Histórico detalhado
 - **Comparação de versões.** Em Acesso, use “Ver alterações” para consultar os campos anteriores e novos, junto do autor, data e hora da edição.
 - **Inclusões e remoções.** As comparações identificam campos incluídos, removidos e alterados; códigos e credenciais são protegidos.
