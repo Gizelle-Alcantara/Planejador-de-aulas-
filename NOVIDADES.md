@@ -1,5 +1,12 @@
 # Novidades desta versão
 
+## Diagnóstico e monitoramento de falhas
+- **Área da senha mestre.** Administração → Diagnóstico reúne falhas de servidor, salvamento, exportações, serviços externos, interface e conexão. A equipe pode enviar eventos técnicos; alunos não enviam e apenas a senha mestre consulta ou trata os registros.
+- **Registros sem conteúdo pessoal.** Guarda apenas códigos fixos, operação, origem, status, datas, contagem e referência da última ocorrência. Não guarda URLs, mensagens brutas, pilhas de execução, destinatários, dados de alunos ou credenciais.
+- **Retenção e análise.** Repetições são agrupadas, com retenção de 30 dias e até 500 grupos; a tela mostra os 100 mais recentes com os filtros escolhidos. Marcar como tratada registra a análise. Uma nova ocorrência reabre o grupo e uma atualização concorrente exige nova conferência.
+- **Conexão e serviços.** Falhas do navegador aguardam reconexão apenas na memória da aba e são limitadas a 10 registros por conta a cada 10 minutos. Falhas de envio e da rotina diária também alimentam o diagnóstico, sem acrescentar envios externos.
+- **Limites operacionais.** Se o banco estiver indisponível, não há garantia de persistência; o servidor emite somente código e referência no console quando possível. Os registros operacionais não fazem parte dos backups de dados do sistema.
+
 ## Uso no celular
 - **Menu compacto.** Em telas de até 620 px, o seletor “Seções do sistema” reúne as mesmas áreas permitidas para a conta. Os menus completos continuam disponíveis no computador.
 - **Atalhos fixos.** Coordenação tem acesso rápido ao painel, calendário e notificações; docentes têm atalhos para calendário, reservas e notificações. Os atalhos são ocultados enquanto uma janela de edição está aberta.

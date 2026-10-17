@@ -27,5 +27,5 @@ http.createServer(async (rq, rs) => {
 let lastRun = "";
 setInterval(async () => {
   const n = new Date(), key = n.toISOString().slice(0, 10);
-  if (n.getUTCHours() === 23 && n.getUTCMinutes() === 0 && lastRun !== key) { lastRun = key; try { console.log("avisos:", JSON.stringify(await runDaily(n))); } catch (e) { console.error(e); } }
+  if (n.getUTCHours() === 23 && n.getUTCMinutes() === 0 && lastRun !== key) { lastRun = key; try { await runDaily(n);console.log('Rotina diária executada. Consulte Diagnóstico para falhas.'); } catch { console.error('Rotina diária não concluída. Consulte Diagnóstico.'); } }
 }, 30000);
