@@ -1,3 +1,9 @@
+## Identidade visual de Salas e Laboratórios
+
+- Cabeçalho com a logo SENAI já usada no calendário e nova organização visual do módulo.
+- Tema claro, escuro e automático, com preferência compartilhada com o calendário e persistida no navegador.
+- Cores adaptadas em formulários, tabelas, avisos, ocupação e status; impressão em fundo claro.
+
 ## Ocupação diária por turnos
 
 - Grade simplificada em Matutino, Vespertino e Noturno, com horários nos detalhes das atividades.

@@ -20,6 +20,10 @@ rep('step(2,"Alunos e docentes: acesso de Visualizador","Convide por e-mail ou u
 rep('step(3,"Coordenação: o único acesso de Editor","Só o nível Editor edita o calendário. Dê esse acesso apenas ao coordenador. Contribuidores, Comentaristas e Visualizadores ficam sem edição. Quem criou o artefato continua podendo editar.")', 'step(3,"Coordenação: a única que edita","A edição exige a senha do coordenador (variável ADMIN_PASSWORD do servidor). Para entrar, abra o endereço do site seguido de #login.")');
 rep("A permissão de acesso é definida no menu Compartilhar. Este planejador não consegue mudá-la. Quem abre precisa estar com a conta ativa para ver os dados ao vivo.", "A permissão é verificada no servidor: sem a senha, nenhuma alteração é gravada.");
 mkdirSync(new URL("../public/", import.meta.url), { recursive: true });
+// A mesma identidade visual do calendário, também disponível como imagem nos módulos.
+const logoData=rd('logo.b64').trim();
+if(!logoData.startsWith('data:image/png;base64,'))throw new Error('Logo SENAI inválida');
+writeFileSync(new URL('../public/senai-logo.png',import.meta.url),Buffer.from(logoData.split(',')[1],'base64'));
 const bodyEnd=t.lastIndexOf("</body>");
 if(bodyEnd<0)throw new Error("Fechamento da página não encontrado");
 t=t.slice(0,bodyEnd)+`<script>${rd("static/excel-preview.js")}</script>`+t.slice(bodyEnd);
