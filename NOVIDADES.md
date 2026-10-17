@@ -1,3 +1,16 @@
+## Programação diária para TVs e Excel
+
+- Gestão exporta um painel HTML independente, com logo SENAI, páginas por turno, rotação automática e tela cheia.
+- Exportação Excel real (.xlsx) com aulas planejadas, reservas aprovadas, docentes, turmas, horários e ambientes efetivos, incluindo EAD sem ambiente.
+- Exportações respeitam data e ambiente selecionados; os arquivos são retratos dos dados salvos e precisam ser reexportados após alterações.
+- Painel externo não inclui pendências, contas, alunos, finalidades ou observações internas.
+
+## Agendamento de salas pela gestão
+
+- Docentes solicitam e reagendam somente laboratórios; salas de aula ficam fora das opções.
+- Gestão de ambientes agenda salas para aulas e docentes, com confirmação direta após validação de conflitos.
+- O professor acompanha a reserva da sala, mas alterações e cancelamento ficam com a gestão. A regra também é aplicada no servidor.
+
 ## Exclusão de ambientes e planejamento EAD
 
 - Gestão pode excluir ambientes com confirmação. Reservas, bloqueios e aulas presenciais atuais ou futuros impedem a exclusão até serem ajustados; o histórico permanece.
