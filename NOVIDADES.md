@@ -1,3 +1,9 @@
+## Tela inicial padronizada
+
+- Entrada sem o seletor de mês do calendário; seleção continua disponível no painel da coordenação.
+- Identidade visual alinhada a Salas e Laboratórios, com logo SENAI, detalhe vermelho, cartões e temas claro e escuro.
+- Acessos por perfil preservados e descrição do docente atualizada para ocupação diária e reservas de laboratórios.
+
 ## Importação de ambientes por Excel
 
 - Administrador importa .xlsx de até 2 MB e 500 ambientes, com modelo disponível para download.
