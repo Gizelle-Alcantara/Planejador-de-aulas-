@@ -1,3 +1,8 @@
+## Exclusão de ambientes e planejamento EAD
+
+- Gestão pode excluir ambientes com confirmação. Reservas, bloqueios e aulas presenciais atuais ou futuros impedem a exclusão até serem ajustados; o histórico permanece.
+- Planejamento assistido de disciplinas com docente EAD dispensa sala ou laboratório e não é bloqueado por ocupação física.
+
 ## Ambientação e atividades EAD
 
 - Ambientação permitida antes do início da turma, sem alerta de período, incluindo planejamento e exportação.

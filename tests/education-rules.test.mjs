@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails,outsidePeriod} from '../lib/schedule.js';
 import {calendarData} from '../lib/calendar-export.js';
 import {calendarEntries} from '../lib/reservations.js';
-import {teacherLessons} from '../lib/environments.js';
+import {environmentRemovalError,teacherLessons} from '../lib/environments.js';
 import {teacherCalendarXlsx} from '../lib/teacher-calendar-export.js';
 import {unzipSync,strFromU8} from 'fflate';
 import {suggestPlanning} from '../lib/planning.js';
@@ -31,4 +31,12 @@ test('paralelo não aceita disciplinas presenciais nem duplicidade e respeita ca
 test('Excel do docente EAD conserva atividades simultâneas sem rotulá-las como conflito',()=>{
  const st=state();st.days['2099-03-12']={s:['E'],grade:['E','E','E','E']};const all=docs(st),second=structuredClone(st);second.cfg.turma='EDU2';all['turma-other']={state:second};
  const zip=unzipSync(teacherCalendarXlsx(all,'Docente EAD',2099)),sheet=strFromU8(zip['xl/worksheets/sheet1.xml']);assert.ok(sheet.includes('E.1 + E.2'));assert.ok(!sheet.includes('CONFLITO:'));assert.ok(sheet.includes('COUNTIF'));
+});
+
+test('planejamento EAD dispensa ambiente e mantém a contagem exata de aulas',()=>{
+ const st=state();st.cfg.local='';st.ucs[2].ch=6;const all=docs(st);all.ambientes.items=[];const options={sigla:'E',from:'2099-03-12',to:'2099-03-13',quantity:6,weekdays:[0,1,2,3,4,5,6]},plan=suggestPlanning(all,'turma-edu',options);assert.equal(plan.added,6);assert.equal(plan.ambiente,'EAD (sem ambiente físico)');assert.deepEqual(plan.changes.map(d=>d.quantity),[4,2]);assert.throws(()=>suggestPlanning(all,'turma-edu',{...options,sigla:'P'}),/sala ou laboratório/);
+});
+test('exclusão de ambiente protege usos atuais e futuros, preservando históricos e ignorando EAD',()=>{
+ const st=state(),all=docs(st),date='2099-03-12';assert.equal(environmentRemovalError(all,[],'2099-03-01'),'');st.days[date]={s:['P'],grade:['P','P','P','P']};assert.match(environmentRemovalError(all,[],'2099-03-01'),/aulas presenciais/);st.days[date]={s:['E'],grade:['E','E','E','E']};assert.equal(environmentRemovalError(all,[],'2099-03-01'),'');
+ all.reservas={items:[{ambienteId:'sala',data:date,status:'aprovada'}]};assert.match(environmentRemovalError(all,[],'2099-03-01'),/reservas/);assert.equal(environmentRemovalError(all,[],'2099-04-01'),'');all.reservas.items[0].status='cancelada';assert.equal(environmentRemovalError(all,[],'2099-03-01'),'');all.bloqueios={items:[{ambienteId:'sala',de:date,ate:date}]};assert.match(environmentRemovalError(all,[],'2099-03-01'),/bloqueios/);
 });
