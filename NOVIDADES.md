@@ -1,3 +1,15 @@
+## Visualização do docente em Salas e Laboratórios
+
+- Docentes visualizam somente Ocupação diária e Reservas no módulo.
+- Navegação e atalhos administrativos removidos desse perfil; links antigos dessas seções retornam à ocupação diária.
+- Solicitação, consulta e reagendamento das próprias reservas preservados.
+- Consulta ao cadastro de bloqueios restrita à gestão no servidor; a ocupação diária mantém os horários bloqueados visíveis.
+
+## Legibilidade da ocupação diária
+
+- Colunas dimensionadas por ambiente para evitar sobreposição dos nomes em grades extensas.
+- Nomes longos com quebra de linha e coluna de turnos fixa durante a rolagem horizontal.
+
 ## Identidade visual de Salas e Laboratórios
 
 - Cabeçalho com a logo SENAI já usada no calendário e nova organização visual do módulo.

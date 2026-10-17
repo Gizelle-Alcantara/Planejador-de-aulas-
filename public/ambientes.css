@@ -76,10 +76,15 @@ tr:target{outline:3px solid var(--accent);outline-offset:-3px}
 #environment-content tbody tr:hover{background:var(--surface2)}
 .board-navigation{margin:12px 0 18px}
 .board-table{min-width:640px}
-.board-shifts{table-layout:fixed}
+.board-scroll{border:1px solid var(--line);border-radius:10px;isolation:isolate}
+.board-scroll-hint:empty{display:none}
+.board-shifts{table-layout:fixed;width:max(100%,calc(140px + var(--board-columns,1)*240px));min-width:0;border-collapse:separate;border-spacing:0;margin-top:0}
 .board-shifts caption{text-align:left;font-weight:600;padding:18px 0;color:var(--text)}
-.board-shifts th{min-width:150px}
-.board-shifts th:first-child{width:130px;min-width:130px}
+.board-shifts th{vertical-align:top;white-space:normal;overflow-wrap:anywhere;line-height:1.5}
+.board-shifts th:first-child{width:140px;min-width:140px;position:sticky;left:0;z-index:1;background:var(--surface2);box-shadow:3px 0 5px rgb(0 0 0 / 8%)}
+.board-environment-name{display:block;margin-bottom:8px}
+.board-shifts thead th{padding:18px 16px}
+.board-shifts thead small{font-weight:400}
 .board-shifts td{vertical-align:top;padding:10px}
 .board-shifts tbody th{vertical-align:top;padding-top:20px}
 .board-event{padding:12px;margin:0 0 8px;border-radius:8px;font-size:.85rem;overflow-wrap:anywhere;border-left:3px solid currentColor}
@@ -122,9 +127,11 @@ tr:target{outline:3px solid var(--accent);outline-offset:-3px}
  body[data-print-board] #board{display:block!important;border:0;box-shadow:none;margin:0;padding:0}
  body[data-print-board] #reports{display:none!important}
  body[data-print-board] #board>.form{display:none!important}
- body[data-print-board] .board-shifts{min-width:0;table-layout:auto;font-size:10px}
+ .board-scroll-hint{display:none}
+ body[data-print-board] .board-scroll{border:0}
+ body[data-print-board] .board-shifts{width:100%;min-width:0;table-layout:auto;font-size:10px}
  body[data-print-board] .board-shifts th{min-width:0}
- body[data-print-board] .board-shifts th:first-child{width:75px}
+ body[data-print-board] .board-shifts th:first-child{width:75px;position:static;box-shadow:none}
  body[data-print-board] .board-event{font-size:10px;padding:6px;break-inside:avoid;border:1px solid #bbc9d8}
  body[data-print-board] .board-shifts th,body[data-print-board] .board-shifts td{padding:6px}
  body[data-print-board] .board-shifts a{color:inherit;text-decoration:none}
