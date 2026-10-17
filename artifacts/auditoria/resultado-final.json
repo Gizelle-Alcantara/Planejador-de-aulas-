@@ -1,0 +1,115 @@
+{
+  "at": "2026-10-17T20:38:10.339Z",
+  "site": "https://planejador-de-aulas-zowu.vercel.app",
+  "unit": {
+    "passed": 155,
+    "failed": 0
+  },
+  "interface": {
+    "passed": 15,
+    "total": 15,
+    "suites": [
+      {
+        "name": "test:ui",
+        "file": "tests/ui.smoke.mjs",
+        "code": 0,
+        "seconds": 63
+      },
+      {
+        "name": "test:ui:copy",
+        "file": "tests/turma-copy.ui.mjs",
+        "code": 0,
+        "seconds": 3
+      },
+      {
+        "name": "test:ui:search",
+        "file": "tests/search.ui.mjs",
+        "code": 0,
+        "seconds": 5
+      },
+      {
+        "name": "test:ui:recovery",
+        "file": "tests/recovery.ui.mjs",
+        "code": 0,
+        "seconds": 6
+      },
+      {
+        "name": "test:ui:history",
+        "file": "tests/history.ui.mjs",
+        "code": 0,
+        "seconds": 2
+      },
+      {
+        "name": "test:ui:notifications",
+        "file": "tests/notifications.ui.mjs",
+        "code": 0,
+        "seconds": 2,
+        "initialCode": 1,
+        "retest": "test-ui-notifications-reteste.log",
+        "note": "Espera corrigida para a lista terminar de atualizar."
+      },
+      {
+        "name": "test:ui:planning",
+        "file": "tests/planning.ui.mjs",
+        "code": 0,
+        "seconds": 3
+      },
+      {
+        "name": "test:ui:reports",
+        "file": "tests/management-report.ui.mjs",
+        "code": 0,
+        "seconds": 3
+      },
+      {
+        "name": "test:ui:mobile",
+        "file": "tests/mobile.ui.mjs",
+        "code": 0,
+        "seconds": 5
+      },
+      {
+        "name": "test:ui:diagnostics",
+        "file": "tests/diagnostics.ui.mjs",
+        "code": 0,
+        "seconds": 4
+      },
+      {
+        "name": "test:ui:docentes",
+        "file": "tests/docentes.ui.mjs",
+        "code": 0,
+        "seconds": 7
+      },
+      {
+        "name": "test:ui:ambientes",
+        "file": "tests/ambientes.ui.mjs",
+        "code": 0,
+        "seconds": 12
+      },
+      {
+        "name": "test:ui:education",
+        "file": "tests/education-rules.ui.mjs",
+        "code": 0,
+        "seconds": 7
+      },
+      {
+        "name": "test:ui:environment-import",
+        "file": "tests/environment-import.ui.mjs",
+        "code": 0,
+        "seconds": 7
+      },
+      {
+        "name": "test:ui:keys",
+        "file": "tests/key-control.ui.mjs",
+        "code": 0,
+        "seconds": 8
+      }
+    ]
+  },
+  "deployment": {
+    "assets": 19,
+    "equal": 9,
+    "different": 10,
+    "configurationErrors": 3,
+    "configurationWarnings": 2
+  },
+  "scope": "Publicação: telas públicas e sessão mestre, navegação, consultas e downloads. Mutações e outros perfis: bancos temporários locais."
+}
