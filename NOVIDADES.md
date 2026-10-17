@@ -1,3 +1,15 @@
+## Ambientação e atividades EAD
+
+- Ambientação permitida antes do início da turma, sem alerta de período, incluindo planejamento e exportação.
+- Editor do dia permite disciplinas com docente identificado por EAD em paralelo às aulas presenciais.
+- EAD mantém a contagem de aulas sem bloquear salas nem gerar conflitos com aulas presenciais.
+
+## Exclusão e detecção automática de avisos
+
+- Exclusão individual de avisos sem afetar os outros destinatários, com confirmação.
+- Central verifica novos avisos a cada 30 segundos, ao retornar à janela e ao recuperar a conexão.
+- Alerta de novos avisos preserva a lista e os filtros até o usuário atualizar.
+
 ## Visualização do docente em Salas e Laboratórios
 
 - Docentes visualizam somente Ocupação diária e Reservas no módulo.

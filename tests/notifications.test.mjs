@@ -88,3 +88,11 @@ test('remoção da turma avisa docentes e backup preserva o tipo, referência e 
  const restored=(await api({op:'notification_list'},ana)).items.find(n=>n.id===notice.id);
  assert.equal(restored.docId,'turma-not');assert.equal(restored.kind,'calendario');assert.equal(restored.lida,true);
 });
+
+test('exclusão é individual, autorizada, idempotente e preservada no backup',async()=>{
+ master=await login({password:process.env.ADMIN_PASSWORD});coord=await login({login:'coord',password:'senha-notificacao'});ana=await login({login:'ana',password:'senha-notificacao'});
+ const before=await api({op:'notification_list'},master),other=await api({op:'notification_list'},coord),notice=before.items.find(n=>other.items.some(x=>x.id===n.id));assert.ok(notice);
+ await api({op:'notification_delete',id:notice.id},master);const after=await api({op:'notification_list'},master);assert.ok(!after.items.some(n=>n.id===notice.id));assert.equal(after.unread,before.unread-(notice.lida?0:1));assert.ok((await api({op:'notification_list'},coord)).items.some(n=>n.id===notice.id));
+ await api({op:'notification_delete',id:notice.id},master);assert.equal((await call({op:'notification_delete',id:notice.id},ana)).status,404);assert.equal((await call({op:'notification_delete',id:'1'},master)).status,400);assert.equal((await call({op:'notification_delete',id:notice.id})).status,401);
+ const backup=await api({op:'backup_now'},master);await api({op:'backup_restore',id:backup.id},master);master=await login({password:process.env.ADMIN_PASSWORD});assert.ok(!(await api({op:'notification_list'},master)).items.some(n=>n.id===notice.id));
+});
