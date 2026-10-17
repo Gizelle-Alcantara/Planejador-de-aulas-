@@ -1,3 +1,9 @@
+## Aba Docentes
+
+- Removido o botão Cadastro completo; os dados complementares ficam em Dados adicionais, na própria lista.
+- Busca ampliada para contatos, área e unidade; filtros por vínculo e disciplinas.
+- Contagem de aulas corrigida e validação de matrícula duplicada na edição direta.
+
 # Novidades desta versão
 
 ## Diagnóstico e monitoramento de falhas
