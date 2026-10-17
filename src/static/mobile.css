@@ -20,3 +20,5 @@
  .agenda-day{padding:14px}.agenda-day>.btn{width:100%;min-height:44px}.calendar-agenda-edit{display:grid;grid-template-columns:minmax(0,1fr)}.calendar-agenda-edit input{width:100%}.calendar-view-switch button{flex:1;min-height:44px}
 }
 @media print{.mobile-section-picker,.mobile-shortcuts,.calendar-view-switch,.calendar-agenda-edit,.agenda-day>button{display:none!important}.agenda-day{break-inside:avoid}}
+
+.agenda-lesson.agenda-ead{border-left-width:1px;background:transparent;padding-block:5px;font-size:.8rem;font-style:italic}.agenda-lesson.agenda-ead h4{font-size:.85rem;font-weight:500}

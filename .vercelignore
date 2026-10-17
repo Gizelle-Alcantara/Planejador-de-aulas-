@@ -1,0 +1,21 @@
+# Dados locais, backups e evidências não fazem parte da aplicação publicada.
+node_modules
+.git
+.env
+.env.*
+!.env.example
+.agents
+.codex
+.aws
+.netlify
+data
+banco
+dados-atuais
+artifacts
+tests
+docs
+*.zip
+*.log
+*.db
+*.db-shm
+*.db-wal

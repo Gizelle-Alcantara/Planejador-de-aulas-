@@ -23,6 +23,7 @@ mkdirSync(new URL("../public/", import.meta.url), { recursive: true });
 // A mesma identidade visual do calendário, também disponível como imagem nos módulos.
 const logoData=rd('logo.b64').trim();
 if(!logoData.startsWith('data:image/png;base64,'))throw new Error('Logo SENAI inválida');
+writeFileSync(new URL('../lib/senai-logo.js',import.meta.url),'// Gerado a partir da identidade visual do projeto.\nexport const senaiLogo='+JSON.stringify(logoData)+';\n');
 writeFileSync(new URL('../public/senai-logo.png',import.meta.url),Buffer.from(logoData.split(',')[1],'base64'));
 const bodyEnd=t.lastIndexOf("</body>");
 if(bodyEnd<0)throw new Error("Fechamento da página não encontrado");
@@ -33,8 +34,12 @@ for (const f of readdirSync(new URL("../src/static/", import.meta.url))) copyFil
 console.log("public/index.html gerado (" + Math.round(t.length / 1024) + " KB)");
 
 const schedule=readFileSync(new URL("../lib/schedule.js",import.meta.url),"utf8").replace(/export /g,"");
-writeFileSync(new URL("../public/schedule.js",import.meta.url),`window.SENAI_SCHEDULE=(()=>{${schedule};return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails,coordinationOverview}})();`);
+writeFileSync(new URL("../public/schedule.js",import.meta.url),`window.SENAI_SCHEDULE=(()=>{${schedule};return {isEAD,isAmbientacao,outsidePeriod,slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails,coordinationOverview}})();`);
 const turmaCopy=readFileSync(new URL('../lib/turma-copy.js',import.meta.url),'utf8').replace(/export /g,'');
 writeFileSync(new URL('../public/turma-copy.js',import.meta.url),`window.SENAI_TURMAS=(()=>{${turmaCopy};return {duplicateTurma}})();`);
 const search=readFileSync(new URL('../lib/search.js',import.meta.url),'utf8').replace(/export /g,'');
 writeFileSync(new URL('../public/search.js',import.meta.url),`window.SENAI_SEARCH=(()=>{${search};return {normalizeSearch,matchesSearch}})();`);
+
+// QR codes locais: geração das etiquetas e leitura por câmera/foto.
+copyFileSync(new URL('../node_modules/qrcode-generator/dist/qrcode.mjs',import.meta.url),new URL('../public/vendor-qrcode.mjs',import.meta.url));
+copyFileSync(new URL('../node_modules/jsqr/dist/jsQR.js',import.meta.url),new URL('../public/vendor-jsqr.js',import.meta.url));
