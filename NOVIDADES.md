@@ -1,3 +1,9 @@
+## Ocupação diária por turnos
+
+- Grade simplificada em Matutino, Vespertino e Noturno, com horários nos detalhes das atividades.
+- Atividades que atravessam turnos aparecem em todos os turnos afetados.
+- Exportação da programação filtrada em CSV e impressão para PDF, incluindo ambientes livres ou indisponíveis.
+
 ## Gestão de ambientes
 
 - Resumo de ambientes e capacidade, ordenação por nome e status com destaque.
