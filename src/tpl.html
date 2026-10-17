@@ -132,6 +132,7 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 </style>
 <link rel="stylesheet" href="/responsive.css">
 <link rel="stylesheet" href="/professional.css">
+<link rel="stylesheet" href="/mobile.css">
 </head><body>
 <div class="wrap">
 <header class="top">
@@ -445,6 +446,7 @@ function effectiveRoom(st,iso,sg,block){
  const blocks=dayBlocks(st,iso,true).filter(b=>b.sigla===sg&&(!block||b.bloco===block));
  return [...new Set(blocks.length?blocks.map(b=>EXPORT_RESERVAS.find(r=>r.status==='aprovada'&&r.turmaId==='turma-'+id&&r.data===iso&&r.sigla===sg&&(r.bloco||'dia')===b.bloco)?.ambienteNome||fallback):[fallback])];
 }
+function agendaAttrs(subject,teacher,room,time,cancelled){return `data-agenda-subject="${esc(subject||'')}" data-agenda-teacher="${esc(teacher||'')}" data-agenda-room="${esc(room||'')}" data-agenda-time="${esc(time||'')}" data-agenda-cancelled="${!!cancelled}"`}
 function calendarMatch(st,iso,sg,conflict=false){
  const f=UI.calFilters,u=st.ucs.find(u=>u.sigla===sg)||{},r=st.reg?.[iso]||{};
  const status=r.dado==='nao'?'cancelada':r.dado==='sim'?'realizada':'programada';
@@ -470,7 +472,7 @@ function vCal(){
     const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso),s=e.s||[];
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(iso<S.cfg.inicio||iso>S.cfg.termino)cl.push("out");if(e.t==="feriado")cl.push("hol");if(e.t==="sem")cl.push("sem");if(iso===t)cl.push("today");
     const cf=confDay(iso).join("; ");
-    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,!!cf))return "";const u=ucOf(sg);return `<span class="chip ${u&&!cf?"":"bad"}" style="--c:${colorOf(sg)}" title="${esc(cf?"Choque: "+cf:(u?u.nome:sg)+" · aula "+C.enc[iso][j])}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
+    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,!!cf))return "";const u=ucOf(sg);return `<span ${agendaAttrs(u?.nome||sg,u?.docente,effectiveRoom(S,iso,sg).join(" / "),ucHours(S,iso,sg),S.reg?.[iso]?.dado==="nao")} class="chip ${u&&!cf?"":"bad"}" style="--c:${colorOf(sg)}" title="${esc(cf?"Choque: "+cf:(u?u.nome:sg)+" · aula "+C.enc[iso][j])}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
     cells+=`<button class="${cl.join(" ")}" data-act="day" data-iso="${iso}" aria-label="${d} de ${MESES[m-1]}"><span class="dn">${d}</span>${e.h?`<span class="lb">${esc(e.h)}</span>`:""}${chips}</button>`;
   }
   const ml=monthList();
@@ -899,7 +901,7 @@ function roCells(ym,C){
   for(let d=1;d<=dim;d++){
     const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso),s=e.s||[];
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(iso<S.cfg.inicio||iso>S.cfg.termino)cl.push("out");if(e.t==="feriado")cl.push("hol");if(e.t==="sem")cl.push("sem");if(iso===t)cl.push("today");
-    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,confDay(iso).length>0))return "";const u=ucOf(sg);return `<span class="chip" style="--c:${colorOf(sg)};${UI.fUc&&sg!==UI.fUc?"display:none":""}" title="${esc(u?u.nome:sg)}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
+    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,confDay(iso).length>0))return "";const u=ucOf(sg);return `<span ${agendaAttrs(u?.nome||sg,u?.docente,effectiveRoom(S,iso,sg).join(" / "),ucHours(S,iso,sg),S.reg?.[iso]?.dado==="nao")} class="chip" style="--c:${colorOf(sg)};${UI.fUc&&sg!==UI.fUc?"display:none":""}" title="${esc(u?u.nome:sg)}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
     cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${d}</span>${e.h?`<span class="lb">${esc(e.h)}</span>`:""}${chips}</div>`;
   }
   return cells;
@@ -991,7 +993,7 @@ function renderDocente(){
     const iso=`${UI.month}-${String(k).padStart(2,"0")}`,w=dow(iso),as=byDay[iso]||[],b=(d.bloqueios||[]).find(x=>x.de&&iso>=x.de&&iso<=(x.ate||x.de));
     const blk=(d.semana||[]).includes(w)||!!b,lab=A.fer[iso]||(b?(b.motivo||"Indisponível"):"");
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(A.fer[iso])cl.push("hol");if(blk&&!A.fer[iso])cl.push("blk");if(iso===t)cl.push("today");
-    cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${k}</span>${lab?`<span class="lb">${esc(lab)}</span>`:""}${as.map(a=>`<span class="chip ${as.some(b=>!a.cancelada&&!b.cancelada&&b!==a&&a.inicio<b.fim&&b.inicio<a.fim)?"bad":""}" style="--c:var(--u${a.ti%8})" title="${esc((a.cancelada?"Aula cancelada · ":"")+a.nome+" · aula "+a.n+"/"+a.P+" · "+a.hor)}">${esc(a.turma)} · ${esc(a.sig)} ${a.n}<small>${esc(a.hor)}</small></span>`).join("")}</div>`;
+    cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${k}</span>${lab?`<span class="lb">${esc(lab)}</span>`:""}${as.map(a=>`<span ${agendaAttrs(a.turma+" · "+a.sig+" · "+a.nome,d.nome,a.sala,a.hor,a.cancelada)} class="chip ${as.some(b=>!a.cancelada&&!b.cancelada&&b!==a&&a.inicio<b.fim&&b.inicio<a.fim)?"bad":""}" style="--c:var(--u${a.ti%8})" title="${esc((a.cancelada?"Aula cancelada · ":"")+a.nome+" · aula "+a.n+"/"+a.P+" · "+a.hor)}">${esc(a.turma)} · ${esc(a.sig)} ${a.n}<small>${esc(a.hor)}</small></span>`).join("")}</div>`;
   }
   const next=filtered.filter(a=>!a.cancelada&&a.iso>=t).slice(0,10);
   const wk=(d.semana||[]).map(w=>PLUR[w]),bl=(d.bloqueios||[]).filter(x=>x.de);
@@ -1447,4 +1449,5 @@ renderView();
 <script src="/forms.js" defer></script>
 <script src="/quick-search.js" defer></script>
 <script src="/notification-badge.js" defer></script>
+<script src="/mobile.js" defer></script>
 </body></html>

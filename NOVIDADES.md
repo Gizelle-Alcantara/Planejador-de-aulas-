@@ -1,5 +1,11 @@
 # Novidades desta versão
 
+## Uso no celular
+- **Menu compacto.** Em telas de até 620 px, o seletor “Seções do sistema” reúne as mesmas áreas permitidas para a conta. Os menus completos continuam disponíveis no computador.
+- **Atalhos fixos.** Coordenação tem acesso rápido ao painel, calendário e notificações; docentes têm atalhos para calendário, reservas e notificações. Os atalhos são ocultados enquanto uma janela de edição está aberta.
+- **Mês ou agenda.** O calendário oferece uma lista de aulas com data, disciplina, docente, sala, horário e indicação de cancelamento. A visualização escolhida é mantida durante a sessão e respeita os filtros existentes.
+- **Edição explícita.** Somente a coordenação pode abrir a edição pela agenda ou escolher uma data vazia. Alunos e docentes continuam em consulta. As ações dos formulários ficam acessíveis no rodapé das janelas em telas pequenas.
+
 ## Relatórios gerenciais
 - **Período e turma.** A aba Relatórios da coordenação reúne aulas programadas, realizadas, canceladas, sem confirmação, conflitos e reservas para analisar, em intervalos de até 366 dias.
 - **Carga corrigida.** Horas por docente usam a duração de cada aula, sem multiplicar novamente pelas aulas do dia. O intervalo do Matutino NEM não entra na carga de ensino. Aulas futuras não contam como realizadas.

@@ -19,7 +19,8 @@
     "test:ui:history": "npm run build && node tests/history.ui.mjs",
     "test:ui:notifications": "npm run build && node tests/notifications.ui.mjs",
     "test:ui:planning": "npm run build && node tests/planning.ui.mjs",
-    "test:ui:reports": "npm run build && node tests/management-report.ui.mjs"
+    "test:ui:reports": "npm run build && node tests/management-report.ui.mjs",
+    "test:ui:mobile": "npm run build && node tests/mobile.ui.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
