@@ -138,3 +138,9 @@ tr:target{outline:3px solid var(--accent);outline-offset:-3px}
  body[data-print-board]{print-color-adjust:exact;-webkit-print-color-adjust:exact}
  @page{size:A4 landscape;margin:15mm}
 }
+
+button.secondary.danger{color:var(--bad)}
+
+.export-button{display:inline-flex;align-items:center;padding:10px 14px;min-height:44px;border:1px solid var(--accent);border-radius:8px;text-decoration:none;background:var(--accent);color:var(--accent-ink);font-weight:550;font-size:.9rem}.export-button:hover{filter:brightness(.96)}@media print{.board-export-help{display:none}}
+
+.environment-import{padding:18px;border:1px solid var(--line);border-radius:10px;margin:20px 0;background:var(--surface2)}.environment-import summary{font-weight:650;cursor:pointer;color:var(--accent)}.environment-import p{font-size:.85rem}.import-scroll{max-height:420px}.import-errors{color:var(--bad);font-size:.85rem}input[type=file]{white-space:normal;max-width:100%}

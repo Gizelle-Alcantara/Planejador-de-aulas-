@@ -273,7 +273,7 @@ const horaOf=c=>c.turno==="Matutino NEM"?50:60;
 const horaAula=()=>horaOf(S.cfg);
 function horariosOf(c){return SENAI_SCHEDULE.slotsOf(c).map(s=>({...s,n:String(s.aula)}))}
 const dayBlocks=(st,iso,cancelled=false)=>SENAI_SCHEDULE.blocksForDay(st,iso,cancelled);
-const ucHours=(st,iso,sg)=>dayBlocks(st,iso,true).filter(b=>b.sigla===sg).map(b=>hm(b.inicio)+" às "+hm(b.fim)).join(" / ");
+const ucHours=(st,iso,sg)=>SENAI_SCHEDULE.isEAD(st.ucs.find(u=>u.sigla===sg))?"Online · sem horário fixo":dayBlocks(st,iso,true).filter(b=>b.sigla===sg).map(b=>hm(b.inicio)+" às "+hm(b.fim)).join(" / ");
 const uiDocs=()=>Object.fromEntries([["geral",G],...Object.entries(T).map(([id,state])=>["turma-"+id,{state}])]);
 
 const horarios=()=>horariosOf(S.cfg);
@@ -306,7 +306,7 @@ function calcOf(S){
 const PLUR=["domingos","segundas-feiras","terças-feiras","quartas-feiras","quintas-feiras","sextas-feiras","sábados"];
 const normSala=s=>String(s||"").trim().toLowerCase();
 function blockMsg(iso,sg){
-  const u=ucOf(sg);if(!u)return "";
+  const u=ucOf(sg);if(!u||SENAI_SCHEDULE.isEAD(u))return "";
   const d=u.docente?S.docentes.find(x=>x.nome===u.docente):null;
   const w=dow(iso);
   if(d){
@@ -319,7 +319,7 @@ function blockMsg(iso,sg){
     if(st===S)continue;const dd=st.days[iso];if(!dd||!(dd.s||[]).length)continue;
     if(st.reg&&st.reg[iso]&&st.reg[iso].dado==="nao")continue;
     const sp2=spanOf(st.cfg);if(!(sp1[0]<sp2[1]&&sp2[0]<sp1[1]))continue;
-    const ucs=dd.s.map(x=>st.ucs.find(u2=>u2.sigla===x)).filter(Boolean);
+    const ucs=dd.s.map(x=>st.ucs.find(u2=>u2.sigla===x)).filter(u=>u&&!SENAI_SCHEDULE.isEAD(u));
     if(d){const hit=ucs.find(u2=>u2.docente===u.docente);if(hit)return `${d.nome} já leciona ${hit.sigla} na turma ${st.cfg.turma} nesse horário`}
     if(sala){const hit=ucs.find(u2=>normSala(u2.sala)===sala);if(hit)return `a sala ${u.sala.trim()} já está ocupada por ${hit.sigla} (turma ${st.cfg.turma}) nesse horário`}
   }
@@ -328,7 +328,7 @@ function blockMsg(iso,sg){
 function confDay(iso){
   if(Array.isArray(S.days[iso]?.grade))return SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,S,iso);
   const s=(S.days[iso]||{}).s||[];const m=[];
-  if(s.length>1)m.push(`mais de uma disciplina no mesmo dia (${s.join(" e ")})`);
+  if(s.filter(sg=>!SENAI_SCHEDULE.isEAD(ucOf(sg))).length>1)m.push(`mais de uma disciplina no mesmo dia (${s.join(" e ")})`);
   s.forEach(sg=>{const b=blockMsg(iso,sg);if(b)m.push(b)});
   return m;
 }
@@ -345,7 +345,7 @@ function avisos(C){
     const d=S.days[iso],s=d.s||[];if(!s.length)continue;
     const w=dow(iso);
     if(w===0||w===6)a.push(["warn",`Aula em ${WDL[w]}, ${br(iso)} (${s.join(", ")}).`]);
-    if(iso<S.cfg.inicio||iso>S.cfg.termino)a.push(["warn",`Aula fora do período da turma: ${br(iso)} (${s.join(", ")}).`]);
+    if(s.some(sg=>SENAI_SCHEDULE.outsidePeriod(S,iso,sg)))a.push(["warn",`Aula fora do período da turma: ${br(iso)} (${s.join(", ")}).`]);
     if(d.t==="feriado"||d.t==="sem")a.push(["err",`Aula marcada em dia sem aula: ${br(iso)}.`]);
     s.forEach(sg=>{if(!ucOf(sg))a.push(["err",`Sigla "${sg}" em ${br(iso)} não existe nas disciplinas.`])});
     confDay(iso).forEach(m=>a.push(["err",`Choque em ${br(iso)}: ${m}.`]));
@@ -441,17 +441,20 @@ function horTable(){
 
 /* ---------- CALENDÁRIO ---------- */
 function monthList(a,b){
-  const out=[];let [y,m]=(a||S.cfg.inicio).split("-").map(Number);const [ye,me]=(b||S.cfg.termino).split("-").map(Number);
+  const dates=Object.keys(S?.days||{}).filter(d=>/^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  const out=[];let [y,m]=(a||[S.cfg.inicio,...dates].sort()[0]).split("-").map(Number);const [ye,me]=(b||[S.cfg.termino,...dates].sort().at(-1)).split("-").map(Number);
   while((y<ye||(y===ye&&m<=me))&&out.length<48){out.push(`${y}-${String(m).padStart(2,"0")}`);m++;if(m>12){m=1;y++}}
   return out;
 }
 function shiftMonth(ym,n){let [y,m]=ym.split("-").map(Number);m+=n;while(m>12){m-=12;y++}while(m<1){m+=12;y--}return `${y}-${String(m).padStart(2,"0")}`}
 function effectiveRoom(st,iso,sg,block){
+ if(SENAI_SCHEDULE.isEAD(st.ucs.find(u=>u.sigla===sg)))return ['EAD'];
  const id=Object.entries(T).find(([,x])=>x===st)?.[0],u=st.ucs.find(u=>u.sigla===sg)||{},fallback=u.sala||st.cfg.local||'';
  const blocks=dayBlocks(st,iso,true).filter(b=>b.sigla===sg&&(!block||b.bloco===block));
  return [...new Set(blocks.length?blocks.map(b=>EXPORT_RESERVAS.find(r=>r.status==='aprovada'&&r.turmaId==='turma-'+id&&r.data===iso&&r.sigla===sg&&(r.bloco||'dia')===b.bloco)?.ambienteNome||fallback):[fallback])];
 }
 function agendaAttrs(subject,teacher,room,time,cancelled){return `data-agenda-subject="${esc(subject||'')}" data-agenda-teacher="${esc(teacher||'')}" data-agenda-room="${esc(room||'')}" data-agenda-time="${esc(time||'')}" data-agenda-cancelled="${!!cancelled}"`}
+function eadCitation(uc,label,cancelled=false,hidden=false){return `<span class="chip ead-note" role="note" style="${hidden?'display:none':''}" ${agendaAttrs(uc?.nome||label,uc?.docente,'EAD','Online · sem horário fixo',cancelled)} title="${esc((uc?.nome||label)+' · Online, sem horário fixo')}" aria-label="${esc((uc?.nome||label)+' · EAD, sem horário fixo')}">↳ ${esc(label)} · EAD</span>`}
 function calendarMatch(st,iso,sg,conflict=false){
  const f=UI.calFilters,u=st.ucs.find(u=>u.sigla===sg)||{},r=st.reg?.[iso]||{};
  const status=r.dado==='nao'?'cancelada':r.dado==='sim'?'realizada':'programada';
@@ -477,7 +480,7 @@ function vCal(){
     const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso),s=e.s||[];
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(iso<S.cfg.inicio||iso>S.cfg.termino)cl.push("out");if(e.t==="feriado")cl.push("hol");if(e.t==="sem")cl.push("sem");if(iso===t)cl.push("today");
     const cf=confDay(iso).join("; ");
-    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,!!cf))return "";const u=ucOf(sg);return `<span ${agendaAttrs(u?.nome||sg,u?.docente,effectiveRoom(S,iso,sg).join(" / "),ucHours(S,iso,sg),S.reg?.[iso]?.dado==="nao")} class="chip ${u&&!cf?"":"bad"}" style="--c:${colorOf(sg)}" title="${esc(cf?"Choque: "+cf:(u?u.nome:sg)+" · aula "+C.enc[iso][j])}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
+    const chips=s.map((sg,j)=>{if(!calendarMatch(S,iso,sg,!!cf))return "";const u=ucOf(sg);if(SENAI_SCHEDULE.isEAD(u))return eadCitation(u,sg,S.reg?.[iso]?.dado==="nao",!!UI.fUc&&sg!==UI.fUc);return `<span ${agendaAttrs(u?.nome||sg,u?.docente,effectiveRoom(S,iso,sg).join(" / "),ucHours(S,iso,sg),S.reg?.[iso]?.dado==="nao")} class="chip ${u&&!cf?"":"bad"}" style="--c:${colorOf(sg)}" title="${esc(cf?"Choque: "+cf:(u?u.nome:sg)+" · aula "+C.enc[iso][j])}">${esc(sg)} ${C.enc[iso][j]}${Array.isArray(e.grade)?`<small>${esc(ucHours(S,iso,sg))}</small>`:""}</span>`}).join("");
     cells+=`<button class="${cl.join(" ")}" data-act="day" data-iso="${iso}" aria-label="${d} de ${MESES[m-1]}"><span class="dn">${d}</span>${e.h?`<span class="lb">${esc(e.h)}</span>`:""}${chips}</button>`;
   }
   const ml=monthList();
@@ -505,6 +508,7 @@ function vCal(){
 function dayClick(iso){
   const tool=UI.tool;if(tool!=="edit"&&Object.values(UI.calFilters).some(Boolean)){toast("Limpe os filtros antes de lançar ou remover aulas diretamente.");return}let e=S.days[iso]||{s:[]};e.s=e.s||[];
   if(tool==="edit"){openDayModal(iso);return}
+  if(tool.startsWith('uc:')&&SENAI_SCHEDULE.isEAD(ucOf(tool.slice(3)))){const sg=tool.slice(3);if(['feriado','sem'].includes(e.t)){toast('Dia marcado como feriado ou sem aula. Limpe o dia antes.');return}if(e.s.includes(sg)){e.s=e.s.filter(x=>x!==sg);if(e.ead)e.ead=e.ead.filter(x=>x!==sg);if(e.eadHours)delete e.eadHours[sg];if(e.grade)e.grade=e.grade.map(x=>x===sg?'':x)}else{e.s.push(sg);e.ead=[...new Set([...(e.ead||[]),sg])]}if(!e.s.length&&!e.h)delete S.days[iso];else S.days[iso]=e;save();renderView();return}
   if(Array.isArray(e.grade)&&tool.startsWith("uc:")){openDayModal(iso);toast("Este dia tem distribuição por horário. Ajuste as aulas na janela.");return}
   if(tool==="erase"){delete S.days[iso]}
   else if(tool==="feriado"||tool==="sem"){S.days[iso]={s:[],t:tool,h:UI.holName||(tool==="sem"?"SEM AULA":"FERIADO")}}
@@ -513,21 +517,22 @@ function dayClick(iso){
     if(e.t==="feriado"||e.t==="sem"){toast("Dia marcado como "+(e.t==="sem"?"sem aula":"feriado")+". Limpe o dia antes.");return}
     const k=e.s.lastIndexOf(sg);
     if(k>=0){e.s.splice(k,1)}
-    else if(e.s.length){toast(`Choque: o dia já tem ${e.s[0]}. Remova antes de lançar outra disciplina.`);return}
+    else if(e.s.some(sg=>!SENAI_SCHEDULE.isEAD(ucOf(sg)))&&!SENAI_SCHEDULE.isEAD(ucOf(sg))){toast(`Choque: o dia já tem ${e.s[0]}. Remova antes de lançar outra disciplina.`);return}
     else{const m=blockMsg(iso,sg);if(m){toast("Choque: "+m+".");return}e.s.push(sg)}
     if(!e.s.length&&!e.h)delete S.days[iso];else S.days[iso]=e;
   }
   save();renderView();
 }
 function openDayModal(iso){
- const e=S.days[iso]||{s:[]},slots=horarios(),legacy=(e.s||[]).length>1&&!Array.isArray(e.grade);
- const grade=Array.isArray(e.grade)?e.grade:slots.map(()=>e.s?.[0]||"");
+ const e=S.days[iso]||{s:[]},slots=horarios(),legacy=(e.s||[]).filter(sg=>!SENAI_SCHEDULE.isEAD(ucOf(sg))).length>1&&!Array.isArray(e.grade);
+ const grade=Array.isArray(e.grade)?e.grade:slots.map(()=>(e.s||[]).find(sg=>!SENAI_SCHEDULE.isEAD(ucOf(sg)))||"");
+ const parallel=Array.isArray(e.grade)?e.ead||[]:(e.s||[]).filter(sg=>SENAI_SCHEDULE.isEAD(ucOf(sg)));
  const opt=value=>`<option value="">Sem aula</option>`+S.ucs.map(u=>`<option value="${esc(u.sigla)}" ${u.sigla===value?"selected":""}>${esc(u.sigla)} · ${esc(u.nome)}</option>`).join("");
  const type=["feriado","sem"].includes(e.t)?e.t:"letivo";
- document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Editar dia" data-iso="${iso}"><h3>${WDL[dow(iso)]}, ${br(iso)}</h3><label class="f">Tipo do dia<select id="mT"><option value="letivo" ${type==="letivo"?"selected":""}>Dia letivo</option><option value="feriado" ${type==="feriado"?"selected":""}>Feriado</option><option value="sem" ${type==="sem"?"selected":""}>Sem aula</option></select></label>${legacy?`<p class="banner warn">Este lançamento antigo contém ${esc(e.s.join(" + "))} no turno inteiro. Confira e distribua todas as disciplinas nos horários antes de salvar.</p>`:""}<label class="f">Preencher todas as aulas<select id="mFill" aria-label="Preencher todas as aulas"><option value="_" selected disabled>Escolha para aplicar</option>${opt("")}</select></label><div class="slot-editor">${slots.map((slot,i)=>`<label class="f">Aula ${i+1} · ${hm(slot.i)} às ${hm(slot.f)}<select data-slot="${i}" aria-label="Disciplina da aula ${i+1}">${opt(grade[i])}</select></label>`).join("")}</div><label class="f">Nome do feriado ou observação<input id="mH" value="${esc(e.h||"")}"></label><div id="mInfo" class="small muted" role="status"></div><div class="row"><button class="btn pri" data-act="msave">Salvar</button><button class="btn bad" data-act="mclear">Limpar dia</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;updModalInfo();
+ document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Editar dia" data-iso="${iso}"><h3>${WDL[dow(iso)]}, ${br(iso)}</h3><label class="f">Tipo do dia<select id="mT"><option value="letivo" ${type==="letivo"?"selected":""}>Dia letivo</option><option value="feriado" ${type==="feriado"?"selected":""}>Feriado</option><option value="sem" ${type==="sem"?"selected":""}>Sem aula</option></select></label>${legacy?`<p class="banner warn">Este lançamento antigo contém ${esc(e.s.join(" + "))} no turno inteiro. Confira e distribua todas as disciplinas nos horários antes de salvar.</p>`:""}<label class="f">Preencher todas as aulas<select id="mFill" aria-label="Preencher todas as aulas"><option value="_" selected disabled>Escolha para aplicar</option>${opt("")}</select></label><div class="slot-editor">${slots.map((slot,i)=>`<label class="f">Aula ${i+1} · ${hm(slot.i)} às ${hm(slot.f)}<select data-slot="${i}" aria-label="Disciplina da aula ${i+1}">${opt(grade[i])}</select></label>`).join("")}</div><fieldset class="ead-parallel"><legend>Disciplinas EAD em paralelo</legend><p class="small muted">Docentes identificados com EAD podem acompanhar as aulas presenciais. Cada seleção lança ${slots.length} aulas EAD neste dia, sem ocupar a sala.</p>${S.ucs.filter(u=>SENAI_SCHEDULE.isEAD(u)).map(u=>`<label><input type="checkbox" data-ead="${esc(u.sigla)}" ${parallel.includes(u.sigla)?'checked':''}> ${esc(u.sigla)} · ${esc(u.nome)}</label>`).join('')||'<p class="small muted">Nenhuma disciplina com docente EAD cadastrada.</p>'}</fieldset><p class="small muted">Ambientação pode ser lançada antes do início da turma. Use as setas do calendário para acessar meses anteriores.</p><label class="f">Nome do feriado ou observação<input id="mH" value="${esc(e.h||"")}"></label><div id="mInfo" class="small muted" role="status"></div><div class="row"><button class="btn pri" data-act="msave">Salvar</button><button class="btn bad" data-act="mclear">Limpar dia</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;updModalInfo();
 }
-function modalDay(){const t=document.getElementById("mT").value,h=document.getElementById("mH").value.trim(),grade=[...document.querySelectorAll("[data-slot]")].map(x=>t==="letivo"?x.value:"");return {s:[...new Set(grade.filter(Boolean))],grade,...(t!=="letivo"?{t,h:h||(t==="sem"?"SEM AULA":"FERIADO")}:h?{t:"nota",h}:{})}}
-function updModalInfo(){const info=document.getElementById("mInfo");if(!info)return;const iso=document.querySelector(".modal").dataset.iso,day=modalDay(),candidate={...S,days:{...S.days,[iso]:day}},bad=[SENAI_SCHEDULE.validateSchedule(candidate),...SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,candidate,iso)].filter(Boolean);document.querySelectorAll("[data-slot],#mFill").forEach(x=>x.disabled=document.getElementById("mT").value!=="letivo");const list=dayBlocks(candidate,iso).map(b=>`${b.sigla}: ${b.quantidade} aula(s), ${hm(b.inicio)} às ${hm(b.fim)}`);info.textContent=list.join(" · ")+(bad.length?" · Conflito: "+bad.join(" "):"");document.querySelector("[data-act=msave]").disabled=bad.length>0}
+function modalDay(){const ead=document.getElementById("mT").value==="letivo"?[...document.querySelectorAll("[data-ead]:checked")].map(x=>x.dataset.ead):[];const t=document.getElementById("mT").value,h=document.getElementById("mH").value.trim(),grade=[...document.querySelectorAll("[data-slot]")].map(x=>t==="letivo"&&!ead.includes(x.value)?x.value:"");const old=S.days[document.querySelector('.modal').dataset.iso]||{},eadHours=Object.fromEntries(ead.filter(sg=>old.eadHours?.[sg]).map(sg=>[sg,old.eadHours[sg]]));return {s:[...new Set([...grade.filter(Boolean),...ead])],grade,...(ead.length?{ead}:{}),...(Object.keys(eadHours).length?{eadHours}:{}),...(t!=="letivo"?{t,h:h||(t==="sem"?"SEM AULA":"FERIADO")}:h?{t:"nota",h}:{})}}
+function updModalInfo(){const info=document.getElementById("mInfo");if(!info)return;const iso=document.querySelector(".modal").dataset.iso,day=modalDay(),candidate={...S,days:{...S.days,[iso]:day}},bad=[SENAI_SCHEDULE.validateSchedule(candidate),...SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,candidate,iso)].filter(Boolean);document.querySelectorAll("[data-slot],[data-ead],#mFill").forEach(x=>x.disabled=document.getElementById("mT").value!=="letivo");const list=dayBlocks(candidate,iso).map(b=>`${b.sigla}: ${b.quantidade} aula(s), ${b.ead?"online, sem horário fixo":hm(b.inicio)+" às "+hm(b.fim)}`);info.textContent=list.join(" · ")+(bad.length?" · Conflito: "+bad.join(" "):"");document.querySelector("[data-act=msave]").disabled=bad.length>0}
 function saveModal(){const iso=document.querySelector(".modal").dataset.iso,day=modalDay(),candidate={...S,days:{...S.days,[iso]:day}},bad=[SENAI_SCHEDULE.validateSchedule(candidate),...SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,candidate,iso)].filter(Boolean);if(bad.length){toast(bad.join(" "));return}if(day.s.length||day.h)S.days[iso]=day;else delete S.days[iso];save();closeModal();renderView()}
 
 function openTurmaModal(){
@@ -600,7 +605,7 @@ async function autoAlloc(request=null){
   const response=await PLAN.api({op:'planning_preview',...payload});if(!modal.isConnected)return;
   if(!response.ok)throw Error(response.error||'Não foi possível gerar sugestões.');
   UI.planPreview={...payload,token:response.token};const plan=response.plan;UI.planMonth=plan.changes[0]?.date.slice(0,7);
-  modal.innerHTML=`<h2>Prévia do planejamento</h2><p><strong>${esc(plan.sigla)} · ${esc(plan.disciplina)}</strong><br>${esc(plan.docente)} · ${esc(plan.ambiente)}</p><p>${plan.added} aula(s) sugerida(s) de ${plan.target} solicitada(s), limitadas à carga pendente de ${plan.pending} aula(s). Restarão ${plan.remaining} aula(s) para planejar.</p>${plan.unfilled?'<p class="small" role="status">Não há horários suficientes com estes critérios. Ajuste o período ou os dias da semana.</p>':''}<p class="small muted">Os lançamentos existentes serão preservados. A sala não será reservada automaticamente.</p><div class="tw"><table><thead><tr><th>Data</th><th>Aulas</th><th>Horários sugeridos</th></tr></thead><tbody>${plan.changes.map(day=>`<tr><td>${br(day.date)}</td><td>${day.quantity}</td><td>${day.slots.map(slot=>`${slot.aula}ª: ${hm(slot.i)}–${hm(slot.f)}`).join(' · ')}</td></tr>`).join('')||'<tr><td colspan="3">Nenhum horário disponível ou carga horária já completa.</td></tr>'}</tbody></table></div>${plan.skipped.length?`<details><summary>Horários não utilizados (${plan.skipped.length} datas)</summary><ul>${plan.skipped.map(day=>`<li>${br(day.date)}: ${esc(day.reasons.join(' '))}</li>`).join('')}</ul></details>`:''}<p id="plan-error" role="alert"></p><div class="row"><button class="btn pri" data-act="planapply" ${plan.added?'':'disabled'}>Aplicar sugestões</button><button class="btn" data-act="planrefresh">Atualizar prévia</button><button class="btn" data-act="mclose2">Cancelar</button></div>`;
+  modal.innerHTML=`<h2>Prévia do planejamento</h2><p><strong>${esc(plan.sigla)} · ${esc(plan.disciplina)}</strong><br>${esc(plan.docente)} · ${esc(plan.ambiente)}</p><p>${plan.added} aula(s) sugerida(s) de ${plan.target} solicitada(s), limitadas à carga pendente de ${plan.pending} aula(s). Restarão ${plan.remaining} aula(s) para planejar.</p>${plan.unfilled?'<p class="small" role="status">Não há horários suficientes com estes critérios. Ajuste o período ou os dias da semana.</p>':''}<p class="small muted">Os lançamentos existentes serão preservados. A sala não será reservada automaticamente.</p><div class="tw"><table><thead><tr><th>Data</th><th>Aulas</th><th>Horários sugeridos</th></tr></thead><tbody>${plan.changes.map(day=>`<tr><td>${br(day.date)}</td><td>${day.quantity}</td><td>${plan.ead?'Online · sem horário fixo':day.slots.map(slot=>`${slot.aula}ª: ${hm(slot.i)}–${hm(slot.f)}`).join(' · ')}</td></tr>`).join('')||'<tr><td colspan="3">Nenhum horário disponível ou carga horária já completa.</td></tr>'}</tbody></table></div>${plan.skipped.length?`<details><summary>Horários não utilizados (${plan.skipped.length} datas)</summary><ul>${plan.skipped.map(day=>`<li>${br(day.date)}: ${esc(day.reasons.join(' '))}</li>`).join('')}</ul></details>`:''}<p id="plan-error" role="alert"></p><div class="row"><button class="btn pri" data-act="planapply" ${plan.added?'':'disabled'}>Aplicar sugestões</button><button class="btn" data-act="planrefresh">Atualizar prévia</button><button class="btn" data-act="mclose2">Cancelar</button></div>`;
   modal.querySelector('button:not([disabled])')?.focus();
  }catch(e){if(modal.isConnected)modal.innerHTML=`<h2>Prévia do planejamento</h2><p role="alert">${esc(e.message||'Não foi possível conectar. Tente novamente.')}</p><button class="btn" data-act="mclose2">Voltar</button>`}
 }
@@ -755,7 +760,7 @@ async function exportTeacherXlsx(button){
 }
 function openExportModal(){
   if(!UI.loaded||UI.empty){toast("Carregue uma turma antes de exportar.");return}
-  const outside=Object.entries(S.days).filter(([d,v])=>(v.s||[]).length&&(d<S.cfg.inicio||d>S.cfg.termino)).length;
+  const outside=Object.entries(S.days).filter(([d,v])=>(v.s||[]).some(sg=>SENAI_SCHEDULE.outsidePeriod(S,d,sg))).length;
   document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Exportar calendário"><h2>Exportar calendário no padrão SENAI</h2>${teacherExportFields()}<h3>Calendário da turma</h3><p>Turma ${esc(S.cfg.turma)} · ${esc(S.cfg.curso)}<br>${br(S.cfg.inicio)} a ${br(S.cfg.termino)}</p><p>Escolha o calendário mensal ou a planilha no modelo original.</p>${outside?`<p>${outside} data(s) com aulas estão fora do período da turma.</p><label class="small"><input id="export-outside" type="checkbox" checked> Incluir lançamentos fora do período configurado</label>`:""}<div class="row"><button class="btn" data-act="prevxlsx">Prévia do Excel da turma</button><button class="btn" data-act="print">Imprimir / salvar calendário em PDF</button><button class="btn" data-act="dlhtml">Baixar calendário mensal (HTML)</button></div><p class="small muted">O Excel usa os dados salvos no sistema. Salve alterações pendentes antes de exportar.</p><div class="row"><button class="btn" data-act="mclose2">Voltar</button></div></div></div>`;
 }
 async function exportXlsx(button){
@@ -964,7 +969,7 @@ function docAgg(d){
     const C=calcOf(st),rows=C.rows.filter(r=>r.u.docente===d.nome);
     if(!rows.length)return;
     turmas.push({id,st,ti,rows});
-    rows.forEach(r=>{let count=0;r.ds.forEach(iso=>dayBlocks(st,iso).filter(b=>b.sigla===r.u.sigla).forEach(b=>{const n=b.quantidade>1?`${count+1}–${count+b.quantidade}`:count+1;count+=b.quantidade;aulas.push({iso,ti,turmaId:id,turma:st.cfg.turma,sig:r.u.sigla,nome:r.u.nome,n,P:r.P,sala:effectiveRoom(st,iso,r.u.sigla,b.bloco).join(" / "),h:(st.days[iso]||{}).h||"",hor:hm(b.inicio)+" às "+hm(b.fim),inicio:b.inicio,fim:b.fim,bloco:b.bloco})}))});
+    rows.forEach(r=>{let count=0;r.ds.forEach(iso=>dayBlocks(st,iso).filter(b=>b.sigla===r.u.sigla).forEach(b=>{const n=b.quantidade>1?`${count+1}–${count+b.quantidade}`:count+1;count+=b.quantidade;aulas.push({iso,ti,turmaId:id,turma:st.cfg.turma,sig:r.u.sigla,nome:r.u.nome,n,P:r.P,sala:effectiveRoom(st,iso,r.u.sigla,b.bloco).join(" / "),h:(st.days[iso]||{}).h||"",hor:b.ead?"Online · sem horário fixo":hm(b.inicio)+" às "+hm(b.fim),inicio:b.inicio,fim:b.fim,bloco:b.bloco})}))});
     Object.entries(st.days).forEach(([iso,e])=>{if(e.t==="feriado"||e.t==="sem")fer[iso]=e.h||"Sem aula"});
   });
   aulas.sort((a,b)=>a.iso<b.iso?-1:a.iso>b.iso?1:a.inicio-b.inicio||a.ti-b.ti);
@@ -985,11 +990,11 @@ function renderDocente(){
   const A=docAgg(d),t=todayISO();
   hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}${UI.role==="docente"?'<a class="btn pri" href="/ambientes.html">Reservar salas e laboratórios</a>':'<a class="btn sm" href="#docente">Trocar docente</a>'}${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
   if(!A.turmas.length){v.innerHTML='<section class="panel"><p class="muted" style="margin:0">Você ainda não está associado a nenhuma disciplina. Fale com a coordenação.</p></section>';return}
-  const ini=A.turmas.map(x=>x.st.cfg.inicio).sort()[0],fim=A.turmas.map(x=>x.st.cfg.termino).sort().pop(),ml=monthList(ini,fim);
+  const ini=A.turmas.flatMap(x=>[x.st.cfg.inicio,...Object.keys(x.st.days||{})]).sort()[0],fim=A.turmas.flatMap(x=>[x.st.cfg.termino,...Object.keys(x.st.days||{})]).sort().pop(),ml=monthList(ini,fim);
   if(!UI.month||!ml.includes(UI.month)){const tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}
   const [y,m]=UI.month.split("-").map(Number);
   const first=new Date(Date.UTC(y,m-1,1)).getUTCDay(),dim=new Date(Date.UTC(y,m,0)).getUTCDate();
-  const cancelled=[];for(const x of A.turmas)for(const [iso,e] of Object.entries(x.st.days||{}))if(x.st.reg?.[iso]?.dado==='nao')for(const b of dayBlocks(x.st,iso,true)){const u=x.st.ucs.find(u=>u.sigla===b.sigla&&u.docente===d.nome);if(u)cancelled.push({iso,ti:x.ti,turmaId:x.id,turma:x.st.cfg.turma,sig:u.sigla,nome:u.nome,n:'×',P:0,sala:effectiveRoom(x.st,iso,u.sigla,b.bloco).join(' / '),h:'Aula cancelada / não dada',hor:hm(b.inicio)+' às '+hm(b.fim),inicio:b.inicio,fim:b.fim,bloco:b.bloco,cancelada:true})}
+  const cancelled=[];for(const x of A.turmas)for(const [iso,e] of Object.entries(x.st.days||{}))if(x.st.reg?.[iso]?.dado==='nao')for(const b of dayBlocks(x.st,iso,true)){const u=x.st.ucs.find(u=>u.sigla===b.sigla&&u.docente===d.nome);if(u)cancelled.push({iso,ti:x.ti,turmaId:x.id,turma:x.st.cfg.turma,sig:u.sigla,nome:u.nome,n:'×',P:0,sala:effectiveRoom(x.st,iso,u.sigla,b.bloco).join(' / '),h:'Aula cancelada / não dada',hor:b.ead?'Online · sem horário fixo':hm(b.inicio)+' às '+hm(b.fim),inicio:b.inicio,fim:b.fim,bloco:b.bloco,cancelada:true})}
   const displayed=[...A.aulas,...cancelled].sort((a,b)=>a.iso.localeCompare(b.iso)||a.inicio-b.inicio);
   const filtered=displayed.filter(a=>calendarMatch(A.turmas.find(x=>x.ti===a.ti).st,a.iso,a.sig,displayed.some(b=>!a.cancelada&&!b.cancelada&&b!==a&&b.iso===a.iso&&a.inicio<b.fim&&b.inicio<a.fim)));
   const byDay={};filtered.forEach(a=>(byDay[a.iso]=byDay[a.iso]||[]).push(a));
@@ -999,7 +1004,7 @@ function renderDocente(){
     const iso=`${UI.month}-${String(k).padStart(2,"0")}`,w=dow(iso),as=byDay[iso]||[],b=(d.bloqueios||[]).find(x=>x.de&&iso>=x.de&&iso<=(x.ate||x.de));
     const blk=(d.semana||[]).includes(w)||!!b,lab=A.fer[iso]||(b?(b.motivo||"Indisponível"):"");
     const cl=["day"];if(w===0||w===6)cl.push("wk");if(A.fer[iso])cl.push("hol");if(blk&&!A.fer[iso])cl.push("blk");if(iso===t)cl.push("today");
-    cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${k}</span>${lab?`<span class="lb">${esc(lab)}</span>`:""}${as.map(a=>`<span ${agendaAttrs(a.turma+" · "+a.sig+" · "+a.nome,d.nome,a.sala,a.hor,a.cancelada)} class="chip ${as.some(b=>!a.cancelada&&!b.cancelada&&b!==a&&a.inicio<b.fim&&b.inicio<a.fim)?"bad":""}" style="--c:var(--u${a.ti%8})" title="${esc((a.cancelada?"Aula cancelada · ":"")+a.nome+" · aula "+a.n+"/"+a.P+" · "+a.hor)}">${esc(a.turma)} · ${esc(a.sig)} ${a.n}<small>${esc(a.hor)}</small></span>`).join("")}</div>`;
+    cells+=`<div data-iso="${iso}" class="${cl.join(" ")}"><span class="dn">${k}</span>${lab?`<span class="lb">${esc(lab)}</span>`:""}${as.map(a=>SENAI_SCHEDULE.isEAD({docente:d.nome})?eadCitation({nome:a.nome,docente:d.nome},a.turma+" · "+a.sig,a.cancelada):`<span ${agendaAttrs(a.turma+" · "+a.sig+" · "+a.nome,d.nome,a.sala,a.hor,a.cancelada)} class="chip ${!SENAI_SCHEDULE.isEAD({docente:d.nome})&&as.some(b=>!a.cancelada&&!b.cancelada&&b!==a&&a.inicio<b.fim&&b.inicio<a.fim)?"bad":""}" style="--c:var(--u${a.ti%8})" title="${esc((a.cancelada?"Aula cancelada · ":"")+a.nome+" · aula "+a.n+"/"+a.P+" · "+a.hor)}">${esc(a.turma)} · ${esc(a.sig)} ${a.n}<small>${esc(a.hor)}</small></span>`).join("")}</div>`;
   }
   const next=filtered.filter(a=>!a.cancelada&&a.iso>=t).slice(0,10);
   const wk=(d.semana||[]).map(w=>PLUR[w]),bl=(d.bloqueios||[]).filter(x=>x.de);
@@ -1301,7 +1306,7 @@ document.addEventListener("click",async e=>{
   else if(a==="planrefresh")autoAlloc(UI.planRequest);
   else if(a==="planapply")applyPlanning(b);
   else if(a==="ucadd"){S.ucs.push({nome:"Nova disciplina",sigla:"NOVA"+(S.ucs.length+1),ch:40,docente:"",sala:""});save();renderView()}
-  else if(a==="ucdel"){const i=+b.dataset.i;if(UI.confirm==="uc"+i){const sg=S.ucs[i].sigla;S.ucs.splice(i,1);for(const [k,d] of Object.entries(S.days)){d.s=(d.s||[]).filter(x=>x!==sg);if(Array.isArray(d.grade))d.grade=d.grade.map(x=>x===sg?"":x);if(!d.s.length&&!d.h)delete S.days[k]}UI.confirm=null;save()}else UI.confirm="uc"+i;renderView()}
+  else if(a==="ucdel"){const i=+b.dataset.i;if(UI.confirm==="uc"+i){const sg=S.ucs[i].sigla;S.ucs.splice(i,1);for(const [k,d] of Object.entries(S.days)){d.s=(d.s||[]).filter(x=>x!==sg);if(Array.isArray(d.grade))d.grade=d.grade.map(x=>x===sg?"":x);if(Array.isArray(d.ead))d.ead=d.ead.filter(x=>x!==sg);if(d.eadHours)delete d.eadHours[sg];if(!d.s.length&&!d.h)delete S.days[k]}UI.confirm=null;save()}else UI.confirm="uc"+i;renderView()}
   else if(a==="calfilterclear"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");UI.fUc="";renderView();queueMicrotask(()=>document.querySelector("[data-calfilter]")?.focus())}
   else if(a==="docadd"){openDocCadastro(-1)}
   
@@ -1382,7 +1387,7 @@ document.addEventListener("change",e=>{
   else if(t.id==="cf"){UI.ucFilter=t.value;renderView()}
   else if(t.id==="aUc"){const r=calc().rows.find(r=>r.u.sigla===t.value);document.getElementById("aQty").value=Math.max(r?r.faltam:1,1)}
   else if(t.id==="mFill"){document.querySelectorAll("[data-slot]").forEach(x=>x.value=t.value);updModalInfo()}
-  else if(t.hasAttribute("data-slot")||t.id==="mT")updModalInfo();
+  else if(t.hasAttribute("data-slot")||t.hasAttribute("data-ead")||t.id==="mT")updModalInfo();
   else if(t.id==="fImp"&&t.files[0]){const fr=new FileReader();fr.onload=()=>{document.getElementById("tImp").value=fr.result};fr.readAsText(t.files[0])}
   else if(t.dataset.cfg){if(!t.reportValidity())return;const k=t.dataset.cfg;S.cfg[k]=k==="aulasDia"?Math.max(1,+t.value||1):t.value;if(k==="inicio")UI.month=null;
     if(k==="turma"){const nid=String(t.value).trim().replace(/[^\w.-]/g,"").slice(0,60);if(nid&&nid!==CUR&&!T[nid]){T[nid]=T[CUR];delete T[CUR];CUR=nid;normalize();toast("Código da turma atualizado. Os links antigos dessa turma deixam de valer.")}}
@@ -1407,7 +1412,7 @@ document.addEventListener("change",e=>{
     const u=S.ucs[+t.dataset.uc],f=t.dataset.f;let v=t.value.trim();
     if(f==="ch")v=Math.max(0,+v||0);
     if(f==="sigla"){v=v.toUpperCase();if(!v||S.ucs.some(x=>x!==u&&x.sigla===v)){toast("Sigla vazia ou já usada.");renderView();return}
-      const old=u.sigla;Object.values(S.days).forEach(d=>{d.s=(d.s||[]).map(x=>x===old?v:x);if(Array.isArray(d.grade))d.grade=d.grade.map(x=>x===old?v:x)})}
+      const old=u.sigla;Object.values(S.days).forEach(d=>{d.s=(d.s||[]).map(x=>x===old?v:x);if(Array.isArray(d.grade))d.grade=d.grade.map(x=>x===old?v:x);if(Array.isArray(d.ead))d.ead=d.ead.map(x=>x===old?v:x);if(d.eadHours&&Object.hasOwn(d.eadHours,old)){d.eadHours[v]=d.eadHours[old];delete d.eadHours[old]}})}
     u[f]=v;save();renderView();
     if(f==="docente"||f==="sigla"){const n=countConf();if(n)toast(`${n} choque(s) com bloqueios de docentes. Veja os avisos no Painel.`)}
   }

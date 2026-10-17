@@ -48,7 +48,7 @@
     article.append(node('h3',new Date(day.dataset.iso+'T12:00:00Z').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long',timeZone:'UTC'})));
     if(note)article.append(node('p',note,'small muted'));
     for(const chip of chips){
-     const item=node('div',undefined,'agenda-lesson');
+     const item=node('div',undefined,'agenda-lesson');if(chip.classList.contains('ead-note'))item.classList.add('agenda-ead');
      item.append(node('h4',chip.dataset.agendaSubject||chip.textContent));
      const info=[chip.dataset.agendaTeacher,chip.dataset.agendaRoom,chip.dataset.agendaTime].filter(Boolean);if(info.length)item.append(node('p',info.join(' · ')));
      if(chip.dataset.agendaCancelled==='true')item.append(node('p','Aula cancelada / não dada','agenda-cancelled'));

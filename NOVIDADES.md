@@ -1,3 +1,16 @@
+## Importação de ambientes por Excel
+
+- Administrador importa .xlsx de até 2 MB e 500 ambientes, com modelo disponível para download.
+- Prévia identifica novos cadastros, atualizações e erros antes de confirmar a gravação.
+- Atualização por nome preserva identificadores e ambientes ausentes na planilha; nenhuma exclusão automática.
+- Importação e modelo protegidos no servidor, exclusivos da conta administradora.
+
+## EAD sem horário livre e visual compacto
+
+- Planejamento EAD utiliza dias com aulas presenciais já lançadas, sem sobrescrever a grade nem exigir disponibilidade de horário.
+- Calendários da coordenação, alunos e docentes mostram EAD como uma anotação menor, com indicação de atividade online sem horário fixo.
+- Quantidade parcial de aulas EAD é preservada ao editar, renomear ou excluir disciplinas.
+
 ## Programação diária para TVs e Excel
 
 - Gestão exporta um painel HTML independente, com logo SENAI, páginas por turno, rotação automática e tela cheia.
