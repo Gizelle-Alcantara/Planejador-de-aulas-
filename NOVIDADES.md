@@ -1,3 +1,9 @@
+## Docentes com visual simplificado
+
+- Cartão por docente com disciplinas, carga horária, aulas lançadas e próxima aula.
+- Cadastro, contatos e disponibilidade agrupados em uma área expansível, sem repetir a lista de docentes.
+- Busca, filtros, edição automática e bloqueios preservados, com adaptação para celular.
+
 ## Tela inicial padronizada
 
 - Entrada sem o seletor de mês do calendário; seleção continua disponível no painel da coordenação.
