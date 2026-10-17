@@ -1,0 +1,18 @@
+/* Organização do módulo de salas e laboratórios. */
+#content>section{scroll-margin-top:100px}
+.environment-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.environment-summary>div{padding:18px;border:1px solid #dce4ee;border-top:3px solid #075aa8;border-radius:10px;background:#f6f8fb;min-width:0}
+.environment-summary strong{display:block;font-size:1.8rem;color:#182d45;font-variant-numeric:tabular-nums}
+.environment-summary span{display:block;font-size:.85rem;color:#526579;margin-top:6px;line-height:1.5}
+.environment-editor{background:#f6f8fb;border:1px solid #dce4ee;border-radius:10px;padding:20px;margin:20px 0}
+.environment-editor h3{margin:0 0 18px;overflow-wrap:anywhere}
+.environment-editor .error{color:#a52222;margin-bottom:0}
+.environment-actions{display:flex;gap:8px;flex-wrap:wrap;min-width:140px}
+.environment-enabled{background:#e5f4ed;color:#166641}
+.environment-disabled{background:#fce8e8;color:#912222}
+.board-navigation{margin:12px 0 18px}
+#environment-content td:first-child{font-weight:600;overflow-wrap:anywhere;max-width:320px}
+#environment-content tbody tr:hover{background:#f6f8fb}
+[hidden]{display:none!important}
+@media(max-width:700px){.environment-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.environment-summary>div{padding:14px}.environment-editor{padding:14px}.module-nav{position:static}#content>section{scroll-margin-top:12px}}
+@media print{.environment-summary,.board-navigation{display:none}}

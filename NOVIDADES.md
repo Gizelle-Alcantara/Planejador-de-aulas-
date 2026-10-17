@@ -1,3 +1,10 @@
+## Gestão de ambientes
+
+- Resumo de ambientes e capacidade, ordenação por nome e status com destaque.
+- Edição identificada, cancelamento e validação de nomes duplicados antes de salvar.
+- Consulta de ocupação a partir da lista e navegação por dia.
+- Filtros de busca e status nas reservas; data e ambiente da grade preservados ao salvar.
+
 ## Aba Docentes
 
 - Removido o botão Cadastro completo; os dados complementares ficam em Dados adicionais, na própria lista.

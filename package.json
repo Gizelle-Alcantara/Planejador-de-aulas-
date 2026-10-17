@@ -22,7 +22,8 @@
     "test:ui:reports": "npm run build && node tests/management-report.ui.mjs",
     "test:ui:mobile": "npm run build && node tests/mobile.ui.mjs",
     "test:ui:diagnostics": "npm run build && node tests/diagnostics.ui.mjs",
-    "test:ui:docentes": "npm run build && node tests/docentes.ui.mjs"
+    "test:ui:docentes": "npm run build && node tests/docentes.ui.mjs",
+    "test:ui:ambientes": "npm run build && node tests/ambientes.ui.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
