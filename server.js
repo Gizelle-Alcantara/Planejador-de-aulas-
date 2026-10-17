@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 import { handle, runDaily } from "./lib/core.js";
 if(!process.env.SESSION_SECRET)throw new Error("Configure SESSION_SECRET para iniciar o servidor com segurança.");
 const root = join(fileURLToPath(new URL(".", import.meta.url)), "public");
-const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".ico": "image/x-icon" };
+const types = { ".mjs": "text/javascript", ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".png": "image/png", ".ico": "image/x-icon" };
 http.createServer(async (rq, rs) => {
   try {
     const url = new URL(rq.url, "http://" + (rq.headers.host || "localhost"));

@@ -1,3 +1,10 @@
+## Controle de chaves por QR code
+
+- Gestão cadastra chaves, imprime etiquetas e aloca docentes a salas ou laboratórios de aulas presenciais.
+- Docente registra retirada e devolução com QR code, conta autenticada e assinatura desenhada na tela.
+- Comprovantes com horário do servidor, identificação da aula e hash de integridade; consultas por data e backup completo.
+- Leitura local por câmera, foto ou endereço da etiqueta; câmera requer HTTPS ou localhost.
+
 ## Docentes com visual simplificado
 
 - Cartão por docente com disciplinas, carga horária, aulas lançadas e próxima aula.
