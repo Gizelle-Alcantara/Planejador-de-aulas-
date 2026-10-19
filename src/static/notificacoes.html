@@ -1,9 +1,15 @@
 <!doctype html>
 <html lang="pt-BR">
-<head><meta charset="utf-8"><script src="/diagnostics-client.js"></script><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Notificações · Agenda SENAI</title><link rel="stylesheet" href="/notifications.css"><script src="/notifications.js" type="module"></script></head>
+<head><meta charset="utf-8"><script src="/diagnostics-client.js"></script><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="robots" content="noindex"><title>Notificações · Agenda SENAI</title><link rel="stylesheet" href="/notifications.css"><script src="/notifications.js" type="module"></script><link rel="manifest" href="/manifest.webmanifest">
+<link rel="stylesheet" href="/mobile.css">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Agenda SENAI">
+</head>
 <body><main><a href="#notification-list" class="skip">Pular para os avisos</a><header><div><p class="eyebrow">SENAI · Planejador de Turmas</p><h1>Central de notificações</h1><p id="account"></p></div><a id="notification-back" href="/" class="button secondary">Voltar ao sistema</a></header>
 <p id="notification-feedback" role="status" aria-live="polite">Carregando notificações…</p>
 <section id="notification-center" hidden aria-labelledby="inbox-title"><div class="heading"><h2 id="inbox-title">Seus avisos</h2><strong id="notification-count"></strong></div><p>Reúne reservas e alterações de aulas. A leitura e a exclusão são individuais para cada conta. Os avisos de calendário começam a ser registrados nesta versão.</p>
 <p id="notification-watch" class="meta" role="status">Verificação automática ativa: a cada 30 segundos.</p><div id="notification-new" hidden role="status"><p>Novos avisos disponíveis.</p><button id="notification-show-new" class="secondary" type="button">Mostrar novos avisos</button></div><form id="notification-filters"><label>Tipo de aviso<select id="notification-kind" aria-label="Tipo de aviso"><option value="">Todos os tipos</option><option value="reserva">Reservas</option><option value="calendario">Calendário</option></select></label><label>Situação<select id="notification-state" aria-label="Situação"><option value="">Todas</option><option value="unread">Não lidas</option></select></label><button type="submit" class="secondary">Atualizar avisos</button></form>
 <div class="actions"><button id="notification-read-visible" class="secondary">Marcar exibidas como lidas</button></div><div id="notification-list" tabindex="-1" aria-busy="true"></div><button id="notification-more" class="secondary" hidden>Carregar avisos anteriores</button>
-</section><p id="notification-login" hidden>Entre com a conta da coordenação, de ambientes ou do docente para consultar seus avisos. <a href="/#login">Entrar no sistema</a></p></main></body></html>
+</section><p id="notification-login" hidden>Entre com a conta da coordenação, de ambientes ou do docente para consultar seus avisos. <a href="/#login">Entrar no sistema</a></p></main><script src="/mobile-app.js" defer></script>
+</body></html>

@@ -1,9 +1,10 @@
 <!doctype html>
-<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Agenda SENAI | Gestão acadêmica</title>
 <script src="/schedule.js"></script>
 <script src="/turma-copy.js"></script>
 <script src="/search.js"></script>
+<script src="/whatsapp-manual.js"></script>
 <script src="/excel-preview.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -134,6 +135,9 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 <link rel="stylesheet" href="/professional.css">
 <link rel="stylesheet" href="/mobile.css">
 <script src="/diagnostics-client.js"></script>
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Agenda SENAI">
 </head><body>
 <div class="wrap">
 <header class="top">
@@ -957,19 +961,20 @@ function docAgg(d){
   return {turmas,aulas,fer};
 }
 function renderDocente(){
+  const keyShortcut=UI.role==="docente"?'<a class="btn pri" data-key-shortcut href="/ambientes.html#keys">Minhas chaves</a>':"";
   const hdr=document.getElementById("hdr"),v=document.getElementById("view");
   document.getElementById("tabs").innerHTML="";
   const back=UI.cw===false||UI.role==="docente"?"":'<a class="btn sm" href="#">Voltar ao planejador</a>';
   if(!UI.me){hdr.innerHTML='<h1>Acesso do docente</h1>';v.innerHTML='<section class="panel"><p>Entre com usuário e senha para consultar sua agenda.</p><a class="btn pri" href="#login-docente">Entrar como docente</a></section>';return}
   if(UI.role==='docente'&&!UI.me.docenteId){hdr.innerHTML='<h1>Meu calendário</h1>';v.innerHTML='<section class="panel"><p>Sua conta ainda não está vinculada a um docente. Solicite o vínculo à coordenação.</p></section>';return}
-  if(!UI.loaded||UI.empty){hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;v.innerHTML=`<p class="muted">${UI.err||(UI.empty?"Nenhuma aula vinculada ao seu cadastro. Consulte a coordenação.":"Carregando…")}</p>`;return}
+  if(!UI.loaded||UI.empty){hdr.innerHTML=`<h1>Calendário do docente</h1>${back}${keyShortcut}`;v.innerHTML=`<p class="muted">${UI.err||(UI.empty?"Nenhuma aula vinculada ao seu cadastro. Consulte a coordenação.":"Carregando…")}</p>`;return}
   const matches=G.docentes.filter(x=>slug(x.nome)===DOC_ID),d=G.docentes.find(x=>x.id===DOC_ID)||(matches.length===1?matches[0]:null);
   if(!d){
     hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;
     v.innerHTML=`<section class="panel"><h2>Escolha seu nome</h2><div style="display:flex;flex-direction:column;gap:8px">${G.docentes.map(x=>`<a class="btn" href="#docente-${esc((x.id||slug(x.nome)))}">${esc(x.nome)}</a>`).join("")||'<span class="muted">Nenhum docente cadastrado.</span>'}</div></section>`;return;
   }
   const A=docAgg(d),t=todayISO();
-  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}${UI.role==="docente"?'<a class="btn pri" href="/ambientes.html">Reservar salas e laboratórios</a>':'<a class="btn sm" href="#docente">Trocar docente</a>'}${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
+  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}${keyShortcut}${UI.role==="docente"?'<a class="btn pri" href="/ambientes.html">Reservar salas e laboratórios</a>':'<a class="btn sm" href="#docente">Trocar docente</a>'}${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
   if(!A.turmas.length){v.innerHTML='<section class="panel"><p class="muted" style="margin:0">Você ainda não está associado a nenhuma disciplina. Fale com a coordenação.</p></section>';return}
   const ini=A.turmas.flatMap(x=>[x.st.cfg.inicio,...Object.keys(x.st.days||{})]).sort()[0],fim=A.turmas.flatMap(x=>[x.st.cfg.termino,...Object.keys(x.st.days||{})]).sort().pop(),ml=monthList(ini,fim);
   if(!UI.month||!ml.includes(UI.month)){const tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}
@@ -1122,7 +1127,7 @@ function vAvisos(){
   const st=A.st||{},pv=A.pv||{},when=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}};
   const need=a.canal==="whatsapp"?!st.whatsapp:a.canal==="email"?!st.email:(!st.email||!st.whatsapp);
   const chk=(k,l)=>`<label class="row small" style="gap:6px"><input type="checkbox" data-av="${k}" ${a[k]?"checked":""}> ${l}</label>`;
-  return `${need?`<section class="panel" style="border-color:var(--warn)"><b>Serviço de envio não configurado.</b> <span class="small">O sistema monta e registra os avisos, mas o envio fica <b>simulado</b> (nada sai de verdade) até você cadastrar as chaves do ${a.canal==="whatsapp"?"WhatsApp":a.canal==="email"?"e-mail (Resend)":"e-mail e do WhatsApp"} no servidor. Veja o guia de instalação, seção Avisos.</span></section>`:""}
+  return `${SENAI_WHATSAPP.render(CUR,S.cfg.turma,S.docentes.filter(d=>S.ucs.some(u=>u.docente===d.nome)),pv.lines||[])}${need?`<section class="panel" style="border-color:var(--warn)"><b>Serviço de envio não configurado.</b> <span class="small">O sistema monta e registra os avisos, mas o envio fica <b>simulado</b> (nada sai de verdade) até você cadastrar as chaves do ${a.canal==="whatsapp"?"WhatsApp":a.canal==="email"?"e-mail (Resend)":"e-mail e do WhatsApp"} no servidor. Veja o guia de instalação, seção Avisos.</span></section>`:""}
   <div class="grid2">
   <section class="panel"><h2>Envio automático da turma ${esc(S.cfg.turma)}</h2>
     <div style="display:flex;flex-direction:column;gap:8px">${chk("auto","Avisar alterações do calendário todos os dias às 20h (aulas novas, canceladas, não dadas e reposições)")}${chk("lembrete","Lembrete na véspera de cada aula (às 20h do dia anterior)")}</div>
@@ -1247,14 +1252,17 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   renderHead();
   const v=document.getElementById("view");
+  const accountForm=UI.tab==="acesso"?v.querySelector("#account-form"):null;
+  const accountFocus=accountForm?.contains(document.activeElement)?document.activeElement:null;
   v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,dados:vDados,publicacao:vPublication,diagnostico:vDiagnostics,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
+  if(accountForm){const fresh=v.querySelector("#account-form");if(fresh){fresh.replaceWith(accountForm);accountFocus?.focus({preventScroll:true})}}
   afterRender();
 }
 const view=document.getElementById("view");
 document.addEventListener("submit",async e=>{
  if(e.target.id!=="account-form")return;e.preventDefault();const form=e.target,feedback=form.querySelector('#account-feedback'),button=form.querySelector('[type=submit]');
  if(button.disabled)return;button.disabled=true;feedback.className='form-feedback';feedback.textContent='Criando conta…';
- try{const g=id=>form.querySelector('#'+id).value;const r=await PLAN.api({op:'user_add',login:g('uLogin'),nome:g('uNome'),password:g('uPw'),role:g('uRole'),recoveryEmail:g('uRecoveryEmail')});if(!r.ok){feedback.className='form-feedback error';feedback.textContent=r.error||'Não foi possível criar a conta. Tente novamente.';return}await loadAcc();const next=document.getElementById('account-feedback');if(next){next.className='form-feedback success';next.textContent='Conta criada com sucesso.'}toast('Conta criada')}
+ try{const g=id=>form.querySelector('#'+id).value;const r=await PLAN.api({op:'user_add',login:g('uLogin'),nome:g('uNome'),password:g('uPw'),role:g('uRole'),recoveryEmail:g('uRecoveryEmail')});if(!r.ok){feedback.className='form-feedback error';feedback.textContent=r.error||'Não foi possível criar a conta. Tente novamente.';return}form.reset();await loadAcc();const next=document.getElementById('account-feedback');if(next){next.className='form-feedback success';next.textContent='Conta criada com sucesso.'}toast('Conta criada')}
  catch{feedback.className='form-feedback error';feedback.textContent='Não foi possível conectar. Seus dados foram mantidos; tente novamente.'}finally{button.disabled=false}
 });
 document.addEventListener("click",async e=>{
@@ -1462,4 +1470,5 @@ renderView();
 <script src="/quick-search.js" defer></script>
 <script src="/notification-badge.js" defer></script>
 <script src="/mobile.js" defer></script>
+<script src="/mobile-app.js" defer></script>
 </body></html>
