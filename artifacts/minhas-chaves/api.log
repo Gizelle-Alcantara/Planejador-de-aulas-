@@ -1,0 +1,17 @@
+✔ prepara aulas, ambientes e contas vinculadas (457.2353ms)
+✔ cadastro exclusivo da gestão, identificação única e QR opaco (12.9267ms)
+✔ alocação cria reserva aprovada de laboratório e evita duplicidade (30.5617ms)
+✔ QR e assinatura são exigidos e outro docente não pode retirar (10.9816ms)
+✔ retirada concorrente grava uma única assinatura com integridade (8.1645ms)
+✔ comprovantes são privados e não vazam na carga inicial (5.5032ms)
+✔ devolução permanece possível após cancelamento da reserva e não duplica (7.7106ms)
+✔ alocação futura não pode retirar e chave com alocação não pode desativar (15.7023ms)
+✔ backup completo inclui QR, alocações e assinaturas e restaura sem perder recibos (17.218ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 742.2579

@@ -63,6 +63,7 @@ test('devolução permanece possível após cancelamento da reserva e não dupli
 });
 test('alocação futura não pode retirar e chave com alocação não pode desativar',async()=>{
  const future=(await ok({op:'managed_lessons'},manager)).items.find(l=>l.data>today());const a=(await ok({op:'key_allocate',...future,keyId:second.id},manager)).item;
+ assert.ok((await ok({op:'key_list',upcoming:true},ana)).items.some(x=>x.id===a.id));assert.ok(!(await ok({op:'key_list',upcoming:true},bia)).items.some(x=>x.id===a.id));assert.equal((await ok({op:'key_list',upcoming:true},ana)).keys.length,0);
  assert.equal((await call({op:'key_sign',id:a.id,action:'retirada',token:second.token,name:'Ana',consent:true,signature},ana)).status,409);
  assert.equal((await call({op:'key_toggle',id:second.id},manager)).status,409);await ok({op:'key_cancel',id:a.id},manager);await ok({op:'key_toggle',id:second.id},manager);
 });

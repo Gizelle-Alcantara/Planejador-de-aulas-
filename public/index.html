@@ -965,7 +965,7 @@ function docAgg(d){
   return {turmas,aulas,fer};
 }
 function renderDocente(){
-  const keyShortcut=UI.role==="docente"?'<a class="btn pri" data-key-shortcut href="/ambientes.html#key-reader">Retirar / devolver chave</a>':"";
+  const keyShortcut=UI.role==="docente"?'<a class="btn pri" data-key-shortcut href="/ambientes.html#keys">Minhas chaves</a>':"";
   const hdr=document.getElementById("hdr"),v=document.getElementById("view");
   document.getElementById("tabs").innerHTML="";
   const back=UI.cw===false||UI.role==="docente"?"":'<a class="btn sm" href="#">Voltar ao planejador</a>';

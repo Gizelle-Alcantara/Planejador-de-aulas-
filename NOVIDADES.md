@@ -1,8 +1,15 @@
+## Minhas chaves para o docente
+
+- Docente visualiza somente as suas chaves, incluindo próximas alocações e devoluções pendentes.
+- Ações diretas Retirar chave e Devolver chave, com QR code e assinatura durante a confirmação.
+- Retirada futura permanece bloqueada até o dia da aula.
+- A área do docente não exibe painel de gestão, resumo geral, cadastro, alocação ou filtro de data.
+
 ## Atalho de chaves para o docente
 
-- Botão Retirar / devolver chave no cabeçalho do docente e na tela de ambientes.
+- Atalho Minhas chaves no cabeçalho do docente e na tela de ambientes.
 - Atalho Chaves na barra inferior do calendário do docente no celular.
-- Abertura direta do leitor de QR code com foco; a movimentação continua exigindo leitura da etiqueta e assinatura.
+- Lista pessoal de chaves; o leitor de QR code aparece ao escolher Retirar chave ou Devolver chave, mantendo a assinatura.
 
 ## Versão web mobile instalável
 
