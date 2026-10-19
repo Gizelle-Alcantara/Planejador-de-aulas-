@@ -1,0 +1,112 @@
+{
+  "at": "2026-10-19T15:19:07.918Z",
+  "environment": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "logicalCpus": 12,
+    "memoryGB": 8,
+    "database": "SQLite/libsql local temporário",
+    "target": "Instância local exclusiva; sem serviços externos"
+  },
+  "fixture": {
+    "turmas": 30,
+    "docentes": 20,
+    "ambientes": 20,
+    "diasPorTurma": 60
+  },
+  "stages": [
+    {
+      "name": "Aquecimento",
+      "concurrency": 2,
+      "durationSeconds": 2.01,
+      "requests": 330,
+      "requestsPerSecond": 164.2,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 330
+      },
+      "errorTypes": {},
+      "receivedMB": 22.93,
+      "latencyMs": {
+        "p50": 11.978599999999915,
+        "p95": 16.189300000000003,
+        "p99": 23.208500000000186,
+        "max": 31.6541000000002
+      },
+      "endpoints": {
+        "board": {
+          "requests": 166,
+          "p50": 12.083000000000084,
+          "p95": 16.874700000000075,
+          "p99": 23.208500000000186,
+          "max": 27.536099999999806
+        },
+        "calendar": {
+          "requests": 164,
+          "p50": 11.881999999999607,
+          "p95": 15.942699999999832,
+          "p99": 24.036599999999908,
+          "max": 31.6541000000002
+        }
+      }
+    },
+    {
+      "name": "Leituras mistas",
+      "concurrency": 1,
+      "durationSeconds": 6.01,
+      "requests": 392,
+      "requestsPerSecond": 65.24,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 392
+      },
+      "errorTypes": {},
+      "receivedMB": 34.99,
+      "latencyMs": {
+        "p50": 14.154199999999946,
+        "p95": 25.979899999999816,
+        "p99": 30.650499999999738,
+        "max": 47.733000000000175
+      },
+      "endpoints": {
+        "static": {
+          "requests": 98,
+          "p50": 13.654499999999643,
+          "p95": 26.44920000000002,
+          "p99": 30.650499999999738,
+          "max": 30.650499999999738
+        },
+        "calendar": {
+          "requests": 98,
+          "p50": 20.88550000000032,
+          "p95": 26.427099999999882,
+          "p99": 29.65650000000005,
+          "max": 29.65650000000005
+        },
+        "board": {
+          "requests": 98,
+          "p50": 15.41229999999996,
+          "p95": 27.202699999999822,
+          "p99": 31.733900000000176,
+          "max": 31.733900000000176
+        },
+        "notifications": {
+          "requests": 98,
+          "p50": 12.123299999999745,
+          "p95": 25.357700000000023,
+          "p99": 47.733000000000175,
+          "max": 47.733000000000175
+        }
+      }
+    }
+  ],
+  "failure": "Error: Servidor encerrou durante a carga; consulte servidor.log\n    at file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:24:165\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Promise.all (index 8)\n    at async stage (file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:24:2)\n    at async file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:38:40",
+  "serverExit": {
+    "code": 3221225477,
+    "signal": null
+  },
+  "serverErrors": []
+}

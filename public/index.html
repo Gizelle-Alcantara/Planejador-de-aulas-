@@ -1252,14 +1252,17 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   renderHead();
   const v=document.getElementById("view");
+  const accountForm=UI.tab==="acesso"?v.querySelector("#account-form"):null;
+  const accountFocus=accountForm?.contains(document.activeElement)?document.activeElement:null;
   v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,dados:vDados,publicacao:vPublication,diagnostico:vDiagnostics,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
+  if(accountForm){const fresh=v.querySelector("#account-form");if(fresh){fresh.replaceWith(accountForm);accountFocus?.focus({preventScroll:true})}}
   afterRender();
 }
 const view=document.getElementById("view");
 document.addEventListener("submit",async e=>{
  if(e.target.id!=="account-form")return;e.preventDefault();const form=e.target,feedback=form.querySelector('#account-feedback'),button=form.querySelector('[type=submit]');
  if(button.disabled)return;button.disabled=true;feedback.className='form-feedback';feedback.textContent='Criando conta…';
- try{const g=id=>form.querySelector('#'+id).value;const r=await PLAN.api({op:'user_add',login:g('uLogin'),nome:g('uNome'),password:g('uPw'),role:g('uRole'),recoveryEmail:g('uRecoveryEmail')});if(!r.ok){feedback.className='form-feedback error';feedback.textContent=r.error||'Não foi possível criar a conta. Tente novamente.';return}await loadAcc();const next=document.getElementById('account-feedback');if(next){next.className='form-feedback success';next.textContent='Conta criada com sucesso.'}toast('Conta criada')}
+ try{const g=id=>form.querySelector('#'+id).value;const r=await PLAN.api({op:'user_add',login:g('uLogin'),nome:g('uNome'),password:g('uPw'),role:g('uRole'),recoveryEmail:g('uRecoveryEmail')});if(!r.ok){feedback.className='form-feedback error';feedback.textContent=r.error||'Não foi possível criar a conta. Tente novamente.';return}form.reset();await loadAcc();const next=document.getElementById('account-feedback');if(next){next.className='form-feedback success';next.textContent='Conta criada com sucesso.'}toast('Conta criada')}
  catch{feedback.className='form-feedback error';feedback.textContent='Não foi possível conectar. Seus dados foram mantidos; tente novamente.'}finally{button.disabled=false}
 });
 document.addEventListener("click",async e=>{

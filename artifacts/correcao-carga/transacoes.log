@@ -1,0 +1,12 @@
+✔ reutiliza a conexão e impede leitura externa dentro de transação (3.0237ms)
+✔ rollback e fechamento liberam a fila sem confirmar alterações (0.457ms)
+✔ falhas ao iniciar ou confirmar não prendem a fila (0.7981ms)
+✔ SQLite real mantém isolamento, rollback e dados após transações repetidas (41.6272ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 516.0531

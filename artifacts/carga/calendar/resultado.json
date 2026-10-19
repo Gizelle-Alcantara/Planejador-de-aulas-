@@ -1,0 +1,172 @@
+{
+  "at": "2026-10-19T15:20:17.383Z",
+  "environment": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "logicalCpus": 12,
+    "memoryGB": 8,
+    "database": "SQLite/libsql local temporário",
+    "target": "Instância local exclusiva; sem serviços externos"
+  },
+  "fixture": {
+    "turmas": 30,
+    "docentes": 20,
+    "ambientes": 20,
+    "diasPorTurma": 60
+  },
+  "stages": [
+    {
+      "name": "Aquecimento",
+      "concurrency": 2,
+      "durationSeconds": 2.01,
+      "requests": 505,
+      "requestsPerSecond": 251.57,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 505
+      },
+      "errorTypes": {},
+      "receivedMB": 46.89,
+      "latencyMs": {
+        "p50": 7.7179000000001,
+        "p95": 10.707100000000082,
+        "p99": 13.074200000000019,
+        "max": 15.834899999999834
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 505,
+          "p50": 7.7179000000001,
+          "p95": 10.707100000000082,
+          "p99": 13.074200000000019,
+          "max": 15.834899999999834
+        }
+      }
+    },
+    {
+      "name": "calendar",
+      "concurrency": 1,
+      "durationSeconds": 6.01,
+      "requests": 423,
+      "requestsPerSecond": 70.33,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 423
+      },
+      "errorTypes": {},
+      "receivedMB": 39.27,
+      "latencyMs": {
+        "p50": 15.068199999999706,
+        "p95": 20.45139999999992,
+        "p99": 25.89090000000033,
+        "max": 29.36750000000029
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 423,
+          "p50": 15.068199999999706,
+          "p95": 20.45139999999992,
+          "p99": 25.89090000000033,
+          "max": 29.36750000000029
+        }
+      }
+    },
+    {
+      "name": "calendar",
+      "concurrency": 10,
+      "durationSeconds": 6.02,
+      "requests": 2311,
+      "requestsPerSecond": 383.92,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 2311
+      },
+      "errorTypes": {},
+      "receivedMB": 214.57,
+      "latencyMs": {
+        "p50": 25.084600000000137,
+        "p95": 37.07430000000022,
+        "p99": 44.30479999999989,
+        "max": 58.060999999999694
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 2311,
+          "p50": 25.084600000000137,
+          "p95": 37.07430000000022,
+          "p99": 44.30479999999989,
+          "max": 58.060999999999694
+        }
+      }
+    },
+    {
+      "name": "calendar",
+      "concurrency": 25,
+      "durationSeconds": 6.08,
+      "requests": 2492,
+      "requestsPerSecond": 409.63,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 2492
+      },
+      "errorTypes": {},
+      "receivedMB": 231.37,
+      "latencyMs": {
+        "p50": 59.25830000000133,
+        "p95": 71.92669999999998,
+        "p99": 93.08759999999893,
+        "max": 112.61590000000069
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 2492,
+          "p50": 59.25830000000133,
+          "p95": 71.92669999999998,
+          "p99": 93.08759999999893,
+          "max": 112.61590000000069
+        }
+      }
+    },
+    {
+      "name": "calendar",
+      "concurrency": 50,
+      "durationSeconds": 6.16,
+      "requests": 2416,
+      "requestsPerSecond": 392.22,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 2416
+      },
+      "errorTypes": {},
+      "receivedMB": 224.32,
+      "latencyMs": {
+        "p50": 121.46049999999741,
+        "p95": 163.9878000000026,
+        "p99": 192.22109999999884,
+        "max": 234.66359999999986
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 2416,
+          "p50": 121.46049999999741,
+          "p95": 163.9878000000026,
+          "p99": 192.22109999999884,
+          "max": 234.66359999999986
+        }
+      }
+    }
+  ],
+  "completed": true,
+  "unexpectedErrors": 0,
+  "serverExit": {
+    "code": null,
+    "signal": "SIGTERM"
+  },
+  "serverErrors": []
+}

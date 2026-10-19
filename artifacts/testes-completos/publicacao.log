@@ -1,0 +1,52 @@
+
+> planejador-senai@1.0.0 check:publish
+> node scripts/check-publication.js
+
+[ERROR] Senha mestre: Use uma senha própria de pelo menos 12 caracteres.
+[ERROR] Chave das sessões: Use uma chave aleatória de pelo menos 32 caracteres, diferente da senha mestre.
+[ERROR] Endereço público: Configure PUBLIC_URL com o endereço HTTPS definitivo, sem usuário ou senha no endereço.
+[WARN] Persistência do banco: Banco em arquivo: confirme o volume persistente e mantenha uma cópia externa.
+[WARN] Recuperação e avisos por e-mail: Sem RESEND_API_KEY e MAIL_FROM, recuperação por e-mail e envio de avisos ficam indisponíveis.
+[WARN] Agendamento de backups: O servidor local precisa permanecer em execução no horário do agendamento.
+[OK] public/index.html: Arquivo necessário para execução.
+[OK] public/shim.js: Arquivo necessário para execução.
+[OK] public/schedule.js: Arquivo necessário para execução.
+[OK] public/turma-copy.js: Arquivo necessário para execução.
+[OK] public/search.js: Arquivo necessário para execução.
+[OK] lib/assets: Arquivo necessário para execução.
+[OK] public/accessibility.css: Arquivo necessário para execução.
+[OK] public/accessibility.js: Arquivo necessário para execução.
+[OK] public/ambientes-theme.js: Arquivo necessário para execução.
+[OK] public/ambientes.css: Arquivo necessário para execução.
+[OK] public/ambientes.html: Arquivo necessário para execução.
+[OK] public/ambientes.js: Arquivo necessário para execução.
+[OK] public/daily-program.js: Arquivo necessário para execução.
+[OK] public/diagnostics-client.js: Arquivo necessário para execução.
+[OK] public/environment-import.js: Arquivo necessário para execução.
+[OK] public/excel-preview.js: Arquivo necessário para execução.
+[OK] public/forms.js: Arquivo necessário para execução.
+[OK] public/icon-192.png: Arquivo necessário para execução.
+[OK] public/icon-512.png: Arquivo necessário para execução.
+[OK] public/key-control.js: Arquivo necessário para execução.
+[OK] public/manifest.webmanifest: Arquivo necessário para execução.
+[OK] public/mobile.css: Arquivo necessário para execução.
+[OK] public/mobile.js: Arquivo necessário para execução.
+[OK] public/notificacoes.html: Arquivo necessário para execução.
+[OK] public/notification-badge.js: Arquivo necessário para execução.
+[OK] public/notifications.css: Arquivo necessário para execução.
+[OK] public/notifications.js: Arquivo necessário para execução.
+[OK] public/professional.css: Arquivo necessário para execução.
+[OK] public/quick-search.js: Arquivo necessário para execução.
+[OK] public/recovery.js: Arquivo necessário para execução.
+[OK] public/recuperar.html: Arquivo necessário para execução.
+[OK] public/responsive.css: Arquivo necessário para execução.
+[OK] public/sw.js: Arquivo necessário para execução.
+[OK] public/whatsapp-manual.js: Arquivo necessário para execução.
+
+Verificações manuais obrigatórias:
+- Baixar e guardar uma cópia externa do backup completo, separada do servidor.
+- Restaurar a cópia em um banco isolado e conferir contas, turmas, registros e reservas.
+- Homologar os acessos de coordenação, docente, ambientes e aluno no endereço publicado.
+- Verificar HTTPS, entrega real de e-mails e execução do agendador na hospedagem.
+
+O banco e os serviços externos não foram acessados por esta checagem.

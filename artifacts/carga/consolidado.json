@@ -1,0 +1,594 @@
+{
+  "static": {
+    "at": "2026-10-19T15:19:50.248Z",
+    "environment": {
+      "node": "v24.18.0",
+      "platform": "win32",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+      "logicalCpus": 12,
+      "memoryGB": 8,
+      "database": "SQLite/libsql local temporário",
+      "target": "Instância local exclusiva; sem serviços externos"
+    },
+    "fixture": {
+      "turmas": 30,
+      "docentes": 20,
+      "ambientes": 20,
+      "diasPorTurma": 60
+    },
+    "stages": [
+      {
+        "name": "Aquecimento",
+        "concurrency": 2,
+        "durationSeconds": 2,
+        "requests": 631,
+        "requestsPerSecond": 314.97,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 631
+        },
+        "errorTypes": {},
+        "receivedMB": 133,
+        "latencyMs": {
+          "p50": 5.457899999999881,
+          "p95": 12.907899999999927,
+          "p99": 18.373100000000022,
+          "max": 21.582799999999907
+        },
+        "endpoints": {
+          "static": {
+            "requests": 631,
+            "p50": 5.457899999999881,
+            "p95": 12.907899999999927,
+            "p99": 18.373100000000022,
+            "max": 21.582799999999907
+          }
+        }
+      },
+      {
+        "name": "static",
+        "concurrency": 1,
+        "durationSeconds": 6,
+        "requests": 447,
+        "requestsPerSecond": 74.48,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 447
+        },
+        "errorTypes": {},
+        "receivedMB": 94.21,
+        "latencyMs": {
+          "p50": 15.100900000000365,
+          "p95": 18.53099999999995,
+          "p99": 22.308599999999387,
+          "max": 27.540399999999863
+        },
+        "endpoints": {
+          "static": {
+            "requests": 447,
+            "p50": 15.100900000000365,
+            "p95": 18.53099999999995,
+            "p99": 22.308599999999387,
+            "max": 27.540399999999863
+          }
+        }
+      },
+      {
+        "name": "static",
+        "concurrency": 10,
+        "durationSeconds": 6.01,
+        "requests": 6700,
+        "requestsPerSecond": 1115.56,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 6700
+        },
+        "errorTypes": {},
+        "receivedMB": 1412.16,
+        "latencyMs": {
+          "p50": 8.434900000000198,
+          "p95": 14.576399999999921,
+          "p99": 18.543900000000576,
+          "max": 30.736400000001595
+        },
+        "endpoints": {
+          "static": {
+            "requests": 6700,
+            "p50": 8.434900000000198,
+            "p95": 14.576399999999921,
+            "p99": 18.543900000000576,
+            "max": 30.736400000001595
+          }
+        }
+      },
+      {
+        "name": "static",
+        "concurrency": 25,
+        "durationSeconds": 6.01,
+        "requests": 7457,
+        "requestsPerSecond": 1240.05,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 7457
+        },
+        "errorTypes": {},
+        "receivedMB": 1571.72,
+        "latencyMs": {
+          "p50": 20.57090000000244,
+          "p95": 28.422099999999773,
+          "p99": 33.45460000000094,
+          "max": 57.11999999999898
+        },
+        "endpoints": {
+          "static": {
+            "requests": 7457,
+            "p50": 20.57090000000244,
+            "p95": 28.422099999999773,
+            "p99": 33.45460000000094,
+            "max": 57.11999999999898
+          }
+        }
+      },
+      {
+        "name": "static",
+        "concurrency": 50,
+        "durationSeconds": 6.02,
+        "requests": 8143,
+        "requestsPerSecond": 1353.78,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 8143
+        },
+        "errorTypes": {},
+        "receivedMB": 1716.31,
+        "latencyMs": {
+          "p50": 37.11249999999927,
+          "p95": 51.13060000000041,
+          "p99": 57.281699999999546,
+          "max": 70.83069999999861
+        },
+        "endpoints": {
+          "static": {
+            "requests": 8143,
+            "p50": 37.11249999999927,
+            "p95": 51.13060000000041,
+            "p99": 57.281699999999546,
+            "max": 70.83069999999861
+          }
+        }
+      }
+    ],
+    "completed": true,
+    "unexpectedErrors": 0,
+    "serverExit": {
+      "code": null,
+      "signal": "SIGTERM"
+    },
+    "serverErrors": []
+  },
+  "calendar": {
+    "at": "2026-10-19T15:20:17.383Z",
+    "environment": {
+      "node": "v24.18.0",
+      "platform": "win32",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+      "logicalCpus": 12,
+      "memoryGB": 8,
+      "database": "SQLite/libsql local temporário",
+      "target": "Instância local exclusiva; sem serviços externos"
+    },
+    "fixture": {
+      "turmas": 30,
+      "docentes": 20,
+      "ambientes": 20,
+      "diasPorTurma": 60
+    },
+    "stages": [
+      {
+        "name": "Aquecimento",
+        "concurrency": 2,
+        "durationSeconds": 2.01,
+        "requests": 505,
+        "requestsPerSecond": 251.57,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 505
+        },
+        "errorTypes": {},
+        "receivedMB": 46.89,
+        "latencyMs": {
+          "p50": 7.7179000000001,
+          "p95": 10.707100000000082,
+          "p99": 13.074200000000019,
+          "max": 15.834899999999834
+        },
+        "endpoints": {
+          "calendar": {
+            "requests": 505,
+            "p50": 7.7179000000001,
+            "p95": 10.707100000000082,
+            "p99": 13.074200000000019,
+            "max": 15.834899999999834
+          }
+        }
+      },
+      {
+        "name": "calendar",
+        "concurrency": 1,
+        "durationSeconds": 6.01,
+        "requests": 423,
+        "requestsPerSecond": 70.33,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 423
+        },
+        "errorTypes": {},
+        "receivedMB": 39.27,
+        "latencyMs": {
+          "p50": 15.068199999999706,
+          "p95": 20.45139999999992,
+          "p99": 25.89090000000033,
+          "max": 29.36750000000029
+        },
+        "endpoints": {
+          "calendar": {
+            "requests": 423,
+            "p50": 15.068199999999706,
+            "p95": 20.45139999999992,
+            "p99": 25.89090000000033,
+            "max": 29.36750000000029
+          }
+        }
+      },
+      {
+        "name": "calendar",
+        "concurrency": 10,
+        "durationSeconds": 6.02,
+        "requests": 2311,
+        "requestsPerSecond": 383.92,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 2311
+        },
+        "errorTypes": {},
+        "receivedMB": 214.57,
+        "latencyMs": {
+          "p50": 25.084600000000137,
+          "p95": 37.07430000000022,
+          "p99": 44.30479999999989,
+          "max": 58.060999999999694
+        },
+        "endpoints": {
+          "calendar": {
+            "requests": 2311,
+            "p50": 25.084600000000137,
+            "p95": 37.07430000000022,
+            "p99": 44.30479999999989,
+            "max": 58.060999999999694
+          }
+        }
+      },
+      {
+        "name": "calendar",
+        "concurrency": 25,
+        "durationSeconds": 6.08,
+        "requests": 2492,
+        "requestsPerSecond": 409.63,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 2492
+        },
+        "errorTypes": {},
+        "receivedMB": 231.37,
+        "latencyMs": {
+          "p50": 59.25830000000133,
+          "p95": 71.92669999999998,
+          "p99": 93.08759999999893,
+          "max": 112.61590000000069
+        },
+        "endpoints": {
+          "calendar": {
+            "requests": 2492,
+            "p50": 59.25830000000133,
+            "p95": 71.92669999999998,
+            "p99": 93.08759999999893,
+            "max": 112.61590000000069
+          }
+        }
+      },
+      {
+        "name": "calendar",
+        "concurrency": 50,
+        "durationSeconds": 6.16,
+        "requests": 2416,
+        "requestsPerSecond": 392.22,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 2416
+        },
+        "errorTypes": {},
+        "receivedMB": 224.32,
+        "latencyMs": {
+          "p50": 121.46049999999741,
+          "p95": 163.9878000000026,
+          "p99": 192.22109999999884,
+          "max": 234.66359999999986
+        },
+        "endpoints": {
+          "calendar": {
+            "requests": 2416,
+            "p50": 121.46049999999741,
+            "p95": 163.9878000000026,
+            "p99": 192.22109999999884,
+            "max": 234.66359999999986
+          }
+        }
+      }
+    ],
+    "completed": true,
+    "unexpectedErrors": 0,
+    "serverExit": {
+      "code": null,
+      "signal": "SIGTERM"
+    },
+    "serverErrors": []
+  },
+  "board": {
+    "at": "2026-10-19T15:20:54.135Z",
+    "environment": {
+      "node": "v24.18.0",
+      "platform": "win32",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+      "logicalCpus": 12,
+      "memoryGB": 8,
+      "database": "SQLite/libsql local temporário",
+      "target": "Instância local exclusiva; sem serviços externos"
+    },
+    "fixture": {
+      "turmas": 30,
+      "docentes": 20,
+      "ambientes": 20,
+      "diasPorTurma": 60
+    },
+    "stages": [
+      {
+        "name": "Aquecimento",
+        "concurrency": 2,
+        "durationSeconds": 2.01,
+        "requests": 252,
+        "requestsPerSecond": 125.2,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 252
+        },
+        "errorTypes": {},
+        "receivedMB": 11.69,
+        "latencyMs": {
+          "p50": 15.097400000000107,
+          "p95": 20.673099999999977,
+          "p99": 23.047900000000027,
+          "max": 29.00720000000001
+        },
+        "endpoints": {
+          "board": {
+            "requests": 252,
+            "p50": 15.097400000000107,
+            "p95": 20.673099999999977,
+            "p99": 23.047900000000027,
+            "max": 29.00720000000001
+          }
+        }
+      },
+      {
+        "name": "board",
+        "concurrency": 1,
+        "durationSeconds": 6.01,
+        "requests": 391,
+        "requestsPerSecond": 65.07,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 391
+        },
+        "errorTypes": {},
+        "receivedMB": 18.14,
+        "latencyMs": {
+          "p50": 15.498099999999795,
+          "p95": 21.489500000000135,
+          "p99": 24.614199999999983,
+          "max": 26.125700000000506
+        },
+        "endpoints": {
+          "board": {
+            "requests": 391,
+            "p50": 15.498099999999795,
+            "p95": 21.489500000000135,
+            "p99": 24.614199999999983,
+            "max": 26.125700000000506
+          }
+        }
+      }
+    ],
+    "failure": "Error: Servidor encerrou durante a carga; consulte servidor.log\n    at file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:25:165\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Promise.all (index 2)\n    at async stage (file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:25:2)\n    at async file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:39:62",
+    "serverExit": {
+      "code": 3221225477,
+      "signal": null
+    },
+    "serverErrors": []
+  },
+  "mixed": {
+    "at": "2026-10-19T15:21:26.665Z",
+    "environment": {
+      "node": "v24.18.0",
+      "platform": "win32",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+      "logicalCpus": 12,
+      "memoryGB": 8,
+      "database": "SQLite/libsql local temporário",
+      "target": "Instância local exclusiva; sem serviços externos"
+    },
+    "fixture": {
+      "turmas": 30,
+      "docentes": 20,
+      "ambientes": 20,
+      "diasPorTurma": 60
+    },
+    "stages": [
+      {
+        "name": "Aquecimento",
+        "concurrency": 2,
+        "durationSeconds": 1.56,
+        "requests": 239,
+        "requestsPerSecond": 153.19,
+        "errors": 12,
+        "errorPercent": 5.02,
+        "statuses": {
+          "200": 227
+        },
+        "errorTypes": {
+          "TypeError": 12
+        },
+        "receivedMB": 15.78,
+        "latencyMs": {
+          "p50": 12.931999999999789,
+          "p95": 18.427599999999984,
+          "p99": 24.20510000000013,
+          "max": 29.482799999999997
+        },
+        "endpoints": {
+          "board": {
+            "requests": 114,
+            "p50": 13.380799999999908,
+            "p95": 18.61239999999998,
+            "p99": 20.89509999999973,
+            "max": 29.482799999999997
+          },
+          "calendar": {
+            "requests": 113,
+            "p50": 12.862500000000182,
+            "p95": 17.782600000000002,
+            "p99": 19.87850000000003,
+            "max": 27.20180000000005
+          },
+          "request": {
+            "requests": 12,
+            "p50": 2.583099999999831,
+            "p95": 24.20510000000013,
+            "p99": 24.20510000000013,
+            "max": 24.20510000000013
+          }
+        },
+        "aborted": "Servidor encerrou durante a carga; consulte servidor.log"
+      }
+    ],
+    "failure": "Error: Servidor encerrou durante a carga; consulte servidor.log\n    at file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:25:187\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async Promise.allSettled (index 0)\n    at async stage (file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:25:17)\n    at async file:///C:/Users/gizel/Downloads/planejador-senai-acesso-alunos/Agenda%20Senai/scripts/load-test.js:38:2",
+    "serverExit": {
+      "code": 3221225477,
+      "signal": null
+    },
+    "serverErrors": []
+  },
+  "writes": {
+    "at": "2026-10-19T15:21:29.415Z",
+    "environment": {
+      "node": "v24.18.0",
+      "platform": "win32",
+      "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+      "logicalCpus": 12,
+      "memoryGB": 8,
+      "database": "SQLite/libsql local temporário",
+      "target": "Instância local exclusiva; sem serviços externos"
+    },
+    "fixture": {
+      "turmas": 30,
+      "docentes": 20,
+      "ambientes": 20,
+      "diasPorTurma": 60
+    },
+    "stages": [
+      {
+        "name": "Aquecimento",
+        "concurrency": 2,
+        "durationSeconds": 2.01,
+        "requests": 484,
+        "requestsPerSecond": 241.32,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 484
+        },
+        "errorTypes": {},
+        "receivedMB": 44.94,
+        "latencyMs": {
+          "p50": 8.313199999999938,
+          "p95": 10.839500000000044,
+          "p99": 12.99070000000006,
+          "max": 17.033699999999953
+        },
+        "endpoints": {
+          "calendar": {
+            "requests": 484,
+            "p50": 8.313199999999938,
+            "p95": 10.839500000000044,
+            "p99": 12.99070000000006,
+            "max": 17.033699999999953
+          }
+        }
+      },
+      {
+        "name": "Gravações em turmas distintas",
+        "concurrency": 10,
+        "durationSeconds": 5.11,
+        "requests": 447,
+        "requestsPerSecond": 87.52,
+        "errors": 0,
+        "errorPercent": 0,
+        "statuses": {
+          "200": 447
+        },
+        "errorTypes": {},
+        "receivedMB": 0,
+        "latencyMs": {
+          "p50": 108.32439999999997,
+          "p95": 147.6934999999994,
+          "p99": 182.59399999999914,
+          "max": 189.9886000000006
+        },
+        "endpoints": {
+          "save": {
+            "requests": 447,
+            "p50": 108.32439999999997,
+            "p95": 147.6934999999994,
+            "p99": 182.59399999999914,
+            "max": 189.9886000000006
+          }
+        }
+      }
+    ],
+    "integrity": {
+      "parallelEdits": 25,
+      "saved": 1,
+      "expectedConflicts": 24,
+      "revisionCorrect": true,
+      "allTurmasPresent": true
+    },
+    "completed": true,
+    "unexpectedErrors": 0,
+    "serverExit": {
+      "code": null,
+      "signal": "SIGTERM"
+    },
+    "serverErrors": []
+  }
+}

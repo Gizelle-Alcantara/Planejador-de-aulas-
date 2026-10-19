@@ -1,0 +1,299 @@
+{
+  "at": "2026-10-19T16:28:33.778Z",
+  "environment": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "logicalCpus": 12,
+    "memoryGB": 8,
+    "database": "SQLite/libsql local temporário",
+    "target": "Instância local exclusiva; sem serviços externos"
+  },
+  "fixture": {
+    "turmas": 30,
+    "docentes": 20,
+    "ambientes": 20,
+    "diasPorTurma": 60
+  },
+  "stages": [
+    {
+      "name": "Aquecimento",
+      "concurrency": 2,
+      "durationSeconds": 2.01,
+      "requests": 295,
+      "requestsPerSecond": 146.45,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 295
+      },
+      "errorTypes": {},
+      "receivedMB": 20.51,
+      "latencyMs": {
+        "p50": 12.494599999999991,
+        "p95": 24.268999999999778,
+        "p99": 28.447599999999966,
+        "max": 32.159999999999854
+      },
+      "endpoints": {
+        "board": {
+          "requests": 148,
+          "p50": 13.817199999999957,
+          "p95": 26.509000000000015,
+          "p99": 29.201300000000174,
+          "max": 32.159999999999854
+        },
+        "calendar": {
+          "requests": 147,
+          "p50": 10.936799999999948,
+          "p95": 21.26189999999997,
+          "p99": 24.268999999999778,
+          "max": 24.74019999999973
+        }
+      }
+    },
+    {
+      "name": "Leituras mistas",
+      "concurrency": 1,
+      "durationSeconds": 6.01,
+      "requests": 374,
+      "requestsPerSecond": 62.27,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 374
+      },
+      "errorTypes": {},
+      "receivedMB": 33.5,
+      "latencyMs": {
+        "p50": 16.214700000000448,
+        "p95": 25.443599999999606,
+        "p99": 32.33550000000105,
+        "max": 36.788800000000265
+      },
+      "endpoints": {
+        "static": {
+          "requests": 94,
+          "p50": 14.945200000000114,
+          "p95": 25.194800000000214,
+          "p99": 28.7175000000002,
+          "max": 28.7175000000002
+        },
+        "calendar": {
+          "requests": 94,
+          "p50": 19.439800000000105,
+          "p95": 27.13110000000006,
+          "p99": 32.33550000000105,
+          "max": 32.33550000000105
+        },
+        "board": {
+          "requests": 93,
+          "p50": 18.93419999999969,
+          "p95": 29.58309999999983,
+          "p99": 36.788800000000265,
+          "max": 36.788800000000265
+        },
+        "notifications": {
+          "requests": 93,
+          "p50": 9.791999999999462,
+          "p95": 22.863000000000284,
+          "p99": 27.079600000000028,
+          "max": 27.079600000000028
+        }
+      }
+    },
+    {
+      "name": "Leituras mistas",
+      "concurrency": 10,
+      "durationSeconds": 6.03,
+      "requests": 826,
+      "requestsPerSecond": 136.94,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 826
+      },
+      "errorTypes": {},
+      "receivedMB": 73.79,
+      "latencyMs": {
+        "p50": 61.6200000000008,
+        "p95": 148.63800000000083,
+        "p99": 197.3718000000008,
+        "max": 226.86119999999937
+      },
+      "endpoints": {
+        "static": {
+          "requests": 208,
+          "p50": 36.72809999999845,
+          "p95": 77.95900000000074,
+          "p99": 121.22929999999906,
+          "max": 162.75900000000001
+        },
+        "calendar": {
+          "requests": 204,
+          "p50": 46.21780000000035,
+          "p95": 94.86490000000049,
+          "p99": 140.0503000000008,
+          "max": 219.85670000000027
+        },
+        "board": {
+          "requests": 206,
+          "p50": 108.33560000000034,
+          "p95": 190.5679,
+          "p99": 215.96860000000015,
+          "max": 226.86119999999937
+        },
+        "notifications": {
+          "requests": 208,
+          "p50": 83.72680000000037,
+          "p95": 137.1779000000006,
+          "p99": 158.28800000000047,
+          "max": 161.28210000000036
+        }
+      }
+    },
+    {
+      "name": "Leituras mistas",
+      "concurrency": 25,
+      "durationSeconds": 6.19,
+      "requests": 923,
+      "requestsPerSecond": 149.03,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 923
+      },
+      "errorTypes": {},
+      "receivedMB": 81.35,
+      "latencyMs": {
+        "p50": 144.14270000000033,
+        "p95": 336.91669999999795,
+        "p99": 437.6817999999985,
+        "max": 486.62880000000223
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 230,
+          "p50": 96.21559999999954,
+          "p95": 165.3725000000013,
+          "p99": 301.5845999999983,
+          "max": 486.62880000000223
+        },
+        "board": {
+          "requests": 236,
+          "p50": 241.77019999999902,
+          "p95": 391.96190000000206,
+          "p99": 470.935300000001,
+          "max": 479.4376000000011
+        },
+        "notifications": {
+          "requests": 232,
+          "p50": 194.4780000000028,
+          "p95": 336.91669999999795,
+          "p99": 366.27400000000125,
+          "max": 380.07990000000063
+        },
+        "static": {
+          "requests": 225,
+          "p50": 85.79639999999927,
+          "p95": 261.4336999999996,
+          "p99": 434.42099999999846,
+          "max": 467.6728000000003
+        }
+      }
+    },
+    {
+      "name": "Leituras mistas",
+      "concurrency": 50,
+      "durationSeconds": 6.58,
+      "requests": 1016,
+      "requestsPerSecond": 154.29,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 1016
+      },
+      "errorTypes": {},
+      "receivedMB": 91.07,
+      "latencyMs": {
+        "p50": 262.85849999999846,
+        "p95": 576.5972000000002,
+        "p99": 654.097600000001,
+        "max": 791.4434000000001
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 263,
+          "p50": 183.58590000000186,
+          "p95": 326.4376000000011,
+          "p99": 526.4735000000001,
+          "max": 539.5330000000031
+        },
+        "board": {
+          "requests": 265,
+          "p50": 442.78069999999934,
+          "p95": 620.4743000000017,
+          "p99": 672.6811999999991,
+          "max": 684.3068000000021
+        },
+        "notifications": {
+          "requests": 238,
+          "p50": 357.6971000000012,
+          "p95": 573.8228999999992,
+          "p99": 654.097600000001,
+          "max": 669.2754999999997
+        },
+        "static": {
+          "requests": 250,
+          "p50": 206.32700000000114,
+          "p95": 599.792300000001,
+          "p99": 637.9717999999993,
+          "max": 791.4434000000001
+        }
+      }
+    },
+    {
+      "name": "Gravações em turmas distintas",
+      "concurrency": 10,
+      "durationSeconds": 5.2,
+      "requests": 276,
+      "requestsPerSecond": 53.12,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 276
+      },
+      "errorTypes": {},
+      "receivedMB": 0,
+      "latencyMs": {
+        "p50": 184.67919999999503,
+        "p95": 209.15039999999863,
+        "p99": 249.14510000000155,
+        "max": 257.2755000000034
+      },
+      "endpoints": {
+        "save": {
+          "requests": 276,
+          "p50": 184.67919999999503,
+          "p95": 209.15039999999863,
+          "p99": 249.14510000000155,
+          "max": 257.2755000000034
+        }
+      }
+    }
+  ],
+  "integrity": {
+    "parallelEdits": 25,
+    "saved": 1,
+    "expectedConflicts": 24,
+    "revisionCorrect": true,
+    "allTurmasPresent": true
+  },
+  "completed": true,
+  "unexpectedErrors": 0,
+  "serverExit": {
+    "code": null,
+    "signal": "SIGTERM"
+  },
+  "serverErrors": []
+}

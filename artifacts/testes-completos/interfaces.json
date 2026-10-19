@@ -1,0 +1,87 @@
+[
+  {
+    "suite": "ambientes.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\ambientes.ui.mjs.log"
+  },
+  {
+    "suite": "diagnostics.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\diagnostics.ui.mjs.log"
+  },
+  {
+    "suite": "docentes.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\docentes.ui.mjs.log"
+  },
+  {
+    "suite": "education-rules.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\education-rules.ui.mjs.log"
+  },
+  {
+    "suite": "environment-import.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\environment-import.ui.mjs.log"
+  },
+  {
+    "suite": "history.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\history.ui.mjs.log"
+  },
+  {
+    "suite": "key-control.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\key-control.ui.mjs.log"
+  },
+  {
+    "suite": "management-report.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\management-report.ui.mjs.log"
+  },
+  {
+    "suite": "mobile.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\mobile.ui.mjs.log"
+  },
+  {
+    "suite": "notifications.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\notifications.ui.mjs.log"
+  },
+  {
+    "suite": "planning.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\planning.ui.mjs.log"
+  },
+  {
+    "suite": "recovery.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\recovery.ui.mjs.log"
+  },
+  {
+    "suite": "search.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\search.ui.mjs.log"
+  },
+  {
+    "suite": "turma-copy.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\turma-copy.ui.mjs.log"
+  },
+  {
+    "suite": "ui.smoke.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\ui.smoke.mjs.log"
+  },
+  {
+    "suite": "whatsapp-manual.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\testes-completos\\whatsapp-manual.ui.mjs.log"
+  },
+  {
+    "suite": "whatsapp-integration.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts/testes-completos/whatsapp-integration.ui.mjs.log"
+  }
+]

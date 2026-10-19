@@ -1,3 +1,11 @@
+## Estabilidade do banco local sob carga
+
+- Transações do banco em arquivo reutilizam uma conexão, evitando a abertura repetida de conexões nativas.
+- Leituras de outras requisições aguardam o término da transação; confirmação, rollback e conflitos de edição são preservados.
+- O cliente web usado no Turso permanece com seu tratamento original.
+- Atualizações da tela Acesso preservam o formulário de criação de conta, inclusive durante um envio em andamento; os campos são limpos após sucesso.
+- Testes de carga locais incluem repetição sustentada com 50 requisições simultâneas e verificação de integridade das edições.
+
 ## Controle de chaves por QR code
 
 - Gestão cadastra chaves, imprime etiquetas e aloca docentes a salas ou laboratórios de aulas presenciais.

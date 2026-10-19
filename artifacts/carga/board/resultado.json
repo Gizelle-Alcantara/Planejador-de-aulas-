@@ -1,0 +1,172 @@
+{
+  "at": "2026-10-19T16:31:03.149Z",
+  "environment": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "logicalCpus": 12,
+    "memoryGB": 8,
+    "database": "SQLite/libsql local temporário",
+    "target": "Instância local exclusiva; sem serviços externos"
+  },
+  "fixture": {
+    "turmas": 30,
+    "docentes": 20,
+    "ambientes": 20,
+    "diasPorTurma": 60
+  },
+  "stages": [
+    {
+      "name": "Aquecimento",
+      "concurrency": 2,
+      "durationSeconds": 2.01,
+      "requests": 269,
+      "requestsPerSecond": 133.82,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 269
+      },
+      "errorTypes": {},
+      "receivedMB": 12.48,
+      "latencyMs": {
+        "p50": 14.664800000000014,
+        "p95": 20.06540000000018,
+        "p99": 22.678200000000288,
+        "max": 24.699100000000044
+      },
+      "endpoints": {
+        "board": {
+          "requests": 269,
+          "p50": 14.664800000000014,
+          "p95": 20.06540000000018,
+          "p99": 22.678200000000288,
+          "max": 24.699100000000044
+        }
+      }
+    },
+    {
+      "name": "board",
+      "concurrency": 1,
+      "durationSeconds": 6,
+      "requests": 231,
+      "requestsPerSecond": 38.49,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 231
+      },
+      "errorTypes": {},
+      "receivedMB": 10.72,
+      "latencyMs": {
+        "p50": 19.610099999999875,
+        "p95": 47.339999999999236,
+        "p99": 138.54989999999998,
+        "max": 234.22980000000007
+      },
+      "endpoints": {
+        "board": {
+          "requests": 231,
+          "p50": 19.610099999999875,
+          "p95": 47.339999999999236,
+          "p99": 138.54989999999998,
+          "max": 234.22980000000007
+        }
+      }
+    },
+    {
+      "name": "board",
+      "concurrency": 10,
+      "durationSeconds": 6.12,
+      "requests": 382,
+      "requestsPerSecond": 62.47,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 382
+      },
+      "errorTypes": {},
+      "receivedMB": 17.72,
+      "latencyMs": {
+        "p50": 143.19800000000032,
+        "p95": 238.8107,
+        "p99": 579.231600000001,
+        "max": 640.3886000000002
+      },
+      "endpoints": {
+        "board": {
+          "requests": 382,
+          "p50": 143.19800000000032,
+          "p95": 238.8107,
+          "p99": 579.231600000001,
+          "max": 640.3886000000002
+        }
+      }
+    },
+    {
+      "name": "board",
+      "concurrency": 25,
+      "durationSeconds": 6.34,
+      "requests": 427,
+      "requestsPerSecond": 67.33,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 427
+      },
+      "errorTypes": {},
+      "receivedMB": 19.81,
+      "latencyMs": {
+        "p50": 337.38720000000103,
+        "p95": 691.9567999999999,
+        "p99": 848.1418999999987,
+        "max": 964.3132000000005
+      },
+      "endpoints": {
+        "board": {
+          "requests": 427,
+          "p50": 337.38720000000103,
+          "p95": 691.9567999999999,
+          "p99": 848.1418999999987,
+          "max": 964.3132000000005
+        }
+      }
+    },
+    {
+      "name": "board",
+      "concurrency": 50,
+      "durationSeconds": 9.1,
+      "requests": 385,
+      "requestsPerSecond": 42.3,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 385
+      },
+      "errorTypes": {},
+      "receivedMB": 17.86,
+      "latencyMs": {
+        "p50": 730.1100000000006,
+        "p95": 2623.7837999999974,
+        "p99": 3367.8449999999975,
+        "max": 3732.7549999999974
+      },
+      "endpoints": {
+        "board": {
+          "requests": 385,
+          "p50": 730.1100000000006,
+          "p95": 2623.7837999999974,
+          "p99": 3367.8449999999975,
+          "max": 3732.7549999999974
+        }
+      }
+    }
+  ],
+  "completed": true,
+  "unexpectedErrors": 0,
+  "serverExit": {
+    "code": null,
+    "signal": "SIGTERM"
+  },
+  "serverErrors": []
+}

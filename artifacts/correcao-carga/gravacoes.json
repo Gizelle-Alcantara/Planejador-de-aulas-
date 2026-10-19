@@ -1,0 +1,92 @@
+{
+  "at": "2026-10-19T16:31:34.166Z",
+  "environment": {
+    "node": "v24.18.0",
+    "platform": "win32",
+    "cpu": "13th Gen Intel(R) Core(TM) i5-13420H",
+    "logicalCpus": 12,
+    "memoryGB": 8,
+    "database": "SQLite/libsql local temporário",
+    "target": "Instância local exclusiva; sem serviços externos"
+  },
+  "fixture": {
+    "turmas": 30,
+    "docentes": 20,
+    "ambientes": 20,
+    "diasPorTurma": 60
+  },
+  "stages": [
+    {
+      "name": "Aquecimento",
+      "concurrency": 2,
+      "durationSeconds": 2.01,
+      "requests": 422,
+      "requestsPerSecond": 210.21,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 422
+      },
+      "errorTypes": {},
+      "receivedMB": 39.18,
+      "latencyMs": {
+        "p50": 9.339399999999841,
+        "p95": 12.918100000000322,
+        "p99": 14.648100000000113,
+        "max": 16.255299999999806
+      },
+      "endpoints": {
+        "calendar": {
+          "requests": 422,
+          "p50": 9.339399999999841,
+          "p95": 12.918100000000322,
+          "p99": 14.648100000000113,
+          "max": 16.255299999999806
+        }
+      }
+    },
+    {
+      "name": "Gravações em turmas distintas",
+      "concurrency": 10,
+      "durationSeconds": 5.21,
+      "requests": 213,
+      "requestsPerSecond": 40.85,
+      "errors": 0,
+      "errorPercent": 0,
+      "statuses": {
+        "200": 213
+      },
+      "errorTypes": {},
+      "receivedMB": 0,
+      "latencyMs": {
+        "p50": 245.41100000000006,
+        "p95": 265.8010999999997,
+        "p99": 273.71470000000045,
+        "max": 276.52120000000014
+      },
+      "endpoints": {
+        "save": {
+          "requests": 213,
+          "p50": 245.41100000000006,
+          "p95": 265.8010999999997,
+          "p99": 273.71470000000045,
+          "max": 276.52120000000014
+        }
+      }
+    }
+  ],
+  "integrity": {
+    "parallelEdits": 25,
+    "saved": 1,
+    "expectedConflicts": 24,
+    "revisionCorrect": true,
+    "allTurmasPresent": true
+  },
+  "completed": true,
+  "unexpectedErrors": 0,
+  "serverExit": {
+    "code": null,
+    "signal": "SIGTERM"
+  },
+  "serverErrors": []
+}

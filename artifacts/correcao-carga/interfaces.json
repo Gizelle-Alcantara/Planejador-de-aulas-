@@ -1,0 +1,92 @@
+[
+  {
+    "suite": "ambientes.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\ambientes.ui.mjs.log"
+  },
+  {
+    "suite": "diagnostics.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\diagnostics.ui.mjs.log"
+  },
+  {
+    "suite": "docentes.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\docentes.ui.mjs.log"
+  },
+  {
+    "suite": "education-rules.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\education-rules.ui.mjs.log"
+  },
+  {
+    "suite": "environment-import.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\environment-import.ui.mjs.log"
+  },
+  {
+    "suite": "history.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\history.ui.mjs.log"
+  },
+  {
+    "suite": "key-control.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\key-control.ui.mjs.log"
+  },
+  {
+    "suite": "management-report.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\management-report.ui.mjs.log"
+  },
+  {
+    "suite": "mobile.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\mobile.ui.mjs.log"
+  },
+  {
+    "suite": "notifications.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\notifications.ui.mjs.log"
+  },
+  {
+    "suite": "planning.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\planning.ui.mjs.log"
+  },
+  {
+    "suite": "recovery.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\recovery.ui.mjs.log"
+  },
+  {
+    "suite": "search.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\search.ui.mjs.log"
+  },
+  {
+    "suite": "turma-copy.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\turma-copy.ui.mjs.log"
+  },
+  {
+    "suite": "ui.smoke.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\ui.smoke.mjs.log"
+  },
+  {
+    "suite": "whatsapp-integration.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\whatsapp-integration.ui.mjs.log"
+  },
+  {
+    "suite": "whatsapp-manual.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\correcao-carga\\whatsapp-manual.ui.mjs.log"
+  },
+  {
+    "suite": "account-draft.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts/correcao-carga/account-draft.ui.mjs.log"
+  }
+]

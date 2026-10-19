@@ -1,0 +1,5 @@
+
+> planejador-senai@1.0.0 build
+> node scripts/build.js
+
+public/index.html gerado (215 KB)
