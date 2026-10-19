@@ -1,0 +1,212 @@
+{
+  "base": "https://planejador-de-aulas-zowu.vercel.app",
+  "at": "2026-10-17T20:49:05.090Z",
+  "results": [
+    {
+      "file": "index.html",
+      "status": 200,
+      "type": "text/html; charset=utf-8",
+      "bytes": 220855,
+      "equal": true,
+      "remoteHash": "db352e0c16bcd48a060ebdcfd06710ddb0909e6d70d0e8190fee979c356671c0",
+      "localHash": "db352e0c16bcd48a060ebdcfd06710ddb0909e6d70d0e8190fee979c356671c0"
+    },
+    {
+      "file": "ambientes.html",
+      "status": 200,
+      "type": "text/html; charset=utf-8",
+      "bytes": 1531,
+      "equal": true,
+      "remoteHash": "338d2f75ec8b898173d925b2310d26651f0459fce6f9aabcfaa12e03ceb53689",
+      "localHash": "338d2f75ec8b898173d925b2310d26651f0459fce6f9aabcfaa12e03ceb53689"
+    },
+    {
+      "file": "ambientes.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 34329,
+      "equal": true,
+      "remoteHash": "5143b029c960eecf1a064ca697997f9e6e5a53a52fb7d523f35b79427226cb0e",
+      "localHash": "5143b029c960eecf1a064ca697997f9e6e5a53a52fb7d523f35b79427226cb0e"
+    },
+    {
+      "file": "ambientes.css",
+      "status": 200,
+      "type": "text/css; charset=utf-8",
+      "bytes": 15849,
+      "equal": true,
+      "remoteHash": "67cf8285aa9eb4823aa113e5846cc4cb7cb912eecc892ee624abd29bf5120b0b",
+      "localHash": "67cf8285aa9eb4823aa113e5846cc4cb7cb912eecc892ee624abd29bf5120b0b"
+    },
+    {
+      "file": "professional.css",
+      "status": 200,
+      "type": "text/css; charset=utf-8",
+      "bytes": 16800,
+      "equal": true,
+      "remoteHash": "411a35172366f629dd96e9e855b4978c1727642f3282970e6a2798168f912c50",
+      "localHash": "411a35172366f629dd96e9e855b4978c1727642f3282970e6a2798168f912c50"
+    },
+    {
+      "file": "accessibility.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 6702,
+      "equal": true,
+      "remoteHash": "cbf03430ce411e80e8643df46a4aa28e678f078772157a4012e0afc9433caa30",
+      "localHash": "cbf03430ce411e80e8643df46a4aa28e678f078772157a4012e0afc9433caa30"
+    },
+    {
+      "file": "sw.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 1201,
+      "equal": true,
+      "remoteHash": "d2dcae4175ccd41b994e65718661418647161292db992fac1e11fec2cdc80461",
+      "localHash": "d2dcae4175ccd41b994e65718661418647161292db992fac1e11fec2cdc80461"
+    },
+    {
+      "file": "environment-import.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 2942,
+      "equal": true,
+      "remoteHash": "9f804f6973d097e135294d786bfbeb94f842c0312120ad344437d7dda0e2df3a",
+      "localHash": "9f804f6973d097e135294d786bfbeb94f842c0312120ad344437d7dda0e2df3a"
+    },
+    {
+      "file": "key-control.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 17537,
+      "equal": true,
+      "remoteHash": "bf5f7c7180740a2cc4099f9d24855561c5efdcc0ecba23c9cf37464d62eeba01",
+      "localHash": "bf5f7c7180740a2cc4099f9d24855561c5efdcc0ecba23c9cf37464d62eeba01"
+    },
+    {
+      "file": "vendor-qrcode.mjs",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 51907,
+      "equal": true,
+      "remoteHash": "ea91d7118a5395289170da848b7c6758b996163bfbccf312591ab65a4911b7c0",
+      "localHash": "ea91d7118a5395289170da848b7c6758b996163bfbccf312591ab65a4911b7c0"
+    },
+    {
+      "file": "vendor-jsqr.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 256885,
+      "equal": true,
+      "remoteHash": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859",
+      "localHash": "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859"
+    },
+    {
+      "file": "daily-program.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 1685,
+      "equal": true,
+      "remoteHash": "2de0f8fab042cbac86bc668c62dcf3d249c0c4708b2a59178093a4d38a66c31b",
+      "localHash": "2de0f8fab042cbac86bc668c62dcf3d249c0c4708b2a59178093a4d38a66c31b"
+    },
+    {
+      "file": "notificacoes.html",
+      "status": 200,
+      "type": "text/html; charset=utf-8",
+      "bytes": 2371,
+      "equal": true,
+      "remoteHash": "be30358ae9129b13aa9f842352f4eba98474ce7c2fce661ab0dbfada8bd566a3",
+      "localHash": "be30358ae9129b13aa9f842352f4eba98474ce7c2fce661ab0dbfada8bd566a3"
+    },
+    {
+      "file": "notifications.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 5765,
+      "equal": true,
+      "remoteHash": "84e8e0279f0d90dad5ac4d715c1e3d64a64a787126febe58aa80af29c5009dfd",
+      "localHash": "84e8e0279f0d90dad5ac4d715c1e3d64a64a787126febe58aa80af29c5009dfd"
+    },
+    {
+      "file": "recuperar.html",
+      "status": 200,
+      "type": "text/html; charset=utf-8",
+      "bytes": 2762,
+      "equal": true,
+      "remoteHash": "6a10b77332f01b40997f9c54f82a52c3feb650c0b1777931f9750a8c1fb8ff2f",
+      "localHash": "6a10b77332f01b40997f9c54f82a52c3feb650c0b1777931f9750a8c1fb8ff2f"
+    },
+    {
+      "file": "recovery.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 3003,
+      "equal": true,
+      "remoteHash": "f4c71fd840fc4ca7af33a7d8d4ed54489490741ae03c67057c1857fd31774f43",
+      "localHash": "f4c71fd840fc4ca7af33a7d8d4ed54489490741ae03c67057c1857fd31774f43"
+    },
+    {
+      "file": "schedule.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 10236,
+      "equal": true,
+      "remoteHash": "ecb6a1e4b2b4fab8576f5535ba307e655e7d46af12eb82530acda6cb7c2b44c6",
+      "localHash": "ecb6a1e4b2b4fab8576f5535ba307e655e7d46af12eb82530acda6cb7c2b44c6"
+    },
+    {
+      "file": "search.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 548,
+      "equal": true,
+      "remoteHash": "c49b1e226a89ba004172e14b2174bf73c34fb7ee34f4172d8b1c32aea8bfd289",
+      "localHash": "c49b1e226a89ba004172e14b2174bf73c34fb7ee34f4172d8b1c32aea8bfd289"
+    },
+    {
+      "file": "excel-preview.js",
+      "status": 200,
+      "type": "application/javascript; charset=utf-8",
+      "bytes": 11380,
+      "equal": true,
+      "remoteHash": "c58af2c1c38de5ab94b939dbd6723577898a0c416ee56e3d96fc198f97921906",
+      "localHash": "c58af2c1c38de5ab94b939dbd6723577898a0c416ee56e3d96fc198f97921906"
+    },
+    {
+      "file": "/api (sem autenticação)",
+      "status": 200,
+      "admin": false,
+      "user": null,
+      "docsCount": 0
+    },
+    {
+      "file": "POST /api key_list",
+      "status": 401
+    },
+    {
+      "file": "POST /api environment_list",
+      "status": 401
+    },
+    {
+      "file": "POST /api managed_lessons",
+      "status": 401
+    },
+    {
+      "file": "POST /api block_list",
+      "status": 401
+    },
+    {
+      "file": "POST /api users",
+      "status": 401
+    },
+    {
+      "file": "POST /api notification_list",
+      "status": 401
+    },
+    {
+      "file": "POST /api environment_import_preview",
+      "status": 401
+    }
+  ]
+}

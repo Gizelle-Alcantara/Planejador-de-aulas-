@@ -1,0 +1,19 @@
+{
+  "at": "2026-10-17T20:58:31.836Z",
+  "results": [
+    {
+      "path": "/",
+      "status": 200
+    },
+    {
+      "path": "/api",
+      "status": 200,
+      "semSessao": true,
+      "documentosPublicos": 0
+    },
+    {
+      "path": "/api?cron=1",
+      "status": 401
+    }
+  ]
+}

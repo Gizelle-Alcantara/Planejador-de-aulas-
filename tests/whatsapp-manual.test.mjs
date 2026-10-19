@@ -1,0 +1,10 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
+const window={};runInNewContext(readFileSync(new URL('../src/static/whatsapp-manual.js',import.meta.url),'utf8'),{window,document:{addEventListener(){},documentElement:{}},MutationObserver:class{observe(){}}});
+const {phone,link,render}=window.SENAI_WHATSAPP;
+test('normaliza DDD brasileiro e números internacionais explícitos',()=>{assert.equal(phone('(11) 99999-9999'),'5511999999999');assert.equal(phone('+55 11 3333-4444'),'551133334444');assert.equal(phone('+351 912345678'),'351912345678')});
+test('rejeita números inválidos e URLs',()=>{for(const p of ['', '123', '00000000000','javascript:1234567890','5511000000000','351912345678'])assert.equal(phone(p),'')});
+test('codifica mensagem sem permitir injeção na URL',()=>{const message='Olá!\nAula & sala #2?';assert.equal(new URL(link('11999999999',message)).searchParams.get('text'),message);assert.equal(link('123',message),'');assert.equal(link('11999999999',' '),'');assert.equal(link('11999999999','x'.repeat(2001)),'')});
+test('escapa HTML e separa os rascunhos por turma',()=>{assert.ok(render('a','<A>',[{nome:'<script>',tel:''}],['Primeiro aviso']).includes('&lt;script&gt;'));assert.ok(render('b','B',[],['Outro aviso']).includes('Outro aviso'));assert.ok(!render('b','B',[]).includes('Primeiro aviso'))});

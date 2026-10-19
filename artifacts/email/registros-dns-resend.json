@@ -1,0 +1,27 @@
+{
+  "domain": "senai.br",
+  "checkedAt": "2026-10-19",
+  "records": [
+    {
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDUbuNd5kICRz2JtB/uv8XjcdgzNFPHNAzehz6f3TvenYcddIeDmsbYswZtxyV8FxmznU+p2LrtCxTJlTL4F0TCoH/c/IW3Gx0+g+Ne6e+5+IRnVrTk4MneKw2e1L7HoiS/56U7C1/2OGpztkm6vOWz3m3eBF8bbk8itrN00csMRwIDAQAB",
+      "name": "resend._domainkey",
+      "status": "Not Started",
+      "ttl": "Auto",
+      "type": "TXT"
+    },
+    {
+      "content": "rsend-sae1.forge.rmta.net",
+      "name": "rsend",
+      "status": "Not Started",
+      "ttl": "Auto",
+      "type": "CNAME"
+    },
+    {
+      "content": "send.forge.rmta.net",
+      "name": "send",
+      "status": "Not Started",
+      "ttl": "Auto",
+      "type": "CNAME"
+    }
+  ]
+}

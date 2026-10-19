@@ -4,6 +4,7 @@
 <script src="/schedule.js"></script>
 <script src="/turma-copy.js"></script>
 <script src="/search.js"></script>
+<script src="/whatsapp-manual.js"></script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1126,7 +1127,7 @@ function vAvisos(){
   const st=A.st||{},pv=A.pv||{},when=iso=>{try{return new Date(iso).toLocaleString("pt-BR",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}catch(e){return iso}};
   const need=a.canal==="whatsapp"?!st.whatsapp:a.canal==="email"?!st.email:(!st.email||!st.whatsapp);
   const chk=(k,l)=>`<label class="row small" style="gap:6px"><input type="checkbox" data-av="${k}" ${a[k]?"checked":""}> ${l}</label>`;
-  return `${need?`<section class="panel" style="border-color:var(--warn)"><b>Serviço de envio não configurado.</b> <span class="small">O sistema monta e registra os avisos, mas o envio fica <b>simulado</b> (nada sai de verdade) até você cadastrar as chaves do ${a.canal==="whatsapp"?"WhatsApp":a.canal==="email"?"e-mail (Resend)":"e-mail e do WhatsApp"} no servidor. Veja o guia de instalação, seção Avisos.</span></section>`:""}
+  return `${SENAI_WHATSAPP.render(CUR,S.cfg.turma,S.docentes.filter(d=>S.ucs.some(u=>u.docente===d.nome)),pv.lines||[])}${need?`<section class="panel" style="border-color:var(--warn)"><b>Serviço de envio não configurado.</b> <span class="small">O sistema monta e registra os avisos, mas o envio fica <b>simulado</b> (nada sai de verdade) até você cadastrar as chaves do ${a.canal==="whatsapp"?"WhatsApp":a.canal==="email"?"e-mail (Resend)":"e-mail e do WhatsApp"} no servidor. Veja o guia de instalação, seção Avisos.</span></section>`:""}
   <div class="grid2">
   <section class="panel"><h2>Envio automático da turma ${esc(S.cfg.turma)}</h2>
     <div style="display:flex;flex-direction:column;gap:8px">${chk("auto","Avisar alterações do calendário todos os dias às 20h (aulas novas, canceladas, não dadas e reposições)")}${chk("lembrete","Lembrete na véspera de cada aula (às 20h do dia anterior)")}</div>

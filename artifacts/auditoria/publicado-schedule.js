@@ -68,4 +68,4 @@ function coordinationOverview(docs){
  rows.sort((a,b)=>Number(b.atencao)-Number(a.atencao)||String(a.turma).localeCompare(String(b.turma),'pt-BR',{numeric:true}));
  return {rows,conflicts,totals:{turmas:rows.length,atencao:rows.filter(r=>r.atencao).length,pendentes:rows.reduce((n,r)=>n+r.pendentes,0),excedentes:rows.reduce((n,r)=>n+r.excedentes,0),semDocente:rows.reduce((n,r)=>n+r.semDocente,0),conflitos:conflicts.length,reservas:requests.length}};
 }
-;return {slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails,coordinationOverview}})();
+;return {isEAD,isAmbientacao,outsidePeriod,slotsOf,blocksForDay,validateSchedule,scheduleConflicts,scheduleConflictDetails,coordinationOverview}})();

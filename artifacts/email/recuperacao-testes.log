@@ -1,0 +1,14 @@
+✔ recuperação entrega somente por e-mail, usa origem configurada e revoga sessões após a troca (1234.7072ms)
+✔ links expiram, são substituídos e somente uma confirmação concorrente pode ter sucesso (1213.2985ms)
+✔ respostas não revelam contas; limitação persiste no banco e ausência de serviço não simula envio (3341.1576ms)
+✔ somente mestre altera e-mails e alterações administrativas invalidam links pendentes (922.637ms)
+✔ backup preserva e-mails de recuperação sem restaurar links pendentes (441.5629ms)
+✔ falha de entrega não deixa token utilizável e origem pública insegura desabilita recuperação (417.6105ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 6
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8008.8968

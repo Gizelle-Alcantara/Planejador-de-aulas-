@@ -1,68 +1,68 @@
 {
   "base": "https://planejador-de-aulas-zowu.vercel.app",
-  "at": "2026-10-17T20:33:12.173Z",
+  "at": "2026-10-17T20:49:05.090Z",
   "results": [
     {
       "file": "index.html",
       "status": 200,
       "type": "text/html; charset=utf-8",
-      "bytes": 217580,
-      "equal": false,
-      "remoteHash": "860caf24e199a06ef867ddc44c92483d60d1e9469ccd20b1a700febca362ae73",
+      "bytes": 220855,
+      "equal": true,
+      "remoteHash": "db352e0c16bcd48a060ebdcfd06710ddb0909e6d70d0e8190fee979c356671c0",
       "localHash": "db352e0c16bcd48a060ebdcfd06710ddb0909e6d70d0e8190fee979c356671c0"
     },
     {
       "file": "ambientes.html",
       "status": 200,
       "type": "text/html; charset=utf-8",
-      "bytes": 1489,
-      "equal": false,
-      "remoteHash": "14830d4aa2ba1bb83099e1071cc3f9e8af082be92b5fd41fa330ed439ebe3341",
+      "bytes": 1531,
+      "equal": true,
+      "remoteHash": "338d2f75ec8b898173d925b2310d26651f0459fce6f9aabcfaa12e03ceb53689",
       "localHash": "338d2f75ec8b898173d925b2310d26651f0459fce6f9aabcfaa12e03ceb53689"
     },
     {
       "file": "ambientes.js",
       "status": 200,
       "type": "application/javascript; charset=utf-8",
-      "bytes": 30488,
-      "equal": false,
-      "remoteHash": "103e1a26b615ba025ebd6ce64794a5673964151d9765a83d7793a6d99e627641",
+      "bytes": 34329,
+      "equal": true,
+      "remoteHash": "5143b029c960eecf1a064ca697997f9e6e5a53a52fb7d523f35b79427226cb0e",
       "localHash": "5143b029c960eecf1a064ca697997f9e6e5a53a52fb7d523f35b79427226cb0e"
     },
     {
       "file": "ambientes.css",
       "status": 200,
       "type": "text/css; charset=utf-8",
-      "bytes": 11491,
-      "equal": false,
-      "remoteHash": "5c986f3a078767afe20d676ab7c53abc6bf72a215fd028f3408d9f4b2b38b8fb",
+      "bytes": 15849,
+      "equal": true,
+      "remoteHash": "67cf8285aa9eb4823aa113e5846cc4cb7cb912eecc892ee624abd29bf5120b0b",
       "localHash": "67cf8285aa9eb4823aa113e5846cc4cb7cb912eecc892ee624abd29bf5120b0b"
     },
     {
       "file": "professional.css",
       "status": 200,
       "type": "text/css; charset=utf-8",
-      "bytes": 10451,
-      "equal": false,
-      "remoteHash": "cb7d4f1c574de47cdbaded8898f5b860d7a1672d0a29c2b9ef332a57767d6eae",
+      "bytes": 16800,
+      "equal": true,
+      "remoteHash": "411a35172366f629dd96e9e855b4978c1727642f3282970e6a2798168f912c50",
       "localHash": "411a35172366f629dd96e9e855b4978c1727642f3282970e6a2798168f912c50"
     },
     {
       "file": "accessibility.js",
       "status": 200,
       "type": "application/javascript; charset=utf-8",
-      "bytes": 6722,
-      "equal": false,
-      "remoteHash": "42f42bb8a7ea9d03fbfc4dc0305724921b31a454597bcfb80dc5fadd86aee5b2",
+      "bytes": 6702,
+      "equal": true,
+      "remoteHash": "cbf03430ce411e80e8643df46a4aa28e678f078772157a4012e0afc9433caa30",
       "localHash": "cbf03430ce411e80e8643df46a4aa28e678f078772157a4012e0afc9433caa30"
     },
     {
       "file": "sw.js",
       "status": 200,
       "type": "application/javascript; charset=utf-8",
-      "bytes": 1200,
-      "equal": false,
-      "remoteHash": "ff4969e744380451df14bfd98db038b47e3eafc1f5603b636d485a1d4e6bc8ff",
+      "bytes": 1201,
+      "equal": true,
+      "remoteHash": "d2dcae4175ccd41b994e65718661418647161292db992fac1e11fec2cdc80461",
       "localHash": "d2dcae4175ccd41b994e65718661418647161292db992fac1e11fec2cdc80461"
     },
     {
@@ -114,18 +114,18 @@
       "file": "notificacoes.html",
       "status": 200,
       "type": "text/html; charset=utf-8",
-      "bytes": 2061,
-      "equal": false,
-      "remoteHash": "8e6aff94c43b6a1e72623726e138137b71742b6efd12c441ab966ebda16c8a93",
+      "bytes": 2371,
+      "equal": true,
+      "remoteHash": "be30358ae9129b13aa9f842352f4eba98474ce7c2fce661ab0dbfada8bd566a3",
       "localHash": "be30358ae9129b13aa9f842352f4eba98474ce7c2fce661ab0dbfada8bd566a3"
     },
     {
       "file": "notifications.js",
       "status": 200,
       "type": "application/javascript; charset=utf-8",
-      "bytes": 4042,
-      "equal": false,
-      "remoteHash": "d0d64d2661d2277b3f1999f6b88e1c10d29cc54d510ecc1d145c325f5b79865b",
+      "bytes": 5765,
+      "equal": true,
+      "remoteHash": "84e8e0279f0d90dad5ac4d715c1e3d64a64a787126febe58aa80af29c5009dfd",
       "localHash": "84e8e0279f0d90dad5ac4d715c1e3d64a64a787126febe58aa80af29c5009dfd"
     },
     {
@@ -150,9 +150,9 @@
       "file": "schedule.js",
       "status": 200,
       "type": "application/javascript; charset=utf-8",
-      "bytes": 10202,
-      "equal": false,
-      "remoteHash": "e76ecb1a917304bbfeda9c17a9724fe548499c5feb97911fe052867ddd55be5d",
+      "bytes": 10236,
+      "equal": true,
+      "remoteHash": "ecb6a1e4b2b4fab8576f5535ba307e655e7d46af12eb82530acda6cb7c2b44c6",
       "localHash": "ecb6a1e4b2b4fab8576f5535ba307e655e7d46af12eb82530acda6cb7c2b44c6"
     },
     {

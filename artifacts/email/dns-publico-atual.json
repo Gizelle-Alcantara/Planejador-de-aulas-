@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "resend._domainkey.senai.br",
+    "Type": "TXT",
+    "Error": "DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName"
+  },
+  {
+    "Name": "rsend.senai.br",
+    "Type": "CNAME",
+    "Error": "DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName"
+  },
+  {
+    "Name": "send.senai.br",
+    "Type": "CNAME",
+    "Error": "DNS_ERROR_RCODE_NAME_ERROR,Microsoft.DnsClient.Commands.ResolveDnsName"
+  }
+]
