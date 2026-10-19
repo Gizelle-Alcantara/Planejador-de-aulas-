@@ -1,8 +1,8 @@
 // Navegação e agenda usam somente controles e aulas já autorizados pela tela atual.
 (()=>{
  const $=(s,r=document)=>r.querySelector(s),all=(s,r=document)=>[...r.querySelectorAll(s)];
- const small=matchMedia('(max-width:620px)');let layout='month';
- try{if(sessionStorage.getItem('senai-calendar-layout')==='agenda')layout='agenda'}catch{}
+ const small=matchMedia('(max-width:620px)');let layout=small.matches?'agenda':'month';
+ try{const saved=sessionStorage.getItem('senai-calendar-layout');if(['month','agenda'].includes(saved))layout=saved}catch{}
  const node=(tag,text,cls)=>{const el=document.createElement(tag);if(text!==undefined)el.textContent=text;if(cls)el.className=cls;return el};
  function navigation(){
   $('#mobile-section-picker')?.remove();$('#mobile-shortcuts')?.remove();

@@ -30,7 +30,8 @@
     "test:ui:whatsapp": "npm run build && node tests/whatsapp-manual.ui.mjs && node tests/whatsapp-integration.ui.mjs",
     "test:load": "node scripts/load-test.js",
     "test:load:stability": "node scripts/load-test.js --profile=mixed --hold-ms=30000",
-    "test:ui:accounts": "npm run build && node tests/account-draft.ui.mjs"
+    "test:ui:accounts": "npm run build && node tests/account-draft.ui.mjs",
+    "test:ui:mobile-app": "npm run build && node tests/mobile-app.ui.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

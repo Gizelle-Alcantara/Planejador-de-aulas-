@@ -1,3 +1,12 @@
+## Versão web mobile instalável
+
+- Agenda em lista por padrão no celular, com escolha entre mês e agenda preservada na sessão.
+- Menu Mais com as seções e ações autorizadas, atalhos inferiores e respeito à área segura da tela.
+- Ocupação diária em cartões por ambiente e turno no celular; grade e impressão preservadas no computador.
+- Manifesto e ícone para tela inicial, botão de instalação quando suportado e orientação para Android e iPhone.
+- Indicação de conexão: consultas atualizadas, reservas e assinaturas continuam exigindo internet.
+- Temas claro/escuro e acesso por perfil mantidos.
+
 ## Estabilidade do banco local sob carga
 
 - Transações do banco em arquivo reutilizam uma conexão, evitando a abertura repetida de conexões nativas.

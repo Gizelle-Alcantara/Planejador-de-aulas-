@@ -1,0 +1,1 @@
+Cadastro de conta preserva campos durante atualização e envio pendente; limpa após sucesso sem guardar senha no armazenamento.

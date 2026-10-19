@@ -1,0 +1,97 @@
+[
+  {
+    "suite": "account-draft.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\account-draft.ui.mjs.log"
+  },
+  {
+    "suite": "ambientes.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\ambientes.ui.mjs.log"
+  },
+  {
+    "suite": "diagnostics.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\diagnostics.ui.mjs.log"
+  },
+  {
+    "suite": "docentes.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\docentes.ui.mjs.log"
+  },
+  {
+    "suite": "education-rules.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\education-rules.ui.mjs.log"
+  },
+  {
+    "suite": "environment-import.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\environment-import.ui.mjs.log"
+  },
+  {
+    "suite": "history.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\history.ui.mjs.log"
+  },
+  {
+    "suite": "key-control.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\key-control.ui.mjs.log"
+  },
+  {
+    "suite": "management-report.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\management-report.ui.mjs.log"
+  },
+  {
+    "suite": "mobile-app.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\mobile-app.ui.mjs.log"
+  },
+  {
+    "suite": "mobile.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\mobile.ui.mjs.log"
+  },
+  {
+    "suite": "notifications.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\notifications.ui.mjs.log"
+  },
+  {
+    "suite": "planning.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\planning.ui.mjs.log"
+  },
+  {
+    "suite": "recovery.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\recovery.ui.mjs.log"
+  },
+  {
+    "suite": "search.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\search.ui.mjs.log"
+  },
+  {
+    "suite": "turma-copy.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\turma-copy.ui.mjs.log"
+  },
+  {
+    "suite": "ui.smoke.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\ui.smoke.mjs.log"
+  },
+  {
+    "suite": "whatsapp-integration.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\whatsapp-integration.ui.mjs.log"
+  },
+  {
+    "suite": "whatsapp-manual.ui.mjs",
+    "exitCode": 0,
+    "log": "artifacts\\mobile\\whatsapp-manual.ui.mjs.log"
+  }
+]
