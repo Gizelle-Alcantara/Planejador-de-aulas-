@@ -40,7 +40,7 @@
  #board-content .board-scroll,#board-content .board-scroll-hint{display:none}
  .spaces-header .spaces-brand{align-items:flex-start}.spaces-header .spaces-eyebrow{font-size:.7rem}.spaces-header .spaces-logo img{width:110px;height:auto}.spaces-header .spaces-title h1{font-size:1.3rem}
  .calendar-agenda{padding-bottom:12px}.agenda-day{border-radius:16px}.agenda-lesson{padding-block:14px}
- #hdr .hbar>[data-act=turmanew],#hdr .hbar>a{display:none}
+ #hdr .hbar>[data-act=turmanew],#hdr .hbar>a:not([data-key-shortcut]){display:none}
  .mobile-section-picker{padding:8px;gap:4px}.mobile-section-picker select{min-height:44px}
  #board-content{display:flex;flex-direction:column}#board-content>.mobile-board-cards{order:0}#board-content>p,#board-content>.board-exports{order:1}
 }

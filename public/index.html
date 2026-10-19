@@ -965,19 +965,20 @@ function docAgg(d){
   return {turmas,aulas,fer};
 }
 function renderDocente(){
+  const keyShortcut=UI.role==="docente"?'<a class="btn pri" data-key-shortcut href="/ambientes.html#key-reader">Retirar / devolver chave</a>':"";
   const hdr=document.getElementById("hdr"),v=document.getElementById("view");
   document.getElementById("tabs").innerHTML="";
   const back=UI.cw===false||UI.role==="docente"?"":'<a class="btn sm" href="#">Voltar ao planejador</a>';
   if(!UI.me){hdr.innerHTML='<h1>Acesso do docente</h1>';v.innerHTML='<section class="panel"><p>Entre com usuário e senha para consultar sua agenda.</p><a class="btn pri" href="#login-docente">Entrar como docente</a></section>';return}
   if(UI.role==='docente'&&!UI.me.docenteId){hdr.innerHTML='<h1>Meu calendário</h1>';v.innerHTML='<section class="panel"><p>Sua conta ainda não está vinculada a um docente. Solicite o vínculo à coordenação.</p></section>';return}
-  if(!UI.loaded||UI.empty){hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;v.innerHTML=`<p class="muted">${UI.err||(UI.empty?"Nenhuma aula vinculada ao seu cadastro. Consulte a coordenação.":"Carregando…")}</p>`;return}
+  if(!UI.loaded||UI.empty){hdr.innerHTML=`<h1>Calendário do docente</h1>${back}${keyShortcut}`;v.innerHTML=`<p class="muted">${UI.err||(UI.empty?"Nenhuma aula vinculada ao seu cadastro. Consulte a coordenação.":"Carregando…")}</p>`;return}
   const matches=G.docentes.filter(x=>slug(x.nome)===DOC_ID),d=G.docentes.find(x=>x.id===DOC_ID)||(matches.length===1?matches[0]:null);
   if(!d){
     hdr.innerHTML=`<h1>Calendário do docente</h1>${back}`;
     v.innerHTML=`<section class="panel"><h2>Escolha seu nome</h2><div style="display:flex;flex-direction:column;gap:8px">${G.docentes.map(x=>`<a class="btn" href="#docente-${esc((x.id||slug(x.nome)))}">${esc(x.nome)}</a>`).join("")||'<span class="muted">Nenhum docente cadastrado.</span>'}</div></section>`;return;
   }
   const A=docAgg(d),t=todayISO();
-  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}${UI.role==="docente"?'<a class="btn pri" href="/ambientes.html">Reservar salas e laboratórios</a>':'<a class="btn sm" href="#docente">Trocar docente</a>'}${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
+  hdr.innerHTML=`<h1>${esc(d.nome)}</h1><span class="meta mono">Calendário do docente</span><div class="hbar"><span class="stat" data-k="saved">● Ao vivo${UI.savedAt?" · atualizado "+esc(fdt(UI.savedAt)):""}</span>${back}${keyShortcut}${UI.role==="docente"?'<a class="btn pri" href="/ambientes.html">Reservar salas e laboratórios</a>':'<a class="btn sm" href="#docente">Trocar docente</a>'}${UI.cw!==false?'<button class="btn sm" data-act="exportdoc">Exportar calendário</button>':""}</div>`;
   if(!A.turmas.length){v.innerHTML='<section class="panel"><p class="muted" style="margin:0">Você ainda não está associado a nenhuma disciplina. Fale com a coordenação.</p></section>';return}
   const ini=A.turmas.flatMap(x=>[x.st.cfg.inicio,...Object.keys(x.st.days||{})]).sort()[0],fim=A.turmas.flatMap(x=>[x.st.cfg.termino,...Object.keys(x.st.days||{})]).sort().pop(),ml=monthList(ini,fim);
   if(!UI.month||!ml.includes(UI.month)){const tm=t.slice(0,7);UI.month=ml.includes(tm)?tm:ml[0]}

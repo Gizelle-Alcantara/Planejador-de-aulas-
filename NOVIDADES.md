@@ -1,3 +1,9 @@
+## Atalho de chaves para o docente
+
+- Botão Retirar / devolver chave no cabeçalho do docente e na tela de ambientes.
+- Atalho Chaves na barra inferior do calendário do docente no celular.
+- Abertura direta do leitor de QR code com foco; a movimentação continua exigindo leitura da etiqueta e assinatura.
+
 ## Versão web mobile instalável
 
 - Agenda em lista por padrão no celular, com escolha entre mês e agenda preservada na sessão.

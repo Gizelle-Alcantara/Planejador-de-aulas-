@@ -22,7 +22,7 @@
   if(team&&typeof MODE!=='undefined'&&MODE!=='landing'&&MODE!=='aluno'){
    const bar=node('nav',undefined,'mobile-shortcuts');bar.id='mobile-shortcuts';bar.setAttribute('aria-label','Atalhos no celular');
    for(const key of ['painel','calendario']){const tab=tabs.find(t=>t.dataset.k===key);if(!tab)continue;const button=node('button',tab.textContent);button.type='button';button.id='mobile-quick-'+key;button.setAttribute('aria-current',tab.getAttribute('aria-selected')==='true'?'page':'false');button.onclick=()=>tab.click();bar.append(button)}
-   if(!tabs.length){const a=node('a','Calendário');a.href='/#docente';bar.append(a);const rooms=node('a','Reservas');rooms.href='/ambientes.html#reservations';bar.append(rooms)}
+   if(!tabs.length){const a=node('a','Calendário');a.href='/#docente';bar.append(a);const rooms=node('a','Reservas');rooms.href='/ambientes.html#reservations';bar.append(rooms);const keys=node('a','Chaves');keys.href='/ambientes.html#key-reader';bar.append(keys)}
    const notices=node('a','Notificações');notices.href='/notificacoes.html';bar.append(notices);$('.wrap')?.append(bar);
   }
   document.body.classList.toggle('has-mobile-shortcuts',!!$('#mobile-shortcuts'));
