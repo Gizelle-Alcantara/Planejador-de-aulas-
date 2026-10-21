@@ -24,6 +24,19 @@ try {
  await call(context,{op:'set',id:'geral',base:0,data:{docentes:[{nome:'Ana'}]}});
  const state={cfg:{turma:'T-UI',curso:'Desenvolvimento de Sistemas',turno:'Matutino',aulasDia:4,inicio:day,termino:next},ucs:[{sigla:'LOG',nome:'Lógica',docente:'Ana',sala:'',ch:40}],days:{[day]:{s:['LOG']},[next]:{s:['LOG']}},reg:{}};
  await call(context,{op:'set',id:'turma-ui',base:0,data:{state}});
+ await call(context,{op:'user_add',login:'coordtabs',nome:'Coordenação',password:'senha-coord-tabs',role:'coord'});
+ const coordContext=await browser.newContext({serviceWorkers:'block'}),coordPage=await coordContext.newPage();
+ await call(coordContext,{op:'login',login:'coordtabs',password:'senha-coord-tabs'});
+ for(const tab of ['dados','publicacao','diagnostico']){
+  await coordPage.goto(base+'/?aba='+tab);await coordPage.getByRole('tab',{name:'Painel',exact:true}).waitFor();
+  for(const label of ['Dados','Publicação','Diagnóstico'])assert.equal(await coordPage.getByRole('tab',{name:label,exact:true}).count(),0);
+  await coordPage.evaluate(tab=>{UI.tab=tab;renderView()},tab);
+  assert.equal(await coordPage.evaluate(()=>UI.tab),'painel');
+ }
+ await coordContext.close();
+ const masterTabs=await context.newPage();await masterTabs.goto(base+'/?aba=painel');await masterTabs.getByRole('tab',{name:'Painel',exact:true}).waitFor();
+ for(const label of ['Dados','Publicação','Diagnóstico'])assert.equal(await masterTabs.getByRole('tab',{name:label,exact:true}).count(),1);
+ await masterTabs.close();
  await call(context,{op:'user_add',login:'profui',nome:'Professora Ana',password:'senha-prof-ui',role:'docente'});
  await call(context,{op:'user_add',login:'gestorui',nome:'Administrador de ambientes',password:'senha-gestor-ui',role:'ambientes'});
  await page.reload();await page.getByLabel('Nome',{exact:true}).fill('Laboratório Maker');await page.getByLabel('Capacidade',{exact:true}).fill('30');await page.getByRole('button',{name:'Salvar ambiente',exact:true}).click();await page.getByText('Ambiente salvo.',{exact:true}).waitFor();
