@@ -34,3 +34,12 @@ test('CSRF accepts configured public origin behind a serverless proxy',async()=>
   assert.equal((await request('https://evil.test')).status,403);
  }finally{if(previous===undefined)delete process.env.PUBLIC_URL;else process.env.PUBLIC_URL=previous}
 });
+
+test('CSRF accepts Vercel authoritative production domain without PUBLIC_URL',async()=>{
+ const previous=process.env.PUBLIC_URL;delete process.env.PUBLIC_URL;process.env.VERCEL_PROJECT_PRODUCTION_URL='agenda.test';
+ try{
+  const request=origin=>handle(new Request('https://internal.vercel.app/api',{method:'POST',headers:{'content-type':'application/json',origin},body:JSON.stringify({op:'password_reset_status'})}));
+  assert.equal((await request('https://agenda.test')).status,200);
+  assert.equal((await request('https://external.test')).status,403);
+ }finally{delete process.env.VERCEL_PROJECT_PRODUCTION_URL;if(previous!==undefined)process.env.PUBLIC_URL=previous}
+});
