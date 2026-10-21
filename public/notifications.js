@@ -12,11 +12,12 @@ function controls(){
  $('#notification-read-visible').disabled=busy||!items.some(n=>!n.lida);list.setAttribute('aria-busy',String(busy));
 }
 function target(n){
+ if(n.kind==='frequencia'){const [teacher,month]=String(n.docId||'').split('/');return '/frequencia.html?teacher='+encodeURIComponent(teacher||'')+'&month='+encodeURIComponent(month||'')}
  if(n.kind==='calendario')return user.role==='docente'?'/#docente':`/?aba=calendario&turma=${encodeURIComponent(String(n.docId||'').replace(/^turma-/,''))}`;
  return '/ambientes.html#reservation-'+encodeURIComponent(n.reservaId||'');
 }
 function render(){
- list.innerHTML=items.map(n=>`<article class="${n.lida?'read':''}" data-notification="${n.id}" aria-label="${n.lida?'Aviso lido':'Aviso não lido'}"><p class="meta">${n.kind==='calendario'?'Calendário':'Reserva'} · ${esc(new Date(n.at).toLocaleString('pt-BR'))} · ${n.lida?'Lida':'Não lida'}</p><p>${esc(n.message)}</p><div class="actions"><a href="${esc(target(n))}">${n.kind==='calendario'?'Abrir calendário':'Ver reserva'}</a>${!n.lida?`<button class="secondary" data-read="${n.id}">Marcar como lida</button>`:''}<button class="secondary" data-delete="${n.id}">Excluir aviso</button></div></article>`).join('')||'<p>Nenhum aviso para os filtros selecionados.</p>';
+ list.innerHTML=items.map(n=>`<article class="${n.lida?'read':''}" data-notification="${n.id}" aria-label="${n.lida?'Aviso lido':'Aviso não lido'}"><p class="meta">${n.kind==='frequencia'?'Frequência':n.kind==='calendario'?'Calendário':'Reserva'} · ${esc(new Date(n.at).toLocaleString('pt-BR'))} · ${n.lida?'Lida':'Não lida'}</p><p>${esc(n.message)}</p><div class="actions"><a href="${esc(target(n))}">${n.kind==='frequencia'?'Abrir frequência':n.kind==='calendario'?'Abrir calendário':'Ver reserva'}</a>${!n.lida?`<button class="secondary" data-read="${n.id}">Marcar como lida</button>`:''}<button class="secondary" data-delete="${n.id}">Excluir aviso</button></div></article>`).join('')||'<p>Nenhum aviso para os filtros selecionados.</p>';
  $('#notification-more').hidden=!cursor;controls();
 }
 async function load(append=false){

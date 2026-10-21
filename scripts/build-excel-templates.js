@@ -3,8 +3,8 @@ import { unzipSync } from 'fflate';
 
 // Incorpora os modelos ao módulo para sobreviver ao empacotamento serverless.
 const models = {};
-for (const name of ['docente', 'senai']) {
-  const bytes = readFileSync(new URL(`../lib/assets/calendario-${name}-modelo.xlsx`, import.meta.url));
+for (const name of ['docente', 'senai', 'frequencia']) {
+  const bytes = readFileSync(new URL(name==='frequencia'?'../lib/assets/frequencia-horista-modelo.xlsx':`../lib/assets/calendario-${name}-modelo.xlsx`, import.meta.url));
   const files = unzipSync(bytes);
   if (!files['xl/workbook.xml'] || !files['xl/worksheets/sheet1.xml']) {
     throw new Error(`Modelo Excel inválido: ${name}`);
