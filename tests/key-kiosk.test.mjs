@@ -44,12 +44,25 @@ test('escopo do painel não permite gestão, agendas, exportações ou recupera�
  const own=await ok({op:'key_list'},kioskCookie);assert.equal(own.items.length,1);assert.equal(own.keys.length,0);
  const bia=(await login({login:'bia',password:'senha-docente-teste'})).split(';')[0];assert.equal((await ok({op:'key_list'},bia)).items.length,0);
 });
+test('QR no terminal exige docente proprietário e não libera acesso por sessão comum',async()=>{
+ const prepared=await ok({op:'key_terminal_prepare',id:item.id},kioskCookie);
+ assert.equal(prepared.key.token,key.token);assert.equal(prepared.key.code,'CH-01');
+ assert.equal((await call({op:'key_terminal_prepare',id:item.id})).status,401);
+ assert.equal((await call({op:'key_terminal_prepare',id:item.id},master,false)).status,403);
+ const bia=(await login({login:'bia',password:'senha-docente-teste'})).split(';')[0];
+ assert.equal((await call({op:'key_terminal_prepare',id:item.id},bia)).status,403);
+ const normal=(await login({login:'ana',password:'senha-docente-teste'},false)).split(';')[0];
+ assert.equal((await call({op:'key_terminal_prepare',id:item.id},normal,false)).status,403);
+});
+
 test('QR e assinatura registram movimentos reais; logout do painel preserva sessão administrativa',async()=>{
  const signature=[[[.1,.4],[.15,.3],[.2,.5],[.25,.2],[.3,.6],[.4,.3],[.5,.5],[.6,.4],[.7,.2],[.8,.5]]];
  assert.equal((await ok({op:'key_scan',token:key.token},kioskCookie)).items[0].id,item.id);
- await ok({op:'key_sign',id:item.id,token:key.token,action:'retirada',name:'Ana',consent:true,signature},kioskCookie);
+ const prepared=await ok({op:'key_terminal_prepare',id:item.id},kioskCookie);
+ const signed=await ok({op:'key_sign',id:item.id,token:prepared.key.token,action:'retirada',name:'Ana',consent:true,signature},kioskCookie);assert.equal(signed.receipt.method,'terminal');
  await ok({op:'key_sign',id:item.id,token:key.token,action:'devolucao',name:'Ana',consent:true,signature},kioskCookie);
  assert.equal((await ok({op:'key_list'},kioskCookie)).items[0].status,'devolvida');
+ assert.equal((await call({op:'key_terminal_prepare',id:item.id},kioskCookie)).status,409);
  const result=await call({op:'logout'},master+'; '+kioskCookie);assert.match(result.headers.get('set-cookie'),/^plan_key_kiosk=;/);assert.equal(result.headers.get('set-cookie').includes('plan_sess='),false);
  assert.equal((await (await get(master,'')).json()).user.master,true);
 });

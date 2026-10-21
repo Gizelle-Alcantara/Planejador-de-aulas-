@@ -37,9 +37,9 @@ try{
  };
  const sign=async action=>{
   await page.getByRole('button',{name:action==='retirada'?'Retirar chave':'Devolver chave',exact:true}).click();
-  await page.getByLabel('Endereço do QR code',{exact:true}).fill(`${base}/ambientes.html#chave=${key.token}`);await page.getByRole('button',{name:'Conferir chave',exact:true}).click();await page.locator('#key-scan-status').waitFor();
+  await page.locator('.key-terminal-qr svg').waitFor();
   if(action==='retirada'){await page.screenshot({path:join(project,'artifacts','painel-secretaria','retirada-desktop.png'),fullPage:true});const audit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>v.id),[])}
-  await page.getByRole('button',{name:action==='retirada'?'Assinar retirada':'Assinar devolução',exact:true}).click();
+  await page.locator('#key-terminal-sign').click();
   const dialog=page.getByRole('dialog');await dialog.locator('[name=consent]').check();const bounds=await dialog.locator('canvas').boundingBox();await page.mouse.move(bounds.x+bounds.width*.12,bounds.y+bounds.height*.5);await page.mouse.down();for(let i=1;i<=20;i++)await page.mouse.move(bounds.x+bounds.width*(.12+i*.035),bounds.y+bounds.height*(.5+Math.sin(i)*.2));await page.mouse.up();
   await dialog.getByRole('button',{name:action==='retirada'?'Confirmar e registrar retirada':'Confirmar e registrar devolução',exact:true}).click();
   await page.getByRole('heading',{name:action==='retirada'?'Retirada registrada':'Devolução registrada',exact:true}).waitFor();assert.equal((await (await context.request.get(base+'/api?kiosk=1')).json()).user,null);assert.equal((await (await context.request.get(base+'/api')).json()).user.master,true);

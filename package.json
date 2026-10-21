@@ -11,7 +11,7 @@
     "check:publish": "node scripts/check-publication.js",
     "start": "node server.js",
     "import": "node scripts/import.js",
-    "test": "node --test tests/api.test.mjs tests/calendar-export.test.mjs tests/teacher-calendar-export.test.mjs tests/schedule.test.mjs tests/excel-preview.test.mjs tests/docentes.test.mjs tests/turma-copy.test.mjs tests/search.test.mjs tests/password-reset.test.mjs tests/publication.test.mjs tests/notifications.test.mjs tests/planning.test.mjs tests/management-report.test.mjs tests/diagnostics.test.mjs tests/daily-program.test.mjs tests/education-rules.test.mjs tests/daily-display.test.mjs tests/environment-import.test.mjs tests/key-control.test.mjs tests/whatsapp-manual.test.mjs tests/local-database.test.mjs tests/key-kiosk.test.mjs",
+    "test": "node --test tests/auth-security.test.mjs tests/api.test.mjs tests/calendar-export.test.mjs tests/teacher-calendar-export.test.mjs tests/schedule.test.mjs tests/excel-preview.test.mjs tests/docentes.test.mjs tests/turma-copy.test.mjs tests/search.test.mjs tests/password-reset.test.mjs tests/publication.test.mjs tests/notifications.test.mjs tests/planning.test.mjs tests/management-report.test.mjs tests/diagnostics.test.mjs tests/daily-program.test.mjs tests/education-rules.test.mjs tests/daily-display.test.mjs tests/environment-import.test.mjs tests/key-control.test.mjs tests/whatsapp-manual.test.mjs tests/local-database.test.mjs tests/key-kiosk.test.mjs",
     "test:ui": "npm run build && node tests/ui.smoke.mjs",
     "test:ui:copy": "npm run build && node tests/turma-copy.ui.mjs",
     "test:ui:search": "npm run build && node tests/search.ui.mjs",
