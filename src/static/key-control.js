@@ -1,7 +1,7 @@
 import qrcode from './vendor-qrcode.mjs';
 import {decorateKeySelfService} from './key-self-service.js';
 
-export async function attachKeyControl({api,manage,esc,environments,message,onAllocated=async()=>{},workflow=null,onSigned=null}){
+export async function attachKeyControl({api,manage,esc,environments,message,onAllocated=async()=>{},workflow=null,onSigned=null,terminal=false}){
  const root=document.querySelector('#key-content');if(!root)return ()=>{};
  let data,lessons=[],scanned=null,stream=null,frame=0,disposed=false,selectedId=null,scanRequest=0;
  const date=()=>new Date(Date.now()-3*3600e3).toISOString().slice(0,10);
@@ -29,17 +29,23 @@ export async function attachKeyControl({api,manage,esc,environments,message,onAl
    const reader=root.querySelector('#key-reader');reader.hidden=true;
    if(scanned&&!selectedId)selectedId=data.items.find(a=>a.keyId===scanned.key.id&&['alocada','retirada'].includes(a.status))?.id||null;
    root.querySelectorAll('[data-key-sign]').forEach(sign=>{const a=data.items.find(a=>a.id===sign.dataset.keySign),card=sign.closest('article'),ready=selectedId===a.id&&!!scanned?.items?.some(item=>item.id===a.id);sign.disabled=!ready;sign.hidden=!ready;
-    if(!ready){const button=document.createElement('button');button.type='button';button.textContent=a.status==='retirada'?'Devolver chave':'Retirar chave';button.dataset.keyPrepare=a.id;button.disabled=a.status==='alocada'&&a.data!==date();button.onclick=()=>{scanRequest++;scanned=null;selectedId=a.id;render(current);root.querySelector('#key-reader').focus();root.querySelector('#key-reader').scrollIntoView({block:'center'})};sign.before(button);const hint=sign.parentElement.querySelector('.small');if(hint)hint.textContent=button.disabled?'Retirada disponível no dia da aula.':'Confirme o QR code da chave para continuar.'}
+    if(!ready){const button=document.createElement('button');button.type='button';button.textContent=a.status==='retirada'?'Devolver chave':'Retirar chave';button.dataset.keyPrepare=a.id;button.disabled=a.status==='alocada'&&a.data!==date();button.onclick=()=>run(button,async()=>{scanRequest++;scanned=null;selectedId=a.id;if(terminal){const result=await api({op:'key_terminal_prepare',id:a.id});if(disposed)return;await scan(result.key.token)}else render(current);root.querySelector('#key-reader')?.focus();root.querySelector('#key-reader')?.scrollIntoView({block:'center'})});sign.before(button);const hint=sign.parentElement.querySelector('.small');if(hint)hint.textContent=button.disabled?'Retirada disponível no dia da aula.':'Confirme o QR code da chave para continuar.'}
     if(selectedId===a.id){card.append(reader);reader.hidden=false}
    });
    const empty=root.querySelector('.key-empty');if(empty)empty.textContent='Nenhuma chave atribuída a você.';
    decorateKeySelfService({root,items:data.items,selectedId,scanned,esc,onCancel:()=>{scanRequest++;scanned=null;selectedId=null;render(current);root.querySelector('#key-refresh').focus()}});
   }
+  if(terminal&&scanned&&selectedId){
+   const reader=root.querySelector('#key-reader'),qr=qrcode(0,'M');qr.addData(location.origin+'/ambientes.html#chave='+scanned.token);qr.make();
+   const panel=document.createElement('div');panel.className='key-terminal-qr';
+   panel.innerHTML='<h3>QR code da sua chave</h3><p><strong>'+esc(scanned.key.code)+' · '+esc(scanned.key.ambienteNome)+'</strong></p><div role="img" aria-label="QR code da chave">'+qr.createSvgTag({cellSize:4,margin:16,scalable:true})+'</div><p>Confira a identificação na chave física. Você pode ler o QR com seu celular ou registrar tudo aqui.</p><button type="button" id="key-terminal-sign">Estou sem celular — assinar neste terminal</button><p class="small">Assine com o mouse, dedo ou caneta na próxima etapa e confirme o aceite.</p>';
+   reader.replaceChildren(panel);panel.querySelector('button').onclick=()=>signature(data.items.find(a=>a.id===selectedId));
+  }
   if(manage)root.insertAdjacentHTML('afterbegin','<p><a class="export-button" href="/secretaria-chaves.html" target="_blank" rel="noopener">Abrir painel da secretaria</a></p>');
   const dateInput=root.querySelector('#key-date');if(dateInput)dateInput.onchange=()=>run(root.querySelector('#key-refresh'),refresh);root.querySelector('#key-refresh').onclick=e=>run(e.target,refresh);
-  root.querySelector('#key-scan-form').onsubmit=e=>{e.preventDefault();run(e.target.querySelector('button'),()=>scan(new FormData(e.target).get('qr')))};
-  root.querySelector('#key-camera').onclick=e=>run(e.target,async()=>{try{await camera()}catch(error){stop();throw Error(error.name==='NotAllowedError'?'Acesso à câmera não autorizado. Permita o acesso no navegador ou envie uma foto do QR code.':error.message)}});root.querySelector('#key-stop').onclick=()=>{stop();root.querySelector('#key-stop').hidden=true};
-  root.querySelector('#key-photo').onchange=e=>run(root.querySelector('#key-camera'),async()=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('Selecione uma imagem de até 10 MB.');const bitmap=await createImageBitmap(file);try{const c=document.createElement('canvas'),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));c.width=Math.round(bitmap.width*scale);c.height=Math.round(bitmap.height*scale);const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0,c.width,c.height);const result=window.jsQR(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height);if(!result)throw Error('QR code não encontrado. Envie uma foto mais nítida.');await scan(result.data)}finally{bitmap.close()}});
+  if(root.querySelector('#key-scan-form'))root.querySelector('#key-scan-form').onsubmit=e=>{e.preventDefault();run(e.target.querySelector('button'),()=>scan(new FormData(e.target).get('qr')))};
+  if(root.querySelector('#key-camera'))root.querySelector('#key-camera').onclick=e=>run(e.target,async()=>{try{await camera()}catch(error){stop();throw Error(error.name==='NotAllowedError'?'Acesso à câmera não autorizado. Permita o acesso no navegador ou envie uma foto do QR code.':error.message)}});if(root.querySelector('#key-stop'))root.querySelector('#key-stop').onclick=()=>{stop();root.querySelector('#key-stop').hidden=true};
+  if(root.querySelector('#key-photo'))root.querySelector('#key-photo').onchange=e=>run(root.querySelector('#key-camera'),async()=>{const file=e.target.files[0];if(!file)return;if(file.size>10*1024*1024)throw Error('Selecione uma imagem de até 10 MB.');const bitmap=await createImageBitmap(file);try{const c=document.createElement('canvas'),scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));c.width=Math.round(bitmap.width*scale);c.height=Math.round(bitmap.height*scale);const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0,c.width,c.height);const result=window.jsQR(ctx.getImageData(0,0,c.width,c.height).data,c.width,c.height);if(!result)throw Error('QR code não encontrado. Envie uma foto mais nítida.');await scan(result.data)}finally{bitmap.close()}});
   root.querySelectorAll('[data-key-sign]').forEach(b=>b.onclick=()=>signature(data.items.find(a=>a.id===b.dataset.keySign)));
   root.querySelectorAll('[data-key-receipt]').forEach(b=>b.onclick=()=>run(b,async()=>receipt((await api({op:'key_receipt',id:b.dataset.keyReceipt})).receipt)));
   if(manage){

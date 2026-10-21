@@ -371,11 +371,11 @@ const rowHorario=()=>{const h=horarios();return h.length?`${hm(h[0].i)} às ${hm
 /* ---------- cabeçalho / abas ---------- */
 const DOCTABS=["relatorios","ambientes"];
 function renderHead(){
-  if(['publicacao','diagnostico'].includes(UI.tab)&&!UI.me?.master)UI.tab='painel';
+  if(['dados','publicacao','diagnostico'].includes(UI.tab)&&!UI.me?.master)UI.tab='painel';
   const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
   document.getElementById("hdr").innerHTML=`<h1>${esc(c.curso)}</h1><span class="meta mono">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${br(c.inicio)} a ${br(c.termino)}</span><div class="hbar"><button class="btn sm" data-act="back">Voltar</button><button class="btn sm pri" data-act="export">Exportar calendário</button><span id="stat" class="stat"></span><select id="turmaSel" aria-label="Turma" style="width:auto;max-width:100%">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select><button class="btn sm" data-act="turmanew">Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div>`;
   setStatus(UI.status);
-  const available=TABS.filter(x=>(!["publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
+  const available=TABS.filter(x=>(!["dados","publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
   document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','dados','publicacao','diagnostico'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','dados','publicacao','diagnostico'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
 }
 
@@ -877,6 +877,7 @@ function vBackups(){
     <p class="small muted">Restaurar devolve turmas e docentes ao estado daquela cópia e antes guarda uma cópia do estado atual ("antes de restaurar"). Turmas criadas depois do backup não são apagadas.</p></section>`;
 }
 function vDados(){
+  if(!UI.me?.master)return '<section class="panel"><h2>Dados</h2><p>Esta área exige a senha mestre.</p></section>';
   return `${vBackups()}<div class="grid2">
   <section class="panel"><h2>Cópia de segurança (JSON)</h2><div class="row" style="margin-bottom:8px"><button class="btn pri" data-act="bkfull">Baixar backup completo (arquivo)</button></div><p class="small muted">Os dados ficam salvos neste navegador. Copie este texto para guardar uma cópia ou levar para outro computador.</p>
     <textarea id="tJson" readonly>${esc(JSON.stringify({geral:G,turmas:strippedT()},null,1))}</textarea><div class="row" style="margin-top:8px"><button class="btn pri" data-act="copy" data-id="tJson">Copiar</button></div></section>
