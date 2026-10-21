@@ -25,3 +25,12 @@ test('login limit persists across requests and normalizes account names',async()
  const blocked=await call({op:'login',login:'limited',password:'wrong'},{'x-forwarded-for':'192.0.2.99'});assert.equal(blocked.status,429);assert.ok(Number(blocked.headers.get('retry-after'))>0);
  assert.equal((await call({op:'login',password:process.env.ADMIN_PASSWORD},{'x-forwarded-for':'192.0.2.100'})).status,200);
 });
+
+test('CSRF accepts configured public origin behind a serverless proxy',async()=>{
+ const previous=process.env.PUBLIC_URL;process.env.PUBLIC_URL='https://agenda.test';
+ try{
+  const request=origin=>handle(new Request('https://internal-deployment.vercel.app/api',{method:'POST',headers:{'content-type':'application/json',origin},body:JSON.stringify({op:'password_reset_status'})}));
+  assert.equal((await request('https://agenda.test')).status,200);
+  assert.equal((await request('https://evil.test')).status,403);
+ }finally{if(previous===undefined)delete process.env.PUBLIC_URL;else process.env.PUBLIC_URL=previous}
+});
