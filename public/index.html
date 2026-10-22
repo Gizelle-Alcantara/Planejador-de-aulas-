@@ -1257,6 +1257,8 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   renderHead();
   const v=document.getElementById("view");
+  // A refresh can happen before the asynchronous details toggle event is delivered.
+  v.querySelectorAll('[data-doc-details]').forEach(el=>{UI.docDetails??={};UI.docDetails[el.dataset.docDetails]=el.open});
   const accountForm=UI.tab==="acesso"?v.querySelector("#account-form"):null;
   const accountFocus=accountForm?.contains(document.activeElement)?document.activeElement:null;
   v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,frequencia:()=>`<section class="panel"><h2>Frequência de horistas</h2><p>Consulte os horários reais registrados nas chaves, confira ajustes e acompanhe o envio e a validação mensal.</p><a class="btn pri" href="/frequencia.html">Abrir frequência de horistas</a></section>`,dados:vDados,publicacao:vPublication,diagnostico:vDiagnostics,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();

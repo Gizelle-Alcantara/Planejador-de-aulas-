@@ -134,6 +134,7 @@ Horários de bloqueios e projeções de ocupação usam minutos desde meia-noite
 | key_toggle | M/C/A | id; alterna active se sem pendência |
 | key_allocate | M/C/A | keyId, docente, turmaId, data, sigla, bloco; cria alocação/reserva validada |
 | key_cancel | M/C/A | id de alocação ainda alocada |
+| key_terminal_prepare | D vinculado no terminal | id da própria alocação; retorna key com token QR, sem registrar movimentação; exige retirada aberta ou alocação do dia com chave ativa |
 | key_scan | M/C/A/D | token; identifica chave e alocações visíveis elegíveis |
 | key_sign | D vinculado | id da alocação, token, action, name, consent, signature |
 | key_receipt | M/C/A ou D proprietário | id do evento; retorna receipt |
@@ -178,7 +179,7 @@ WhatsApp manual usa link wa.me no navegador e não uma operação de envio dessa
 
 GET/POST `/api?kiosk=1` usam exclusivamente cookie `plan_key_kiosk`, com sessão de finalidade própria e validade máxima de 300 segundos. Não há herança do cookie `plan_sess`; trocar o nome do cookie não permite usar o token fora da finalidade assinada. Login aceita apenas conta docente; mestre e perfis de gestão são recusados.
 
-Operações permitidas: login, logout, key_list, key_scan, key_sign e key_receipt, com as mesmas verificações de titularidade. GET básico retorna somente user resumido ou null, sem documentos. Outros parâmetros de consulta/operações são recusados. Logout limpa apenas o cookie do painel. O cliente encerra por inatividade de 90 segundos e após concluir uma movimentação; o limite absoluto de 5 minutos também é verificado pela assinatura no servidor.
+Operações permitidas: login, logout, key_list, key_terminal_prepare, key_scan, key_sign e key_receipt, com as mesmas verificações de titularidade. GET básico retorna somente user resumido ou null, sem documentos. Outros parâmetros de consulta/operações são recusados. Logout limpa apenas o cookie do painel. O cliente encerra por inatividade de 90 segundos e após concluir uma movimentação; o limite absoluto de 5 minutos também é verificado pela assinatura no servidor.
 
 O filtro de retirada do painel mostra alocações do dia; devolução mostra retiradas abertas. A filtragem visual não substitui as validações de key_sign. O módulo compartilhado aceita workflow e onSigned para concluir o atendimento sem expor assinatura/comprovante completo no terminal.
 

@@ -10,6 +10,10 @@ try{
  page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto(base+'/');await page.waitForFunction(()=>UI.loaded);
  await page.getByRole('tab',{name:'Docentes',exact:true}).click();const group=page.locator('[data-quick-search=docentes]'),rows=group.locator('..').locator('[data-search-row]:visible');
  assert.equal(await page.getByRole('button',{name:'Cadastro completo',exact:true}).count(),0);assert.equal(await rows.count(),2);assert.equal(await page.locator('[data-doc-details][open]').count(),0);assert.equal(await page.getByRole('heading',{name:'Bloqueios de disponibilidade',exact:true}).count(),0);assert.equal(await rows.first().locator('[data-teacher-lessons]').innerText(),'8');
+ // Refresh in the same task, before the browser dispatches toggle, must preserve both states.
+ for(const open of [true,false]){
+  assert.equal(await page.evaluate(open=>{const el=document.querySelector('[data-doc-details]'),id=el.dataset.docDetails;el.open=open;renderView();return [...document.querySelectorAll('[data-doc-details]')].find(d=>d.dataset.docDetails===id).open},open),open);
+ }
  await group.getByLabel('Filtrar docentes por disciplinas',{exact:true}).selectOption('com');assert.equal(await rows.count(),1);assert.equal(await rows.getByLabel('Nome',{exact:true}).inputValue(),'Ana');await group.getByRole('button',{name:'Limpar busca',exact:true}).click();
  await group.getByLabel('Buscar docentes',{exact:true}).fill('alvaro');const details=rows.locator('[data-doc-details]');await details.locator('summary').click();
  await details.getByLabel('Matrícula',{exact:true}).fill('12345');await details.getByLabel('Matrícula',{exact:true}).press('Tab');assert.equal(await details.getByLabel('Matrícula',{exact:true}).inputValue(),'98765');
