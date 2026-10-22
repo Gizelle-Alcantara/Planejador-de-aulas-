@@ -3,7 +3,16 @@
  function paint(){document.querySelectorAll('[data-notification-shortcut]').forEach(link=>{
   link.hidden=!user;if(!user)return;
   const text=count===null?'Notificações':`Notificações (${count} não lidas)`;
-  if(link.textContent!==text)link.textContent=text;
+  const compact=!!link.closest('.brand')?.querySelector('.class-heading');
+  link.setAttribute('aria-label',text);
+  if(link.dataset.badgeLabel!==text||link.dataset.badgeCompact!==String(compact)){
+   link.dataset.badgeLabel=text;link.dataset.badgeCompact=String(compact);
+   if(compact){
+    link.innerHTML='<svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>';
+    const label=document.createElement('span');label.className='header-notification-label';label.textContent='Notificações';link.append(label);
+    if(count!==null){const badge=document.createElement('span');badge.className='header-notification-count';badge.textContent=String(count);link.append(badge)}
+   }else link.textContent=text;
+  }
  })}
  async function refresh(){
   if(loading||document.hidden)return;loading=true;
