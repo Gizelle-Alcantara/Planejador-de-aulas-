@@ -48,7 +48,7 @@ const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta 
 writeFileSync(new URL('DOCUMENTACAO.html',root),html);
 // Endereços antigos continuam abrindo a edição consolidada.
 for(const file of ['README.html','MANUAL-COMPLETO.html'])writeFileSync(new URL(file,root),html);
-const publicHtml=html.replace(/href="([^"#]+\.html)"/g,(_,file)=>['DOCUMENTACAO.html','README.html','MANUAL-COMPLETO.html'].includes(file)?'href="#indice"':'href="https://github.com/Gizelle-Alcantara/Planejador-de-aulas-/blob/main/docs/'+encodeURIComponent(file)+'"');
+const publicHtml=html.replace(/href="([^"#/:]+\.html)"/g,(_,file)=>['DOCUMENTACAO.html','README.html','MANUAL-COMPLETO.html'].includes(file)?'href="#indice"':'href="https://github.com/Gizelle-Alcantara/Planejador-de-aulas-/blob/main/docs/'+encodeURIComponent(file)+'"');
 mkdirSync(new URL('../public/',import.meta.url),{recursive:true});
 writeFileSync(new URL('../public/documentacao.html',import.meta.url),publicHtml);
 console.log(`Documentação gerada: ${sections.length} capítulos; ${Buffer.byteLength(html)} bytes.`);

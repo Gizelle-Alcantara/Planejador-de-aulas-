@@ -22,4 +22,6 @@ for(const f of ['DOCUMENTACAO.html','README.html','MANUAL-COMPLETO.html','../pub
  const html=readFileSync(new URL(f,docs),'utf8');if(!html.includes('name="documentation-edition" content="23/10/2026"'))errors.push(f+': edição HTML antiga');const ids=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
  for(const m of html.matchAll(/href="#([^"]+)"/g))if(!ids.has(m[1]))errors.push(`${f}: âncora ausente ${m[1]}`);
 }
+const online=readFileSync(new URL('public/documentacao.html',root),'utf8');
+if(!online.includes('href="https://planejador-de-aulas-zowu.vercel.app/documentacao.html"')||online.includes('/docs/https%3A'))errors.push('Página pública: link externo da documentação inválido');
 if(errors.length){console.error(errors.join('\n'));process.exitCode=1}else console.log(`Documentação válida: ${files.length} documentos, ${links} links locais, ${ops.size} operações da API conferidas e âncoras HTML íntegras.`);
