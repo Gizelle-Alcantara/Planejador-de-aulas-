@@ -1,240 +1,106 @@
-> Alunos agora acessam uma única turma por código: veja [Acesso dos alunos](ACESSO-ALUNOS.md). A consulta anônima continua bloqueada.
+# Referência técnica e arquitetura
 
-> Política de acesso atual: [Acesso privado dos docentes](ACESSO-DOCENTE.md). Referências históricas a consultas públicas não se aplicam; ICS exige autenticação e exportações completas de turma são restritas à coordenação.
+Edição: 19/10/2026. Veja também [API](API.md), [operação](OPERACAO-E-MANUTENCAO.md) e [segurança](SEGURANCA-E-RECUPERACAO.md).
 
-# Referência técnica
+## 1. Arquitetura
 
-**Base:** implementação entregue em 13/10/2026. O contrato abaixo documenta a API atual; não é uma promessa de estabilidade entre versões. Para procedimentos de operação, consulte [MANUAL-COMPLETO.md](MANUAL-COMPLETO.md).
+JavaScript ESM, frontend HTML/CSS/JS e backend Node/libSQL. O núcleo atende servidor local e adaptadores Vercel/Netlify. Não há React nem backend separado de chaves.
 
-## 1. Arquitetura e diretórios
+Fluxo: navegador → `/api` → autenticação/projeção por perfil → validação → transação/revisões → SQLite local ou Turso remoto → resposta. Exportações usam dados salvos e modelos do servidor.
 
 | Caminho | Responsabilidade |
 |---|---|
-| `src/tpl.html` | Interface principal, estado de turmas, calendário, filtros, formulários e exportações da tela |
-| `src/shim.js` | Compatibilidade com o aplicativo original; sessão, API, revisões, consulta periódica e download |
-| `src/static/` | Gestão de ambientes, acessibilidade, prévia, estilos, service worker e recursos estáticos |
-| `scripts/build.js` | Gera `public/index.html`, copia estáticos e transforma regras de horários para o navegador; incorpora o código da prévia à página |
-| `public/` | Saída de build; não deve ser a origem principal de alterações |
-| `lib/core.js` | API, autenticação, banco, políticas de acesso, transações, migrações, histórico, backups e rotinas |
-| `lib/schedule.js` | Horários, blocos, validação da grade e conflitos; compartilhado entre servidor e navegador |
-| `lib/docentes.js` | Validação do cadastro docente |
-| `lib/environments.js` | Validação dos ambientes e projeção de aulas do docente |
-| `lib/reservations.js` | Pedidos, decisões, sincronização, bloqueios, ocupação e relatórios |
-| `lib/calendar-export.js` | XLSX no modelo por turma |
-| `lib/teacher-calendar-export.js` | XLSX anual do docente |
-| `lib/excel-preview.js` | Leitura dos valores/estilos do XLSX gerado e hash de versão |
-| `lib/ics.js` / `lib/notify.js` | Agendas ICS e avisos externos |
-| `lib/assets/` | Modelos originais das planilhas; precisam acompanhar as funções publicadas |
-| `api/index.js` | Adaptador Vercel para a API compartilhada |
-| `netlify/functions/` | Adaptadores API e agendador Netlify |
-| `server.js` | Servidor Node local/VPS e verificação da rotina diária |
-| `scripts/import.js` | Importação inicial de arquivos JSON da pasta de dados |
-| `scripts/restore-backup.js` | Restauração de arquivo de backup |
-| `banco/` | Esquema e arquivos relacionais de origem; não equivalem ao armazenamento JSON utilizado pela API |
-| `dados-atuais/` | Documentos de origem para importação |
-| `tests/` | API, cadastros, horários, XLSX, prévia e integração de navegador |
-| `docs/` | Documentação operacional e técnica |
+| src/tpl.html | Interface principal, estado e formulários |
+| src/shim.js | Sessão, API, revisões, atualização e downloads |
+| src/static/ | Ambientes, chaves, mobile, busca, recuperação, avisos e estilos |
+| scripts/build.js | Geração de public, regras compartilhadas e logo |
+| public/ | Saída de build; não editar como fonte principal |
+| lib/core.js | API, banco, migrações, acesso, histórico, backups e rotinas |
+| lib/local-database.js | Conexão local reutilizada e fila transacional |
+| lib/schedule.js | Turnos, blocos, EAD, Ambientação e conflitos |
+| lib/docentes.js | Validação de docentes |
+| lib/planning.js, turma-copy.js, search.js | Planejamento, cópia e busca |
+| lib/environments.js, environment-import.js | Ambientes e importação |
+| lib/reservations.js | Reservas, ocupação e sincronização |
+| lib/key-control.js | Catálogo, alocações, movimentos e comprovantes |
+| lib/calendar-export.js, teacher-calendar-export.js | XLSX de turma/docente |
+| lib/daily-display.js, excel-preview.js, ics.js | Programação externa, prévia e agendas |
+| lib/notify.js, calendar-notifications.js | Mensagens e avisos |
+| lib/diagnostics.js, publication.js | Incidentes e preparação de publicação |
+| lib/management-report.js, history-diff.js | Relatórios e diferenças |
+| lib/assets/ | Modelos XLSX originais |
+| server.js, api/index.js, netlify/functions/ | Adaptadores de execução |
+| tests/ | Testes de domínio/API e navegador |
 
-A aplicação usa JavaScript/Node e bibliotecas `@libsql/client` e `fflate`. Testes de interface usam Playwright e axe. As versões exatas instaladas devem ser conferidas no lockfile. Não há backend separado para KeyControl, framework React ou container Docker fornecido neste pacote.
+## 2. Dependências
 
-### Fluxo principal
+package.json declara Node >=18; a instalação documentada usa Node 24 com --env-file. Dependências runtime: @libsql/client, fflate, jsqr e qrcode-generator. Desenvolvimento: Playwright e axe. npm ci respeita package-lock.json; registre versões realmente executadas.
 
-O navegador consulta `/api`; o shim transforma os documentos em estado da interface. A coordenação envia mudanças com as revisões conhecidas. A API valida acesso e dados, grava em transação e sincroniza reservas. As consultas periódicas atualizam a visualização. A exportação lê o estado salvo no servidor e os modelos, gera XLSX e fornece a prévia ou o arquivo.
+O servidor não lê .env sozinho. Exige ADMIN_PASSWORD e SESSION_SECRET. Banco padrão: file:./data/planejador.db; remoto: TURSO_DATABASE_URL e TURSO_AUTH_TOKEN.
 
-## 2. Banco efetivamente usado pela API
+## 3. Modelo persistido
 
-O cliente libSQL usa Turso remoto ou SQLite local. A inicialização cria tabelas e migra colunas necessárias. Não substitua `data/planejador.db` pelo arquivo relacional de `banco/` sem uma migração explícita.
+A API usa tabelas operacionais e documentos JSON. Os arquivos de banco/ não substituem esse esquema. Inicialização em core.js cria tabelas/índices e adiciona colunas; não há framework externo de migração versionada.
 
-| Tabela | Campos principais / finalidade |
+| Tabela | Campos/finalidade |
 |---|---|
-| `docs` | `id`, `data` JSON, `updated_at`, `rev`, `updated_by`; documentos operacionais |
-| `users` | `login`, `nome`, `salt`, `hash`, `role`, `docente`, `docente_id`, `created_at`, `session_key`; contas e vínculo |
-| `history` | `id`, `doc_id`, `data`, `at`, `by`, `rev`, `note`; versões de documentos |
-| `backups` | `id`, `at`, `kind`, `by`, `size`, `hash`, `docs_n`, `data`; payload compactado com gzip/base64 |
-| `notify_state` | `turma_id`, `base`, `lembrete_last`; base para detectar alterações/lembretes |
-| `notify_log` | Data, turma, canal, tipo, responsável, resumo, sucesso e erro do envio |
-| `notifications` | Destinatário, mensagem, reserva, data e lista de logins que leram |
+| docs | id, JSON data, updated_at, rev, updated_by |
+| history | doc_id, snapshot, data, autor, revisão e nota |
+| users | login, nome, salt/hash, role, docente/docente_id, recovery_email, session_key, criação |
+| backups | Data, tipo, autor, tamanho, hash, contagem e payload compactado |
+| notify_state | Base de comparação e último lembrete por turma |
+| notify_log | Resultado, canal, resumo e erro dos envios |
+| notifications | target, message, reservation_id, at, kind/doc_id, seen e dismissed |
+| key_control | Registro único id=1; JSON keys, assignments e events |
+| student_access | turma_id, code_hash e session_key |
+| password_resets | token_hash, login, session_key e expires_at |
+| password_reset_limits | Contadores e janela da recuperação |
+| system_events | Fingerprint, categoria, código, referência, contagem e resolução |
+| diagnostic_limits | Limites de incidentes enviados pelo cliente |
 
-A retenção do histórico é de até 60 versões por documento. A consulta de histórico retorna até 80 registros globais. Backups preservam as 30 cópias mais recentes e a primeira de cada um dos 12 meses distintos mais recentes com cópias; isso não é um prazo absoluto de exclusão de dados pessoais. A consulta de backups retorna até 60 registros.
+Documentos: geral (docentes/configuração), turma-CODIGO (state), ambientes, reservas e bloqueios (items). IDs são referências estáveis; nomes são rótulos. Preserve IDs ao renomear pessoas/recursos.
 
-### Documentos e unidades
-
-| Identificador | Conteúdo |
-|---|---|
-| `geral` | Cadastro compartilhado de docentes e endereço-base |
-| `turma-CODIGO` | `{state: {cfg, ucs, days, reg, ...}}`; programação e dados legados da turma |
-| `ambientes` | `{items: [...]}`; salas/laboratórios |
-| `reservas` | `{items: [...]}`; pedidos, status e histórico |
-| `bloqueios` | `{items: [...]}`; manutenção/indisponibilidade de ambientes |
-
-Os nomes permanecem como rótulos. `docentes[].id`, `users.docente_id`, `ucs[].docenteId` e `reservas[].docenteId` mantêm a referência profissional. Não altere esses IDs manualmente. A sessão da conta resolve o nome atual pelo vínculo. O campo `session_key` é interno, não integra o backup exportado de contas e é renovado ao redefinir senha/restaurar contas.
-
-### Exemplo de grade
+### Exemplo didático de programação
 
 ```json
-{
-  "state": {
-    "cfg": {
-      "turma": "T-EXEMPLO",
-      "curso": "Curso de exemplo",
-      "turno": "Matutino",
-      "aulasDia": 4,
-      "inicio": "2027-03-01",
-      "termino": "2027-03-31"
-    },
-    "ucs": [
-      {"sigla": "LOG", "nome": "Lógica", "ch": 20, "docente": "Docente A", "sala": "Sala 1"},
-      {"sigla": "IHC", "nome": "Interface", "ch": 20, "docente": "Docente A", "sala": "Sala 1"}
-    ],
-    "days": {
-      "2027-03-01": {"s": ["LOG", "IHC"], "grade": ["LOG", "LOG", "IHC", "IHC"]}
-    },
-    "reg": {}
-  }
-}
+{"state":{"cfg":{"turma":"EXEMPLO","turno":"Matutino","aulasDia":4,"inicio":"2027-03-01","termino":"2027-03-31"},"ucs":[{"sigla":"LOG","nome":"Lógica","ch":20,"docente":"Pessoa exemplo","sala":"Sala exemplo"}],"days":{"2027-03-01":{"s":["LOG"],"grade":["LOG","LOG","LOG","LOG"]}},"reg":{}}}
 ```
 
-O exemplo é um esquema didático, não um comando para importar em produção. `s` contém as siglas únicas; `grade` contém a sigla de cada posição. Um bloco é uma sequência contígua da mesma UC. A pausa do turno pode separar blocos. `bloco` identifica as posições, como `1-2`. Dados legados sem grade usam `dia` e representam o turno inteiro. `reg[DATA].dado` usa `sim` ou `nao`; os campos legados não constituem uma nova tela de chamada.
+É um esquema de armazenamento, não payload completo de importação. s reúne siglas únicas; grade representa posições; blocos são derivados. Dados legados sem grade usam bloco do dia. Atividades paralelas EAD usam ead e quantidades opcionais eadHours.
 
-## 3. Horários codificados
+## 4. Regras compartilhadas
 
-| Turno | Início / particularidade |
-|---|---|
-| Matutino | 07:30 |
-| Matutino NEM | 07:00, aulas de 50 min, pausa de 20 min após a terceira |
-| Vespertino NEM | 13:20; duração da função atual permanece 60 min |
-| Vespertino | 13:00 |
-| Diurno | 07:30; a quinta posição inicia às 13:00 |
-| Noturno (Comunidade) | 18:00 |
-| Outros nomes de turno | Início padrão 18:40 |
+- Sobreposição presencial considera docente, ambiente e indisponibilidade; intervalos adjacentes não se sobrepõem.
+- slotsOf define início e pausas do turno. Grade explícita aceita 1 a 12 aulas/dia e não ultrapassa meia-noite.
+- Ambientação reconhecida pelo domínio pode anteceder o período.
+- isEAD libera ambiente/horário presencial e ocupação; EAD pode ser paralela.
+- Docente solicita laboratório para aula própria; gestão agenda salas.
+- Reserva aprovada altera local efetivo do bloco; mudanças relevantes podem exigir revisão.
+- Chave é alocada a aula presencial/reserva e docente com conta vinculada.
+- Retirada: dia atual, QR correto, chave ativa/livre, aula/reserva válidas, conta proprietária, assinatura e aceite. Devolução: retirada em aberto e QR correto.
 
-A quantidade vem de `aulasDia`; os limites/validações estão em `schedule.js`. Se regras institucionais diferirem, é necessário alterar a regra compartilhada e retestar interface, conflitos, reservas, carga horária e exportações. Ajustar apenas o texto de uma tabela não altera a programação.
+Altere regras em lib e valide sua transformação para navegador pelo build. Nunca substitua checagem transacional por validação apenas da interface.
 
-## 4. API: convenções
+## 5. Concorrência
 
-A rota é `/api`. Operações POST recebem JSON com `op`; a sessão é enviada pelo cookie `plan_sess`. Use requisições da mesma origem com `credentials: 'same-origin'`. Não há um token de API público destinado a gravar documentos.
+inWriteTransaction propaga a transação pelo contexto assíncrono e usa fila de escrita. Erro faz rollback; sucesso commit; finally fecha/libera. Revisão antiga retorna 409; set_many é atômico.
 
-Siglas de perfis nas tabelas: **M** = senha mestre; **C** = coordenação; **D** = docente; **A** = administração de ambientes; **P** = público. Os exemplos indicam campos principais; validações e escopos adicionais continuam no servidor.
+No banco de arquivo, local-database.js serializa acesso e mantém uma conexão de BEGIN até commit/rollback/close. Isso evita o caminho de troca de conexão associado a falhas nativas no teste de carga. A causa C++ exata não foi comprovada. Cliente remoto web não usa essa adaptação.
 
-### GET
+## 6. Exportação
 
-| Consulta | Perfil e resposta |
-|---|---|
-| `/api` | P; documentos com projeção por perfil, `admin`, `user` e revisões. `admin` indica sessão presente, não autorização universal |
-| `?ics=turma-CODIGO` | P; agenda `text/calendar` da turma |
-| `?ics=docente-ID` | P; agenda do identificador permanente; nome antigo somente se não ambíguo |
-| `?export=turma-preview&turma=turma-CODIGO` | M/C ou D associado à turma; JSON da prévia |
-| `?export=xlsx&turma=turma-CODIGO` | Mesmo acesso; XLSX. `incluir=1` inclui lançamentos fora do período |
-| `?export=docente-preview&docente=NOME&ano=2027` | M/C ou D do próprio vínculo; prévia anual. `vinculo` é opcional |
-| `?export=docente-xlsx&docente=NOME&ano=2027` | Mesmo acesso; XLSX anual |
-| `?cron=1` | Autorização Bearer CRON_SECRET; executa rotina diária. Não é uma consulta somente leitura |
+XLSX usa modelos em lib/assets e ZIP/XML por fflate. Prévia lê o workbook gerado e calcula versão; download pode exigir o mesmo hash. CSV protege textos que poderiam virar fórmula. PDF usa impressão do navegador. ICS exige autenticação.
 
-Downloads conferidos podem incluir `versao=HASH`. Um hash diferente da geração atual retorna 409. A prévia contém `title`, `filename`, `version`, `styles`, `sheets` e `conflicts`; planilhas incluem linhas/células, mesclagens, larguras e meses identificados. Valores exibidos vêm do arquivo gerado.
+Excel diário e HTML externo derivam de aulas planejadas, reservas e bloqueios, com deduplicação da aula reservada. HTML é snapshot independente, sem autenticação de quem recebe ou atualização automática.
 
-### Sessão, planejamento e contas
+## 7. Mobile e cache
 
-| `op` | Acesso | Campos principais / efeito |
-|---|---|---|
-| `login` | P | `login`, `password`; cria cookie; usuário vazio/admin usa senha mestre |
-| `logout` | Sessão ou P | Expira cookie |
-| `set` | M/C; D restrito a próprias aulas | `id`, `data`, `base`, `note`; grava documento validado |
-| `set_many` | M/C | `items: [{id,data,base}]`, `deleted`, `deleteBases`; lote atômico; retorna `revs` |
-| `delete` | M/C | `id`; exclusão com registro no histórico. A operação isolada não recebe revisão; prefira o lote usado pela interface |
-| `history` | M/C | Lista versões |
-| `restore` | M/C | `hid`; restaura a versão do documento e sincroniza reservas |
-| `users` | M | Lista contas, sem hash/salt |
-| `user_add` | M | `login`, `nome`, `password`, `role` |
-| `user_pw` | M | `login`, `password`; muda senha e versão de sessão |
-| `user_del` | M | `login`; remove conta |
-| `user_link` | M | `login`, `docente` (nome atual ou vazio); associa/desassocia cadastro |
+mobile.js escolhe Agenda em telas pequenas e preserva preferência da sessão. mobile-app.js oferece instalação, menu, navegação e aviso offline. Manifest define aplicação instalável; sw.js cacheia shell e não respostas da API. Não há fila de gravação offline.
 
-Logins aceitam 3 a 40 caracteres em letras minúsculas, números, ponto, traço ou underscore; `admin` é reservado. Senhas de contas exigem pelo menos 8 caracteres. Não há endpoint de recuperação de senha por e-mail.
+Minhas chaves usa key_list com upcoming=true para próprias futuras pendentes e retiradas abertas. Leitor aparece após selecionar ação; a interface e o servidor conferem correspondência da alocação.
 
-`base` é a revisão conhecida; documentos novos usam 0. `set_many` aceita até 200 itens e rejeita payload acima de 10 milhões de caracteres na checagem implementada. Cada `set` tem limite de 2 milhões. A infraestrutura pode impor limites menores. Exclusões do lote enviam as revisões em `deleteBases`.
+## 8. Rotinas e retenção
 
-### Ambientes, reservas e notificações
+Rotina diária executa backup e avisos. Vercel: 23:00 UTC; Node verifica horário com processo ativo; Netlify tem adaptador agendado. Partes do domínio usam UTC-3 fixo, sem suporte completo a múltiplos fusos por unidade.
 
-| `op` | Acesso | Campos principais / efeito |
-|---|---|---|
-| `environment_list` | M/C/D/A | Retorna ambientes e revisão |
-| `environment_save` | M/C/A | `base`, `items` com `id,nome,tipo,capacidade,ativo`; salva cadastro |
-| `my_lessons` | Autenticado | Retorna blocos do vínculo docente; sem vínculo retorna lista vazia |
-| `reservation_list` | M/C/A; D próprios | Lista pedidos visíveis e revisão |
-| `reservation_request` | D vinculado | `turmaId,data,sigla,bloco,ambienteId,finalidade`; deriva demais dados da aula |
-| `reservation_reschedule` | D dono | `id` do pedido ativo e campos da nova aula/ambiente; volta a pendente |
-| `reservation_decide` | M/C/A | `id,status,motivo`; aprovada/recusada; recusa exige motivo |
-| `reservation_cancel` | M/C/A; D dono | `id`; encerra pedido ativo |
-| `notification_list` | Autenticado | Notificações próprias/gestão; leitura individual |
-| `notification_read` | Destinatário autorizado | `id`; marca leitura |
-| `block_list` | Autenticado | Lista manutenção |
-| `block_add` | M/C/A | `ambienteId,de,ate,inicio,fim,motivo`; datas ISO e minutos no dia |
-| `block_remove` | M/C/A | `id`; remove bloqueio |
-| `daily_board` | Autenticado | `data` ISO; grade diária sem login/finalidade/histórico privado |
-| `reservation_report` | M/C/A | `de,ate` ISO; pedidos, ocupação e resumo |
-
-Os status persistidos são `pendente`, `aprovada`, `recusada`, `cancelada`, `revisao`. Pedidos ativos incluem pendente/aprovada/revisao. Só aprovada garante ocupação. Uma revisão não pode ser aprovada diretamente: reagende ou encerre. A API trata sobreposição por minutos; início igual ao fim da outra aula não sobrepõe.
-
-### Backups e avisos
-
-| `op` | Acesso | Campos / efeito |
-|---|---|---|
-| `backup_status` | M/C | Estado do envio de backup por e-mail |
-| `backup_list` | M/C | Lista metadados das cópias |
-| `backup_now` | M/C | Força cópia atual |
-| `backup_download` | M/C | `id`; retorna `data` como texto JSON; C não recebe contas/notificações |
-| `backup_restore` | M/C conforme conteúdo | `id`; conteúdo com contas exige M |
-| `notify_status` | M/C | Estado dos provedores e agendamento |
-| `notify_log` | M/C | Histórico de avisos; filtros conforme interface |
-| `notify_preview` | M/C | `turma` sem prefixo `turma-`, `cfg` opcional; diferenças e contagens |
-| `notify_baseline` | M/C | `turma`; atualiza base de comparação, sem envio |
-| `notify_send` | M/C | `turma,canal,kind`; alterações ou mensagem manual com `assunto,texto` |
-
-Uma chamada de envio modifica o estado e pode contactar destinatários reais. Não execute exemplos de escrita para depurar a API publicada sem autorização operacional.
-
-### Exemplos de corpos de requisição
-
-```json
-{"op":"reservation_request","turmaId":"turma-T-EXEMPLO","data":"2027-03-01","sigla":"LOG","bloco":"1-2","ambienteId":"lab-1","finalidade":"Prática de lógica"}
-```
-
-```json
-{"op":"reservation_decide","id":"ID_DO_PEDIDO","status":"recusada","motivo":"Ambiente em manutenção"}
-```
-
-```json
-{"op":"set_many","items":[{"id":"geral","base":4,"data":{"docentes":[],"base":"https://SEU_SITE/"}}],"deleted":[],"deleteBases":{}}
-```
-
-O terceiro exemplo ilustra apenas o formato; enviar uma lista vazia de docentes tem efeito real de remoção/desvinculação. Use dados descartáveis em um banco isolado para testar.
-
-## 5. Respostas e erros
-
-| HTTP | Interpretação / tratamento |
-|---|---|
-| 200 | Operação atendida; confira o conteúdo e `ok` quando presente |
-| 400 | Dados/operação inválidos; corrija campos e regras |
-| 401 | Sem sessão, sessão removida/expirada ou cron sem autorização |
-| 403 | Perfil/vínculo sem permissão; não repetir como se fosse erro transitório |
-| 404 | Turma, agenda, reserva, conta relacionada ou backup não encontrado conforme operação |
-| 409 | Conflito de revisão, versão da prévia, pedido duplicado ou estado incompatível |
-| 413 | Documento acima do limite do `set` |
-| 422 | Sobreposição/indisponibilidade da grade validada no servidor |
-| 500 | Configuração, banco ou processamento; revisar logs sem expor segredos |
-
-Os erros JSON usam `error`. Não assuma que todo 409 inclui `data`: respostas de versões/estado de reserva têm formatos diferentes. O shim conserva revisões e a interface não deve atualizar `lastJson` como salvo quando a operação falhou.
-
-## 6. Transações, migrações e proteção
-
-Escritas passam por transação libSQL/SQLite com contexto assíncrono. Respostas de erro a partir de 400 provocam rollback. A fila em memória serializa dentro do processo; a transação/revisão protege o banco entre processos. Não trate a fila local como lock global.
-
-A inicialização migra colunas de usuários e IDs de docentes. As novas colunas toleram criação concorrente e a primeira migração de IDs confere a revisão. Renomear sincroniza rótulos e referências de contas/turmas/reservas. Validações e permissões são server-side; ocultar botões não é uma barreira de acesso.
-
-Consultas anônimas retornam docs vazio. Docentes recebem somente seu cadastro e turmas filtradas para suas UCs, dias e posições da grade. Exportação de turma é restrita à coordenação. ICS exige login e, para docente, o identificador do próprio vínculo. Ocupação alheia é anonimizada na grade de ambientes.
-
-## 7. Testes e verificação de entrega
-
-A suíte `npm test` executa testes de API, XLSX por turma/docente, horários, prévia e cadastro. Os casos da auditoria incluem escopo de docente, privacidade, vínculo após renomear, sessões, rollback de lote, IDs com slug igual e configuração sem segredo. A suíte de navegador executa ações na interface, downloads e verificações axe em temas e telas móveis.
-
-Não são cobertos por essa evidência: autenticação na hospedagem publicada do usuário, entrega real dos provedores, desempenho sob carga, todos os leitores de tela, conformidade formal com um padrão de acessibilidade ou renderização no Excel de desktop. Mantenha testes de regressão ao alterar regras compartilhadas.
-
-As instruções de operação e diagnóstico estão no [manual](MANUAL-COMPLETO.md). A [lista de validação](CHECKLIST-VALIDACAO.md) organiza uma homologação antes da publicação.
+Histórico: até 60 versões/documento e consulta global até 80. Backups: últimas 30 cópias e primeira de cada um dos 12 meses distintos mais recentes com cópias; listagem até 60. Diagnóstico: retenção declarada 30 dias, até 500 grupos e consulta até 100. Essas retenções não substituem política institucional de dados.

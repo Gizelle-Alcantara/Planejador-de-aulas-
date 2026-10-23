@@ -83,6 +83,21 @@ Logins: 3 a 40 letras minúsculas, números, ponto, traço ou underscore; admin 
 
 ## 5. Documentos, histórico e planejamento
 
+### Organização por cursos
+
+| op | Perfil | Campos e resultado |
+|---|---|---|
+| course_list | M/C | items, enabled e rev; após ativação, C recebe apenas seus cursos |
+| course_save | M; C vinculado após ativação | course {id?,nome,tipo,ucs}, base; tipo tecnico/rapido; ucs [{sigla,nome,ch,docenteId,modulo}]; C edita somente o modelo do próprio curso |
+| user_courses | M | login de coordenador, courseIds; substitui vínculos; [] remove acesso após ativação |
+| course_enable | M | base; ativa restrições depois de configurar vínculos; não altera turmas |
+
+O documento cursos é gerenciado por estas operações; set, delete e restore de histórico não podem alterar esse documento. A revisão do catálogo é global; conflito de course_save retorna apenas rev, sem modelos de outros cursos. Contas e backup completo incluem users.course_ids. Novas contas têm lista vazia.
+
+Com as restrições ativas, coordenadores recebem somente seus cursos e turmas, nomes/identificadores/disponibilidade dos docentes e reservas das próprias turmas. Escrita em lote, exclusão, códigos de alunos, planejamento, histórico, restauração e exportação de turma verificam o vínculo no servidor a cada requisição. Relatórios recebem apenas as turmas autorizadas. A troca dos vínculos vale também para sessões existentes. Coordenador sem vínculo não recebe turmas. As exportações globais por docente e os módulos globais de ambientes, frequência, avisos, contas e backups ficam com o administrador ou seus perfis específicos. Perfis de aluno, docente e ambientes preservam suas regras próprias.
+
+Cursos existentes são identificados pelo nome sem alterar os documentos das turmas. Novas turmas criadas pelo catálogo recebem cfg.cursoId e uma cópia das unidades e professores sugeridos. Editar modelo não modifica turmas existentes; editar turma não modifica o modelo. Nome de curso existente é preservado para manter os vínculos.
+
 | op | Perfil | Campos e resultado |
 |---|---|---|
 | set | M/C; D restrito | id, data, base, note; grava validado; D só alterações permitidas de próprias aulas |

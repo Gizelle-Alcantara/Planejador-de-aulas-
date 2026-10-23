@@ -1,30 +1,26 @@
-> Alunos agora acessam uma única turma por código: veja [Acesso dos alunos](ACESSO-ALUNOS.md). A consulta anônima continua bloqueada.
+# Documentação do Agenda SENAI
 
-# Índice da documentação
+Edição: **19/10/2026**, baseada no código desta pasta e na implantação de referência `385c590361d9a7438c680fe315297bc71d4ba3fc`. A versão `1.0.0` do package.json não identifica sozinha uma implantação: registre também o commit e a data.
 
-Comece pelo **[Manual completo](MANUAL-COMPLETO.md)**. Para leitura em navegador e impressão, abra **[MANUAL-COMPLETO.html](MANUAL-COMPLETO.html)**. A edição atual corresponde ao pacote com correções da auditoria de 13/10/2026.
-
-| Documento | Conteúdo |
+| Público | Documento |
 |---|---|
-| [Manual completo](MANUAL-COMPLETO.md) | Operação por perfil, instalação, configuração, reservas, arquivos, segurança, backup e suporte |
-| [Referência técnica](REFERENCIA-TECNICA.md) | Arquitetura, banco, regras, API, respostas, transações e testes |
-| [Checklist](CHECKLIST-VALIDACAO.md) | Homologação e verificação antes de publicar |
-| [Publicação](PUBLICACAO.md) | Diagnóstico de configuração, integridade do backup e homologação no destino |
-| [Instalação](INSTALACAO-pt-BR.md) | Entrada para instalação local e hospedagem |
-| [Cadastro docente](CADASTRO-DOCENTE.md) | Formulário e integração com contas/exportação |
-| [Horários](HORARIOS-POR-AULA.md) | Grade por posição e compatibilidade com dados antigos |
-| [Filtros](FILTROS-CALENDARIO.md) | Critérios e significado das situações |
-| [Ambientes](AMBIENTES-pt-BR.md) | Cadastro e manutenção |
-| [Reservas](RESERVAS-pt-BR.md) | Solicitação, aprovação, revisão, cancelamento e reagendamento |
-| [Exportação da turma](EXPORTACAO-CALENDARIO.md) | XLSX, HTML e PDF |
-| [Exportação docente](EXPORTACAO-DOCENTE.md) | Modelo anual e totais |
-| [Prévia](PREVIA-EXCEL.md) | Conferência do XLSX antes do download |
-| [Acessibilidade](ACESSIBILIDADE.md) | Teclado, leitores de tela e celular |
-| [Avisos](AVISOS-pt-BR.md) | Canais e configuração dos provedores |
-| [Backups](BACKUP-pt-BR.md) | Escopos, retenção e restauração |
-| [Correções da auditoria](CORRECOES-AUDITORIA.md) | Segurança e integridade corrigidas |
-| [Validação da integração](VALIDACAO-INTEGRACAO.md) | Registro histórico de verificações; não representa automaticamente a versão atual |
+| Coordenação, docentes, ambientes e alunos | [Manual completo](MANUAL-COMPLETO.md) |
+| Administrador e coordenadores | [Cursos, modelos e vínculos de acesso](CURSOS-E-COORDENACAO.md) |
+| Administrador e infraestrutura | [Instalação, publicação e manutenção](OPERACAO-E-MANUTENCAO.md) |
+| Desenvolvedor | [Arquitetura e modelo de dados](REFERENCIA-TECNICA.md) |
+| Integrações e endpoints | [Referência da API](API.md) |
+| Responsável por acessos e dados | [Segurança e recuperação](SEGURANCA-E-RECUPERACAO.md) |
+| Homologação e suporte | [Testes e aceite](TESTES-E-ACEITE.md) |
+| Transferência para outra equipe | [Entrega técnica](ENTREGA-TECNICA.md) |
+| Implantação na unidade | [Plano de implementação](PLANO-DE-IMPLEMENTACAO.md) |
+| Atendimento presencial e guarda de chaves | [Processos físicos e simulação](PROCESSOS-FISICOS.md) |
 
-Os guias em inglês/espanhol foram resumidos e atualizados como entrada para instalação. Para requisitos atuais, permissões e comandos, use o manual em português. Os registros históricos de testes não substituem uma homologação do ambiente publicado.
+[Protótipo visual da operação física](PROTOTIPO-OPERACAO.html): demonstração local do fluxo de alocação, retirada, uso e devolução, sem acesso ao sistema real.
 
-- [Acesso privado dos docentes](ACESSO-DOCENTE.md) — configuração de contas, vínculos e reservas.
+Complemento de 20/10/2026: plano de implantação e adoção com cronograma proposto, responsáveis e critérios de avanço.
+
+Para consulta no navegador e impressão, abra [DOCUMENTACAO.html](DOCUMENTACAO.html). Use Imprimir → Salvar em PDF. O HTML é um documento local; sua criação não publica uma nova página no sistema.
+
+Estes documentos constituem a edição consolidada atual. Os demais guias desta pasta são complementos históricos: confirme suas instruções nesta edição antes de operar. Relatórios registram execuções específicas, não uma garantia sobre implantações futuras.
+
+Ao alterar comportamento, atualize o manual e a referência correspondente; ao alterar endpoints, atualize API.md. Regenere o HTML com `node scripts/build-docs.js` e confira os links com `node scripts/check-docs.js`. Não inclua credenciais, códigos de alunos, QR de chaves, assinaturas ou backups reais.

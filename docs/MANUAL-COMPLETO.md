@@ -1,349 +1,204 @@
-> Alunos agora acessam uma única turma por código: veja [Acesso dos alunos](ACESSO-ALUNOS.md). A consulta anônima continua bloqueada.
+# Manual de utilização — Agenda SENAI
 
-> Atualização: agendas agora exigem login. Docentes consultam apenas a própria agenda. Consulte [Acesso privado dos docentes](ACESSO-DOCENTE.md), inclusive para configurar contas e vínculos.
+Edição: 19/10/2026. Consulte o [índice](README.md) para instalação e documentação técnica.
 
-# Planejador de Aulas SENAI
+## 1. Finalidade e entrada
 
-## Manual completo — uso, instalação e manutenção
+O sistema organiza turmas, disciplinas, docentes, calendários, ambientes, reservas e movimentações de chaves. A ocupação apresentada é planejada: reserva aprovada não comprova presença física. A retirada da chave tem registro próprio.
 
-**Edição:** 13 de outubro de 2026. **Base:** código do pacote com as correções da auditoria. **Público:** coordenação, docentes, administração de ambientes e equipe técnica. O manual descreve funcionalidades existentes; melhorias futuras estão identificadas como limitações.
+Abra o endereço da unidade. Gestores e docentes entram com usuário e senha. Alunos escolhem **Sou aluno** e informam o código da turma. A sessão dura até 12 horas; encerre-a em equipamentos compartilhados. Revogação de acesso ou troca de senha pode exigir novo login.
 
-**Endereço informado da instalação:** https://planejador-de-aulas-zowu.vercel.app/ . A agenda pública foi consultada nesta data. Isso não substitui testes autenticados nem comprova a configuração da hospedagem.
+| Perfil | Responsabilidades |
+|---|---|
+| Administrador mestre | Planejamento e gestão; contas, vínculos, importação Excel de ambientes, diagnóstico e Publicação |
+| Coordenação | Turmas, docentes, disciplinas, calendário, relatórios, reservas, chaves e códigos de alunos |
+| Administração de ambientes | Ocupação, cadastro/manutenção, reservas, programação externa e controle de chaves |
+| Docente | Sua agenda, ocupação diária, suas reservas de laboratórios e Minhas chaves |
+| Aluno | Consulta exclusiva da turma autorizada pelo código |
 
-### Como consultar
+O docente não recebe catálogo geral de chaves nem ferramentas de cadastro/alocação. A autorização também é verificada no servidor.
 
-Para começar, leia as seções 1 a 4. Para operação diária, use as seções 5 a 11. Para instalação e suporte, use as seções 12 a 18 e a [referência técnica](REFERENCIA-TECNICA.md). Abra `MANUAL-COMPLETO.html` para leitura com sumário navegável e impressão pelo navegador. Os guias especializados continuam disponíveis no [índice](README.md).
+## 2. Preparação pela administração
 
-## 1. Finalidade e limites
+1. Cadastre docentes, contatos e disponibilidade.
+2. Em **Acesso**, com a senha mestre, crie contas com o perfil correto.
+3. Vincule cada conta docente ao seu cadastro. Login e nome profissional são informações diferentes.
+4. Cadastre ambientes e confira disponibilidade.
+5. Configure turmas, disciplinas e calendário.
+6. Revise pendências/conflitos antes de compartilhar códigos ou exportações.
 
-O sistema organiza turmas, disciplinas, docentes e aulas por horário. A programação da coordenação alimenta a agenda autenticada da turma, a agenda do docente e as solicitações de salas/laboratórios. A gestão decide os pedidos e acompanha ocupação, manutenção, notificações e relatórios.
+Preserve os cadastros existentes ao corrigir nomes; não duplique pessoas para resolver vínculos. Uma conta sem vínculo pode entrar sem encontrar suas aulas/chaves.
 
-As abas Chamada e Alunos foram retiradas da interface. Dados antigos dessas áreas continuam preservados no armazenamento e em backups. Não há módulo de retirada/devolução de chaves, assinatura digital, controle físico de presença ou integração automática com o KeyControl nesta versão.
+## 3. Turmas, disciplinas e programação
 
-Excel, CSV, HTML e ICS são saídas do planejamento. Alterar um arquivo exportado não atualiza o sistema. O modelo anual de docente e o modelo por turma são arquivos diferentes, preservados em `lib/assets/`.
+Selecione a turma e confira código, curso, módulo, turno, início/término e aulas por dia. Cadastre disciplinas com sigla, nome, carga horária, docente e ambiente quando necessário. O local padrão da turma pode atender disciplinas sem local específico.
 
-## 2. Perfis e permissões
+No calendário, abra o dia e distribua disciplinas pelas posições de aula. Um bloco reúne posições consecutivas da mesma disciplina; pausas podem separar blocos. Revise os totais, salve e aguarde a confirmação antes de exportar ou sair.
 
-| Perfil | Acesso principal | Pode fazer | Restrições |
-|---|---|---|---|
-| Coordenação com senha mestre | `/#login` e `/ambientes.html` | Planejar, cadastrar, gerenciar ambientes/reservas, contas, vínculos e backups completos | Deve proteger a senha mestre e os arquivos com credenciais derivadas |
-| Conta de coordenação (`coord`) | Mesmos módulos de planejamento e gestão | Calendário, cadastros, decisões de reservas, relatórios, histórico e backups de documentos | Não cria/remove contas, não redefine senhas nem vincula contas; não restaura backup que contém contas |
-| Conta docente (`docente`) | `/ambientes.html` e agenda | Solicitar ambiente para suas aulas, acompanhar pedidos, reagendar/cancelar seus pedidos ativos, exportar agenda própria | Precisa estar vinculada ao cadastro; não planeja turmas nem altera alunos ou aulas de colegas |
-| Administração de ambientes (`ambientes`) | `/ambientes.html` | Cadastrar ambientes, bloquear períodos, decidir reservas e consultar relatórios | Não edita planejamento nem acessa a exportação Excel acadêmica |
-| Visitante | Página inicial | Entrar com sua conta | Não recebe calendários nem ICS |
+Confira a prévia das ferramentas de planejamento antes de aplicar. Ao copiar uma turma, revise datas, docentes e ambientes: a cópia não assegura disponibilidade no novo período.
 
-O cadastro profissional e a conta de acesso são registros distintos. Criar um docente não cria login. A referência permanente relaciona ambos, mesmo após renomear o cadastro. A API permite ao docente registrar apenas dias cujas disciplinas pertencem integralmente ao vínculo dele; a confirmação ainda é diária. Dias com docentes diferentes exigem registro pela coordenação. Não há uma nova tela de confirmação por bloco nesta versão.
+### Ambientação e EAD
 
-## 3. Primeira configuração funcional
+A disciplina reconhecida como **Ambientação** pode ser lançada antes do início do período. Essa exceção não libera outras disciplinas de todas as validações.
 
-1. Entre como coordenação pela rota `/#login`. Para a senha mestre, deixe o usuário vazio ou use `admin`.
-2. Abra **Docentes** e complete os cadastros.
-3. Cadastre ou confira a **Turma**: código, curso, módulo, turno, período e aulas por dia.
-4. Em **Disciplinas**, informe nome, sigla, carga horária, docente e sala padrão.
-5. Cadastre salas/laboratórios em **Ambientes**.
-6. Com a senha mestre, crie as contas em **Acesso**. Na gestão de ambientes, vincule cada conta docente ao cadastro correspondente.
-7. Lance as aulas no **Calendário** e aguarde **Todos os lançamentos salvos**.
-8. Abra a agenda do docente, confira os blocos e faça uma solicitação de teste somente em ambiente de homologação.
-9. Confira a prévia do Excel e os relatórios. Publique os links gerados em **Compartilhar**.
+Disciplinas reconhecidas pela regra de docente **EAD** podem entrar em paralelo às presenciais, sem ambiente e sem exigir horário presencial livre. Use a opção EAD no editor e informe a quantidade quando disponível. Aparecem como citações menores e não ocupam salas. Se a opção não aparecer, confira o cadastro do docente; o reconhecimento técnico está em `lib/schedule.js`.
 
-Use cadastros reais na produção. Não execute os scripts de importação ou restauração para simplesmente abrir o site.
+### Conflitos e revisões
 
-## 4. Rotina diária recomendada
+Confira sobreposições de docente/ambiente e indisponibilidades. Se houver conflito de revisão, outra atualização mudou o documento: recarregue, compare e refaça a alteração necessária. Não repita indefinidamente um envio de tela antiga.
 
-A coordenação confere pendências, carga horária e conflitos antes de alterar a programação. O docente consulta a agenda e solicita o ambiente correspondente ao bloco da aula. A gestão verifica o painel diário, decide pedidos e acompanha avisos de revisão.
+## 4. Docentes, busca e calendário
 
-Depois de qualquer alteração, confira a gravação. Se aparecer conflito de edição, recarregue, compare a versão atual e refaça somente a alteração necessária. Não considere a cópia local do navegador equivalente a um backup completo.
+A aba Docentes usa busca e cartões com detalhes recolhíveis. Abra apenas o cadastro necessário e confira contatos e disponibilidade. Limpe os critérios para recuperar a visão completa.
 
-## 5. Cadastro completo do docente
-
-Em **Docentes**, use **Adicionar docente** ou **Cadastro completo**. O formulário contém nome completo, matrícula, e-mail de contato, e-mail institucional, WhatsApp/telefone, unidade, área de atuação, formação/titulação, Meu SENAI, vínculo e observações. Somente o nome é obrigatório.
-
-Nomes repetidos sem diferença de maiúsculas/minúsculas e matrículas repetidas são rejeitados. E-mails, telefone e limites de tamanho são validados. Os vínculos disponíveis são Mensalista, Horista, Intermitente e RSA. O cadastro não faz cálculos trabalhistas nem valida documentos pessoais.
-
-**Salvar cadastro** mantém os bloqueios existentes; **Cancelar** descarta a edição do formulário. Renomear atualiza contas, disciplinas e reservas na mesma transação. Remover o docente deixa sua conta sem vínculo e exige conferir as disciplinas afetadas. Novos links usam o identificador permanente. Um link antigo por nome só é resolvido quando não há ambiguidade.
-
-O e-mail institucional tem preferência no Excel anual, com o contato como alternativa. Meu SENAI preenche o campo correspondente. O vínculo é sugerido ao abrir a exportação; confira-o ao trocar o docente selecionado.
-
-## 6. Turmas, disciplinas e carga horária
-
-A turma define o período, o turno e a quantidade de aulas por dia. A disciplina define sigla, carga horária, docente e sala/laboratório padrão. O cadastro de docentes é compartilhado pelas turmas.
-
-A interface conta aulas individuais. A duração da hora-aula participa da conversão da carga horária: o Matutino NEM usa 50 minutos; os demais turnos, 60 minutos no código atual. Ajustar uma configuração exige conferir a programação que já existe.
-
-Um total como **84/82** indica duas aulas acima da previsão apresentada. Isso não significa, por si só, que a aula foi confirmada como realizada. A tabela pública de andamento considera datas e programação; o filtro **Realizada** usa a confirmação registrada em `reg.dado`.
-
-Ao renomear a sigla, as referências dos lançamentos são atualizadas. Excluir uma disciplina remove seus lançamentos após a confirmação da interface. Antes de alterar cargas, turno ou aulas por dia em uma turma ativa, gere um backup e confira o resultado na prévia.
-
-## 7. Calendário e distribuição por horário
-
-1. Abra **Calendário** e escolha o mês.
-2. Selecione **Editar dia** e clique na data.
-3. Escolha a disciplina de cada aula. Exemplo: LOG nas aulas 1 e 2; IHC nas aulas 3 e 4.
-4. Deixe horários vazios quando não houver aula. **Preencher todas as aulas** aplica uma disciplina ao turno.
-5. Confira os intervalos e os avisos. Clique em **Salvar** e aguarde a gravação.
-
-A grade considera a pausa do Matutino NEM e a separação manhã/tarde do Diurno. A validação aceita até 12 posições por dia; certos controles de cadastro podem oferecer um limite menor. Uma configuração não pode ultrapassar a meia-noite. Antes de reduzir aulas por dia, ajuste os dias que usam as posições que seriam removidas.
-
-Lançamentos antigos sem `grade` continuam representando o turno inteiro. Não são redistribuídos automaticamente. Ao abrir um dia antigo com várias disciplinas, confira cada horário antes de salvar.
-
-A ferramenta para lançar várias aulas usa a disciplina, a data inicial, a quantidade e os dias da semana. Ela pode preencher parcialmente o último dia. Reveja feriados, período e bloqueios antes de confirmar.
-
-Feriados e dias sem aula permanecem visíveis. A grade explícita rejeita aulas em dias marcados como feriado/sem aula. Conflitos de docente e ambiente são verificados quando os horários se sobrepõem; intervalos que apenas se encostam não conflitam. Bloqueios de docente por dia/período ainda afetam o dia inteiro.
-
-## 8. Filtros, celular e acessibilidade
-
-Combine docente, disciplina, sala/laboratório e situação. A agenda docente também permite turma e turno. O contador se refere aos lançamentos do mês, não ao total de horas nem à quantidade de posições da grade.
+Os filtros combinam disciplina, docente, ambiente e situação; na agenda docente, podem incluir turma e turno. Filtrar a tela não significa filtrar a exportação completa.
 
 | Situação | Significado |
 |---|---|
-| Programada | Não há confirmação registrada como realizada ou não dada |
-| Realizada | `reg.dado` está definido como `sim` |
-| Cancelada / não dada | `reg.dado` está definido como `nao` |
-| Com conflito | Há sobreposição ou indisponibilidade identificada pelo calendário |
+| Programada | Sem confirmação de realizada/não dada |
+| Realizada | Registro do dia marcado como dado |
+| Cancelada / não dada | Registro do dia marcado como não dado |
+| Com conflito | Sobreposição/indisponibilidade identificada |
 
-**Limpar filtros** recupera a visualização completa. As datas mantêm sua posição, inclusive quando não há resultados. Na coordenação, a edição de um dia mostra todos os horários; limpe os filtros para lançar/apagar diretamente com as ferramentas. Exportações mantêm o calendário completo, sem aplicar os filtros da tela.
+A reserva aprovada define o local efetivo do bloco quando existe; não muda automaticamente o ambiente padrão da disciplina.
 
-A sala efetiva é a reserva aprovada do bloco, quando existir; caso contrário, a sala da disciplina ou o local da turma. A agenda docente mostra cancelamentos sem incluí-los nas próximas aulas ativas.
+## 5. Salas, laboratórios e ocupação diária
 
-No celular, o calendário mantém sete colunas, e tabelas permitem rolagem horizontal. Use a janela do dia e as tabelas para ler intervalos completos. Tab percorre controles; setas navegam nas abas e nos dias; Escape fecha janelas. O foco retorna ao controle de origem. A próxima aula recebe destaque, e as informações têm rótulos para leitores de tela.
+Na gestão de ambientes, escolha data e filtro em **Ocupação diária**. A programação é agrupada por turnos. O computador oferece grade comparativa; o celular apresenta cartões com leitura vertical. Use o tema claro ou escuro conforme necessário.
 
-## 9. Salas, laboratórios e manutenção
+O cadastro reúne nome, tipo, capacidade e disponibilidade. Capacidade é informativa: não há contagem automática de participantes no pedido. Nomes/IDs repetidos são rejeitados. Desativar impede novos usos e pode exigir revisão das reservas. Exclusão pode ser bloqueada por aulas/reservas futuras ou chaves vinculadas; resolva as dependências com a gestão.
 
-Abra **Ambientes → Abrir gestão de ambientes** ou `/ambientes.html`. Cadastre nome, tipo (sala/laboratório), capacidade e disponibilidade. A capacidade aceita inteiros de 1 a 1000. Nomes normalizados e identificadores repetidos são rejeitados.
+Bloqueios/manutenção exigem ambiente, datas, horários e motivo. Remover um bloqueio não reaprove automaticamente pedidos em revisão.
 
-Desativar um ambiente impede novas solicitações para ele e exige revisar reservas futuras afetadas. O cadastro da capacidade não bloqueia automaticamente pedidos por número de participantes: esse campo ainda não existe no pedido.
+### Importação Excel — somente mestre
 
-Em **Bloqueios e manutenção**, escolha ambiente, datas, início, fim e motivo. Os intervalos precisam ser válidos e não atravessam a meia-noite. Remover um bloqueio não reaprove automaticamente pedidos em revisão.
+1. Abra a importação de ambientes com a senha mestre.
+2. Baixe o modelo do sistema.
+3. Preencha Nome, Tipo, Capacidade e Disponibilidade conforme os exemplos.
+4. Selecione o arquivo e confira inclusões, atualizações, registros inalterados e erros na prévia.
+5. Corrija o arquivo se necessário e aplique a prévia válida.
+6. Confira cadastro e ocupação após a aplicação.
 
-A grade diária combina aulas do calendário, reservas e bloqueios. Consulte a data e os filtros antes de decidir. A ocupação é prevista; não comprova utilização física da sala.
+A prévia não salva. Se o cadastro mudar durante a conferência, gere outra prévia.
 
-## 10. Solicitações e aprovação de reservas
+## 6. Reservas
 
-### Docente
+O docente escolhe uma aula própria atual/futura, bloco, laboratório ativo e finalidade e envia para aprovação. A conta precisa estar vinculada. Salas de aula são agendadas pela gestão e não aparecem como opção de solicitação docente. EAD não exige ambiente.
 
-Entre com sua conta vinculada. Escolha uma aula atual/futura, o bloco de horário, um ambiente ativo e a finalidade. Clique em **Enviar para aprovação**. A identidade e os horários são derivados da aula e da conta pelo servidor.
+A gestão confere aula, finalidade, horário, ocupação e manutenção antes de aprovar. Recusa exige motivo. Para salas, a gestão pode agendar a partir das aulas disponíveis. O servidor revalida a disponibilidade ao gravar.
 
-A finalidade é obrigatória e aceita até 1000 caracteres. Não é possível solicitar em nome de outra pessoa. Quando a mesma UC aparece em blocos diferentes no dia, escolha o bloco correto. Existe somente um pedido ativo sobreposto para a mesma aula/bloco.
-
-### Gestão
-
-Confira turma, docente, finalidade, horários e ocupação. **Aprovar** reserva o intervalo após nova validação. **Recusar** exige motivo. Coordenação e administração de ambientes podem decidir/cancelar; o docente atua apenas nos próprios pedidos ativos.
-
-| Status | Efeito e próximo passo |
+| Status | Efeito |
 |---|---|
-| Pendente | Aguarda decisão; não garante a ocupação |
-| Aprovada | Reserva o intervalo validado |
-| Recusada | Pedido encerrado com motivo |
-| Cancelada | Ocupação liberada; histórico preservado |
-| Revisão | Dados/disponibilidade mudaram; docente deve reagendar ou gestão encerrar |
+| Pendente | Aguarda decisão; não garante local |
+| Aprovada | Ocupa o intervalo validado |
+| Recusada | Encerra com motivo |
+| Cancelada | Libera a reserva, preservando histórico |
+| Revisão | Exige nova análise/reagendamento |
 
-**Reagendar** volta o pedido a pendente e exige nova aprovação. Alterar aula, docente, turno, sala, curso ou turma pode exigir revisão, assim como remover a aula, desativar o ambiente ou inserir manutenção/conflito. Pedidos passados mantêm o histórico.
+Reagendamento volta a pendente. Mudança de aula, docente, horário ou disponibilidade pode levar a revisão; leia o motivo e não considere o pedido antigo como autorização vigente.
 
-Uma reserva aprovada não reescreve a sala padrão da disciplina. O calendário e as exportações usam o ambiente aprovado do bloco. A aprovação e a validação ocorrem dentro de transações.
+## 7. Chaves — gestão
 
-## 11. Notificações, relatórios e exportações
+1. Cadastre identificação única de chave e ambiente ativo.
+2. Gere/imprima o QR e fixe na chave correta.
+3. Selecione docente com conta vinculada, aula presencial atual/futura e chave ativa.
+4. Confira ambiente/horário e confirme a alocação.
+5. Acompanhe retiradas, devoluções e comprovantes.
 
-As notificações de reservas são internas: novos pedidos avisam a gestão; decisões/revisões avisam o docente. Abra o aviso para localizar a reserva e marque-o como lido. A leitura é individual. A tela verifica novidades a cada 30 segundos enquanto ativa. Não há envio automático de decisões de reservas por e-mail/WhatsApp.
+A alocação utiliza reserva aprovada compatível ou cria agendamento validado. O sistema impede conflitos. Só se cancela alocação ainda não retirada. Chaves com alocações ou devoluções pendentes não podem ser livremente ativadas/desativadas.
 
-Os relatórios de ambientes agrupam pedidos, aprovações e horas previstas por ambiente/docente. Aulas do calendário e reservas aprovadas somam ocupação, com deduplicação da aula já reservada. Pendências, recusas, cancelamentos e revisão não somam horas de reserva. Selecione o período antes de exportar CSV ou imprimir PDF.
+O QR identifica a chave e não autentica o portador. Proteja a etiqueta contra cópia/troca e confira a chave física na entrega.
 
-### Excel, HTML, PDF e ICS
+## 8. Minhas chaves — docente
 
-1. Com uma conta autorizada, abra **Exportar calendário**.
-2. Escolha docente/ano/vínculo ou a turma. Quando oferecido, escolha incluir lançamentos fora do período.
-3. Abra **Prévia do Excel**. Selecione planilha, mês e zoom.
-4. Confira cabeçalho, horários, ambiente e totais. Clique em **Baixar Excel**.
+Na sua agenda, abra **Minhas chaves**; no celular há também **Chaves** na navegação. Você vê apenas suas alocações, inclusive futuras pendentes e devoluções em aberto. O leitor aparece ao escolher a ação.
 
-Se os dados mudarem, use **Atualizar prévia**. A versão conferida acompanha o download; um arquivo desatualizado é bloqueado. **Voltar às opções** conserva as escolhas. Quando a prévia falhar e a alternativa for oferecida, use **Baixar Excel sem prévia**; as permissões e a exigência de dados salvos permanecem.
+A tela **Retirada e devolução de chaves** apresenta o autoatendimento e as quantidades para retirar, devolver e devolvidas na lista. Ao selecionar uma chave, mostra as etapas de conferência, leitura do QR e assinatura. **Voltar às minhas chaves** cancela a seleção e limpa o QR lido, sem registrar movimento. Ler a etiqueta de outra alocação não muda automaticamente a chave selecionada.
 
-A prévia lê o XLSX gerado; não reproduz imagens nem cada detalhe da impressão nativa do Excel. A planilha baixada preserva o modelo. O modelo por turma usa encontros equivalentes no resumo (aulas do bloco divididas por aulas/dia); o anual do docente conta aulas individuais. Não compare esses totais como se fossem a mesma unidade.
+### Retirada
 
-HTML gera uma cópia independente. PDF é obtido pela impressão do navegador. CSV de turma/docente e relatórios protege textos que poderiam virar fórmulas. ICS exige login e permite importar uma cópia da agenda; não há assinatura pública automática. Copie os links em **Compartilhar**; não construa links de docentes pelo nome.
+1. Confira ambiente, disciplina, data e intervalo.
+2. No dia da aula, escolha **Retirar chave**.
+3. Leia o QR pela câmera ou alternativa de foto oferecida.
+4. Confira o nome, desenhe a assinatura e confirme o aceite.
+5. Aguarde a conclusão e consulte o comprovante.
 
-## 12. Instalação local — Windows, Linux ou macOS
+Retiradas futuras são bloqueadas. QR de outra chave, chave já retirada ou aula/reserva alterada exigem correção pela gestão. Não assine por outra pessoa.
 
-O `package.json` declara Node.js 18 ou superior. Os exemplos abaixo usam Node.js com `--env-file`, como Node.js 22; esse parâmetro não está disponível em todas as versões antigas aceitas pelo projeto. Os testes de navegador exigem um ambiente compatível com as dependências de desenvolvimento (guia anterior indica Node.js 20+).
+### Devolução
 
-### Preparação
+Escolha **Devolver chave**, leia o QR correspondente e recoloque a chave na posição correta do ponto autorizado. Assine e confirme a devolução no local e confira o comprovante antes de sair. A devolução continua disponível para a retirada em aberto mesmo após mudança ou passagem da aula. A guarda física é feita pelo próprio docente: o registro eletrônico não verifica a presença da chave no armário.
 
-Extraia o pacote e abra o terminal na pasta que contém `package.json`. Confira:
+A assinatura é um desenho eletrônico associado à conta e ao comprovante com hash. Não há certificado ICP-Brasil ou validação biométrica implementada.
 
-```bash
-node --version
-npm --version
-```
+### Painel compartilhado da secretaria
 
-Se o terminal não reconhecer Node/npm, instale o Node.js e reabra o terminal. Não use a pasta `public/` como raiz do projeto.
+Abra `/secretaria-chaves.html` no equipamento de autoatendimento. A gestão também encontra **Abrir painel da secretaria** no Controle de chaves. Na tela inicial, o professor escolhe **Retirar chave** ou **Devolver chave**, entra com sua conta docente individual e vê apenas as chaves pertinentes à opção: alocações liberadas para hoje ou retiradas em aberto.
 
-```bash
-npm ci
-npm run build
-```
+O professor seleciona a chave, confere o QR e assina. Após gravar, o painel encerra a sessão e mostra uma confirmação breve; volta ao início em 10 segundos ou ao tocar em concluir. Também é possível **Encerrar atendimento** sem movimentar uma chave. A inatividade encerra o acesso após 90 segundos; a sessão tem limite de 5 minutos. Ao atingir o limite, identifique-se novamente.
 
-Crie o diretório `data` para SQLite local. No PowerShell:
+Use **Tela cheia** para exibição ampliada. O painel não exibe um cadastro público de professores, não dispensa senha/assinatura e não abre o armário. Use perfil de navegador dedicado ao terminal, sem sessão administrativa ativa e sem salvamento de senhas. Tela cheia não bloqueia a navegação do equipamento: restrições do dispositivo dependem da configuração local.
 
-```powershell
-New-Item -ItemType Directory -Force data
-```
+A sessão do painel usa cookie separado do calendário. Cada professor usa sua própria conta; não disponibilizar senha mestre ou uma conta compartilhada para assinar. Se houver falha ao encerrar a sessão, o painel bloqueia novos atendimentos até confirmar a saída. Movimentação já gravada não deve ser repetida por falha de conexão na etapa de encerramento.
 
-No Linux/macOS:
+## 9. Avisos, WhatsApp e recuperação
 
-```bash
-mkdir -p data
-```
+Notificações internas avisam eventos como reservas e alocações. Marcar leitura/excluir um aviso pessoal não apaga a reserva ou registros de outros usuários. O sistema acompanha atualizações enquanto a tela está ativa.
 
-Crie um arquivo `.env` local com as variáveis abaixo, substituindo os marcadores por valores próprios. Para banco local, não copie a URL de exemplo do Turso:
+Em **Avisos**, confira alterações, lembretes e destinatários antes de enviar. Simulação não comprova entrega real.
 
-```ini
-ADMIN_PASSWORD=SUA_SENHA_MESTRE_FORTE
-SESSION_SECRET=SUA_CHAVE_ALEATORIA_LONGA_E_DIFERENTE_DA_SENHA
-TURSO_DATABASE_URL=file:./data/planejador.db
-PORT=3000
-PUBLIC_URL=http://localhost:3000
-```
+No WhatsApp manual, selecione docente ou informe número, revise o texto e abra a conversa. A pessoa conclui o envio no aplicativo. Não há confirmação automática de entrega nesse fluxo e não é necessária configuração Meta.
 
-Para gerar uma chave aleatória, execute e copie o resultado para o campo correspondente:
+E-mail real exige domínio autorizado/verificado, RESEND_API_KEY e MAIL_FROM. Na entrega de 19/10/2026 essa configuração ainda depende da equipe responsável pelo domínio. Domínio fictício não habilita envio real.
 
-```bash
-node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"
-```
+Quando habilitada, a recuperação solicita os dados da conta e envia link de uso único, válido por 15 minutos. Defina nova senha e entre novamente. Se indisponível, procure a administração. A senha mestre é alterada no servidor, não por esse fluxo.
 
-O servidor não carrega `.env` sozinho. Inicie com:
+## 10. Exportações
 
-```bash
-node --env-file=.env server.js
-```
+Salve e espere a confirmação: o Excel usa os dados salvos no servidor.
 
-Abra `http://localhost:3000/#login`. Sem `--env-file`, defina as variáveis no ambiente do processo antes de usar `npm start`. Não publique `.env`, chaves ou backups completos em repositórios. O arquivo de exemplo contém marcadores, não credenciais utilizáveis.
-
-### Importação inicial
-
-A pasta `dados-atuais/` contém documentos JSON de origem. Confira o banco de destino e gere backup se já houver dados. A importação pode substituir documentos com o mesmo identificador:
-
-```bash
-node --env-file=.env scripts/import.js
-```
-
-Confira cada mensagem `importado`/`falhou` e valide pela interface. O importador percorre os arquivos; não oferece uma importação única de toda a pasta com rollback. Não rode esse comando a cada atualização.
-
-## 13. Hospedagem e configuração
-
-### Vercel
-
-Use o projeto completo no repositório, incluindo `api/`, `lib/`, `src/`, `scripts/`, modelos e lockfile. A configuração existente usa `node scripts/build.js`, saída `public/`, função `api/index.js`, inclusão de `lib/assets/**` e duração máxima configurada de 15 segundos.
-
-Cadastre ADMIN_PASSWORD, SESSION_SECRET, TURSO_DATABASE_URL e TURSO_AUTH_TOKEN nas variáveis do ambiente de produção. Use Turso remoto; SQLite local não fornece persistência adequada para esse fluxo de funções. Atualize o projeto inteiro e faça nova implantação. Confira também qual ambiente recebe as variáveis; Preview e Production podem ter configurações diferentes.
-
-### Netlify
-
-A configuração usa build `node scripts/build.js`, pasta `public/`, funções em `netlify/functions/` e inclusão dos modelos. A função API atende `/api`; a função agendada executa `runDaily`. Cadastre as mesmas variáveis e confira os logs após a implantação.
-
-### Servidor próprio
-
-Mantenha um processo Node ativo, acesso de escrita ao diretório do banco e HTTPS na camada de publicação. Com banco local, preserve o volume do arquivo SQLite ao atualizar o código. Configure o gerenciador de processos para carregar as variáveis; executar um comando diferente sem `.env` não as carrega automaticamente.
-
-Os limites da hospedagem devem ser conferidos no ambiente contratado. A publicação do código não valida, sozinha, banco, provedores de mensagens ou execução dos agendamentos.
-
-## 14. Variáveis de ambiente
-
-| Variável | Obrigatoriedade e finalidade |
+| Necessidade | Procedimento |
 |---|---|
-| ADMIN_PASSWORD | Obrigatória; senha mestre; mudar exige nova implantação/reinício e invalida a sessão mestre antiga |
-| SESSION_SECRET | Obrigatória; assinatura de sessões; sem valor padrão; trocar invalida assinaturas existentes |
-| TURSO_DATABASE_URL | Banco remoto na hospedagem; local omite ou usa `file:./data/planejador.db` |
-| TURSO_AUTH_TOKEN | Token do banco remoto; não necessário para arquivo local |
-| PORT | Porta local; padrão 3000 |
-| PUBLIC_URL | Endereço público usado nos links de avisos; se ausente, usa a base cadastrada |
-| CRON_SECRET | Autentica `/api?cron=1` como `Authorization: Bearer ...`; necessário para cron HTTP na Vercel |
-| RESEND_API_KEY / MAIL_FROM | Habilitam envio real de e-mail |
-| WHATSAPP_TOKEN / WHATSAPP_PHONE_ID / WHATSAPP_TEMPLATE | Habilitam envio por template na API WhatsApp |
-| WHATSAPP_LANG | Idioma do template; padrão `pt_BR` |
-| BACKUP_EMAIL | Destinatários da cópia por e-mail; aceita separação por espaço, vírgula ou ponto e vírgula |
-| BACKUP_EMAIL_SEM_ALUNOS | Qualquer valor não vazio ativa a retirada de dados de alunos do backup por e-mail; use `1` ou deixe vazio |
-| BACKUP_EMAIL_DIARIO | Qualquer valor não vazio ativa envio diário, em vez de somente domingo; use `1` ou deixe vazio |
+| Calendário da turma | Coordenação → Exportar calendário → Prévia da turma → Baixar |
+| Agenda anual docente | Docente/ano/vínculo autorizado → Prévia → Baixar |
+| PDF | Imprimir → destino Salvar em PDF |
+| Cópia mensal | Download HTML do calendário |
+| TV/totem | Gestão → data/filtro → exportação HTML da programação diária |
+| Excel diário | Mesmo painel → exportação Excel |
+| Relatórios | Período/filtros → CSV ou impressão oferecida |
+| ICS | Link autenticado permitido pela interface |
 
-Não use `0` para desativar as duas flags de backup: o código verifica se o texto está preenchido. Segredos ficam na hospedagem ou no ambiente local, não no navegador nem no código publicado.
+Se os dados mudarem, atualize a prévia; versão divergente pode bloquear o download com 409. A prévia não reproduz todos os detalhes do Excel desktop. Os modelos originais precisam estar instalados no servidor.
 
-## 15. Avisos automáticos e agendamento
+A planilha da turma e a anual docente usam resumos com unidades diferentes; confira cabeçalhos antes de comparar. HTML externo é uma cópia da programação planejada, não uma tela com atualização automática: exporte novamente após mudanças e distribua apenas em locais autorizados.
 
-A aba **Avisos** define alterações do calendário, lembretes, canais e destinatários. Esses avisos são diferentes das notificações internas de reservas. Confira a prévia e a lista de destinatários antes de enviar uma mensagem real.
+## 11. Celular e acessibilidade
 
-E-mail requer Resend configurado e remetente autorizado. WhatsApp requer as variáveis do número/token/template e um template aprovado compatível com o corpo enviado. Sem configuração, confira o estado retornado pelo provedor: não considere simulação como entrega real.
+Use o mesmo endereço. Em telas pequenas, Agenda é a visão inicial; você pode trocar. A navegação inferior e **Mais** reúnem as funções do perfil.
 
-A rotina diária está configurada para **23:00 UTC / 20:00 Bahia**. No servidor local, verifica-se o horário a cada 30 segundos e executa-se uma vez por dia enquanto o processo está ligado. Na Netlify, a função agendada chama a rotina. Na Vercel, `vercel.json` aponta `/api?cron=1`; o servidor exige CRON_SECRET. A rotina cria backup e executa avisos conforme as configurações.
+Quando oferecido, toque em instalar. Android: instalação/adicionar à tela inicial no navegador. iPhone: Safari → Compartilhar → Adicionar à Tela de Início. É uma aplicação web, sem APK. A sessão e as permissões são as mesmas do site.
 
-Não há recuperação automática garantida de uma execução perdida enquanto o servidor local estava desligado. Confira o histórico de envios e os logs do agendador. Falhas de provedor precisam ser analisadas sem expor tokens ou contatos em capturas públicas.
+Câmera depende de HTTPS, permissão e suporte do dispositivo. Use foto quando oferecida. Sem conexão, novas consultas e gravações exigem internet; não há fila de gravação offline.
 
-## 16. Backup, restauração e atualização
+Use Tab entre controles e Escape para fechar diálogos. Confira foco, contraste e ampliação de texto. A câmera e a assinatura precisam ser conferidas em celular real; testes de viewport não substituem isso.
 
-Backups agendados são criados se houve alterações. A retenção mantém as últimas 30 cópias e a primeira de cada um dos 12 meses distintos mais recentes que tenham cópias. A lista da interface exibe até 60 registros. Cópias dentro do mesmo banco não substituem uma cópia externa.
+## 12. Alunos por código
 
-| Tipo | Conteúdo e comportamento |
+Na turma correta, a coordenação abre **Compartilhar → Acesso dos alunos → Gerar ou substituir código**. O código completo aparece na geração; distribua apenas à turma. O aluno consulta só essa turma, sem administração ou dados privados individuais.
+
+Substituir o código invalida o anterior e suas sessões; desativar bloqueia o acesso. O código é compartilhado, não identifica matrícula individual. Após restauração de backup, gere novos códigos.
+
+## 13. Suporte rápido
+
+| Sintoma | Primeira verificação |
 |---|---|
-| Backup completo v2 pela senha mestre | Documentos, contas com hashes/salts/vínculos e notificações; não inclui senha mestre, variáveis de ambiente ou cópias recursivas de backups |
-| Download por coordenação comum | Retira contas e notificações individuais do arquivo |
-| Backup enviado por e-mail | Documentos; não envia credenciais das contas; opção sem alunos remove seus dados dessa cópia |
-| Restauração v2 | Recupera o conjunto do snapshot e remove documentos/contas posteriores quando incluídos no escopo do arquivo |
-| Backup antigo v1 | Compatibilidade com documentos; não equivale à restauração completa de contas |
+| Docente sem aulas/chaves | Cadastro, vínculo, disciplinas, datas e alocações |
+| Reserva em revisão | Motivo; corrigir/reagendar e aguardar decisão |
+| Conflito ao salvar | Conexão, versão; recarregar e comparar |
+| Modelo Excel ausente | Equipe técnica deve conferir lib/assets na implantação |
+| QR não corresponde | Etiqueta e alocação com a gestão |
+| Assinatura rejeitada | Limpar, desenhar assinatura completa e confirmar aceite |
+| E-mail não chega | Serviço habilitado, endereço cadastrado e spam |
+| Tela antiga | Recarregar e conferir versão publicada |
 
-Antes de restaurar, o sistema cria uma cópia do estado atual. A restauração é transacional; uma falha desfaz as mudanças. Sessões de contas restauradas exigem novo login. O histórico existente não é importado do arquivo e não deve ser confundido com a lista de backups.
-
-Para um arquivo externo:
-
-```bash
-node --env-file=.env scripts/restore-backup.js caminho/backup-completo.json
-```
-
-Confira o destino, o arquivo e seu conteúdo antes de executar. Preserve as variáveis da hospedagem separadamente. Depois de restaurar, confira docentes, vínculos, ambientes, reservas, datas e exportações.
-
-Para atualizar: gere backup externo; teste o pacote em banco separado; mantenha o banco e as variáveis de produção; atualize código/funções/modelos; faça build e implantação; entre novamente; valide os fluxos. Não altere manualmente identificadores para resolver problemas de vínculo.
-
-## 17. Segurança, dados e manutenção
-
-As senhas de contas são derivadas com scrypt e salt aleatório. A sessão assinada dura 12 horas, usa cookie HttpOnly/SameSite=Lax e Secure quando a requisição é HTTPS. Trocar senha, remover conta ou restaurar contas encerra sessões conforme a nova versão de sessão. Isso não implementa recuperação de senha por e-mail, autenticação multifator nem limitação completa de tentativas.
-
-O planejamento usa revisão por documento e transações de escrita. O lote é desfeito em erro/conflito. Os modelos Excel ficam no servidor. A prévia verifica a versão do conteúdo da pasta de trabalho, não apenas o horário do download.
-
-O service worker tenta reutilizar conteúdo disponível quando não há rede; não guarda respostas da API. Offline não significa gravação sincronizada nem exportação disponível. Não use um computador compartilhado para guardar backups com dados pessoais. Faça logout e controle o acesso às cópias locais.
-
-A equipe técnica deve testar atualizações, conferir logs, observar falhas 401/409/422/500, verificar a rotina diária e ensaiar restauração em ambiente isolado. O compartilhamento de cópias exportadas deve estar de acordo com a política da unidade; o sistema não comprova automaticamente conformidade jurídica.
-
-## 18. Testes, suporte e limitações
-
-### Comandos
-
-```bash
-npm ci
-npm test
-npm run build
-npx playwright install chromium
-npm run test:ui
-```
-
-`npm test` usa bancos temporários. O teste de navegador sobe servidor próprio temporário, cria contas/dados descartáveis e encerra o processo. Não aponte a variável de teste para produção. Dependências de sistema do Chromium podem precisar de instalação no ambiente usado para os testes.
-
-A versão auditada passou em 67 testes automatizados e fluxos de navegador com cadastro, vínculos, pedidos, decisões, revisão, reagendamento, filtros, horários, cancelamentos, acessibilidade, backup e exportações. Esses resultados não garantem todas as configurações remotas. Envio real, carga com muitos usuários e Microsoft Excel de desktop não foram validados nessa execução.
-
-| Sintoma | O que conferir |
-|---|---|
-| Página não carrega dados | Conectividade e resposta de `/api`; configuração e logs da função |
-| Erro de SESSION_SECRET/ADMIN_PASSWORD | Defina ambas no processo/ambiente correto e reinicie/implante novamente |
-| Conta docente sem aulas | Cadastro, vínculo da conta, disciplinas atribuídas, período, blocos e cancelamentos |
-| Pedido em revisão | Abra o motivo; escolha uma aula atual, reagende e peça nova aprovação |
-| Conflito 409 | Recarregue, compare a versão atual e refaça a alteração necessária |
-| Conflito de horários 422 | Confira sobreposição de docente/sala e bloqueios; ajuste a grade |
-| Prévia não abre | Aguarde a gravação; confira erro na janela e API; use a alternativa direta quando oferecida |
-| Planilha baixada com dados inesperados | Perfil, turma, docente, ano, período, vínculo e versão; atualize a prévia |
-| Link por nome escolhe outro/mostra lista | Copie o link permanente na interface; nomes podem gerar o mesmo slug |
-| Dados de tela parecem antigos | Confira conexão, versão implantada e cache; recarregue após atualização |
-| Backup não foi enviado | Provedor de e-mail, destinatários, flags, logs e execução da rotina |
-
-Ao pedir suporte, informe endereço, perfil, tela/ação, mensagem exata, horário e passos para reproduzir. Nunca envie senha, token de banco, SESSION_SECRET ou backup completo em uma conversa pública.
-
-Limitações atuais: confirmação/cancelamento por dia; disponibilidade docente por dia/período; capacidade de ambiente sem contagem de participantes; agendas e ICS exigem login; filtros não limitam exportações; importação inicial por arquivo; ausência de integração de chaves, MFA, recuperação de senha, confirmação física e medição de carga em produção.
-
-Para detalhes de implementação, contratos da API e tabelas, consulte [REFERENCIA-TECNICA.md](REFERENCIA-TECNICA.md). Para validação antes de publicar, consulte [CHECKLIST-VALIDACAO.md](CHECKLIST-VALIDACAO.md).
-
-
-### Atualização de responsividade
-No celular, os filtros ficam em duas colunas ou uma coluna nas telas menores; formulários ficam em uma coluna. As janelas se ajustam à altura disponível. O calendário mantém sete dias por linha e as tabelas podem ser deslizadas horizontalmente dentro do painel. Campos têm fonte de 16px para facilitar a leitura. Na gestão de ambientes, o menu acompanha a rolagem da página, evitando cobrir os formulários.
+Informe perfil, tela, ação, mensagem exata, horário e referência do erro. Capturas devem evitar dados privados. Nunca envie senha, token ou backup completo em atendimento público.

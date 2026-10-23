@@ -36,7 +36,7 @@
             };
             const tick = async (initial) => {
               if (stop) return; clearTimeout(timer);
-              try { const j = initial ? await first() : await load(); if(session?.user&&(!j.user||j.user.docenteId!==session.user.docenteId||j.user.role!==session.user.role||j.user.turmaId!==session.user.turmaId)){location.reload();return}session = keep(j); emit(j); } catch (e) { if (initial && errcb) errcb(e); }
+              try { const j = initial ? await first() : await load(); if(session?.user&&(!j.user||j.user.docenteId!==session.user.docenteId||j.user.role!==session.user.role||j.user.turmaId!==session.user.turmaId||!!j.user.courseRestricted!==!!session.user.courseRestricted||JSON.stringify(j.user.courseIds)!==JSON.stringify(session.user.courseIds))){location.reload();return}session = keep(j); emit(j); } catch (e) { if (initial && errcb) errcb(e); }
               if (!stop) timer = setTimeout(() => tick(false), document.hidden ? 20000 : 5000);
             };
             poke = () => { last = null; tick(false); };

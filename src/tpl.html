@@ -4,6 +4,8 @@
 <script src="/schedule.js"></script>
 <script src="/turma-copy.js"></script>
 <script src="/search.js"></script>
+<script src="/courses.js"></script>
+<script src="/course-ui.js"></script>
 <script src="/whatsapp-manual.js"></script>
 <script src="/excel-preview.js" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -168,7 +170,7 @@ const WD=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 const WDL=["domingo","segunda-feira","terça-feira","quarta-feira","quinta-feira","sexta-feira","sábado"];
 const MESES=["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 const TURNOS=["Matutino","Matutino NEM","Vespertino","Vespertino NEM","Noturno (Técnico)","Noturno (Comunidade)","Diurno"];
-const TABS=[["painel","Painel"],["geral","Visão geral"],["calendario","Calendário"],["cronograma","Cronograma"],["enviar","Enviar"],["avisos","Avisos"],["compartilhar","Compartilhar"],["disciplinas","Disciplinas"],["docentes","Docentes"],["relatorios","Relatórios"],["turma","Turma"],["ambientes","Ambientes"],["acesso","Acesso"],["frequencia","Frequência"],["dados","Dados"],["publicacao","Publicação"],["diagnostico","Diagnóstico"]];
+const TABS=[["cursos","Cursos"],["painel","Painel"],["geral","Visão geral"],["calendario","Calendário"],["cronograma","Cronograma"],["enviar","Enviar"],["avisos","Avisos"],["compartilhar","Compartilhar"],["disciplinas","Disciplinas"],["docentes","Docentes"],["relatorios","Relatórios"],["turma","Turma"],["ambientes","Ambientes"],["acesso","Acesso"],["frequencia","Frequência"],["dados","Dados"],["publicacao","Publicação"],["diagnostico","Diagnóstico"]];
 
 /* ---------- estado ---------- */
 function seedTurma(){
@@ -223,7 +225,7 @@ normalize();
 let dref=null,saveTimer=null,saving=Promise.resolve(),dirty=false,lastJson={};
 const STAT={local:"Salvo só neste navegador",saving:"Salvando…",saved:"Todos os lançamentos salvos",error:"Erro ao salvar. Tentaremos de novo na próxima alteração.",ro:"Somente leitura: você não tem permissão para salvar"};
 function setStatus(k){UI.status=k;document.querySelectorAll('#stat,[data-save-status]').forEach(el=>{el.textContent=STAT[k]||"";el.dataset.k=k})}
-const docItems=()=>[["geral",{docentes:G.docentes,base:G.base}],...Object.entries(T).map(([id,st])=>["turma-"+id,{state:stripT(st)}])];
+const docItems=()=>[...(UI.me?.courseRestricted?[]:[["geral",{docentes:G.docentes,base:G.base}]]),...Object.entries(T).map(([id,st])=>["turma-"+id,{state:stripT(st)}])];
 function persistLocal(){try{localStorage.setItem(KEY2,JSON.stringify({G,T:strippedT(),CUR}))}catch(e){}}
 function save(){
   if(MODE!=="planner")return;
@@ -242,7 +244,7 @@ function save(){
   })},500);
 }
 function fromDocs(docs){
-  const g=docs.geral?{docentes:clone(docs.geral.docentes||[]),base:docs.geral.base}:{docentes:[],base:BASE0},t={};
+  const g=docs.geral?{docentes:clone(docs.geral.docentes||[]),base:docs.geral.base}:{docentes:[],base:BASE0},t={};g.cursos=SENAI_COURSES.courseCatalog(docs);g.coursesEnabled=docs.cursos?.enabled===true;g.courseCatalogStored=!!docs.cursos;
   for(const [k,v] of Object.entries(docs))if(k.startsWith("turma-")&&v&&v.state)t[k.slice(6)]=clone(v.state);
   if(!docs.geral)Object.values(t).forEach(st=>(st.docentes||[]).forEach(d=>{if(!g.docentes.some(x=>x.nome===d.nome))g.docentes.push(d)}));
   Object.values(t).forEach(st=>{delete st.docentes});
@@ -367,6 +369,7 @@ const rowHorario=()=>{const h=horarios();return h.length?`${hm(h[0].i)} às ${hm
 /* ---------- cabeçalho / abas ---------- */
 const DOCTABS=["relatorios","ambientes","frequencia"];
 function renderHead(){
+  if(UI.me?.courseRestricted&&['docentes','ambientes','frequencia','avisos','enviar'].includes(UI.tab))UI.tab='cursos';
   if(['dados','publicacao','diagnostico'].includes(UI.tab)&&!UI.me?.master)UI.tab='painel';
   const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
   const icon=path=>`<svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
@@ -376,7 +379,7 @@ function renderHead(){
     <div class="class-actions"><label class="class-picker"><span>Turma ativa</span><select id="turmaSel" aria-label="Turma">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select></label><button class="btn sm pri class-export" data-act="export">${icon('M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4')}Exportar calendário</button></div>
     <div class="class-views"><div><button class="btn sm header-back" data-act="back">${icon('m12 5-7 7 7 7M5 12h14')}Voltar</button><button class="btn sm class-new" data-act="turmanew">${icon('M12 5v14M5 12h14')}Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div><span id="stat" class="stat" role="status" aria-live="polite"></span></div>`;
   setStatus(UI.status);
-  const available=TABS.filter(x=>(!["dados","publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
+  const available=TABS.filter(x=>(!UI.me?.courseRestricted||!['docentes','ambientes','frequencia','avisos','enviar'].includes(x[0]))&&(!["dados","publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
   document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','frequencia','dados','publicacao','diagnostico'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','frequencia','dados','publicacao','diagnostico'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
 }
 
@@ -541,11 +544,13 @@ function updModalInfo(){const info=document.getElementById("mInfo");if(!info)ret
 function saveModal(){const iso=document.querySelector(".modal").dataset.iso,day=modalDay(),candidate={...S,days:{...S.days,[iso]:day}},bad=[SENAI_SCHEDULE.validateSchedule(candidate),...SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,candidate,iso)].filter(Boolean);if(bad.length){toast(bad.join(" "));return}if(day.s.length||day.h)S.days[iso]=day;else delete S.days[iso];save();closeModal();renderView()}
 
 function openTurmaModal(){
+  const catalog=(G.coursesEnabled||G.courseCatalogStored||UI.newCourseId)?G.cursos||[]:[],selected=catalog.find(c=>c.id===(UI.newCourseId||SENAI_COURSES.courseOf(S)));UI.newCourseId='';
   document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Nova turma">
     <h3>Nova turma</h3>
     <p class="form-hint">Campos com * são obrigatórios.</p>
     <label class="f">Código da turma<input type="text" id="ntCod" placeholder="ex.: 202630" required></label>
-    <label class="f">Curso<input type="text" id="ntCurso" value="${esc(S?S.cfg.curso:"")}" required></label>
+    ${catalog.length?`<label class="f">Curso cadastrado<select aria-label="Curso cadastrado" id="ntCourseCatalog" required>${catalog.map(c=>`<option value="${esc(c.id)}" ${c.id===selected?.id?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></label>`:''}
+    <label class="f">${catalog.length?"Nome do curso":"Curso"}<input type="text" id="ntCurso" value="${esc(selected?.nome||catalog[0]?.nome||(S?S.cfg.curso:""))}" ${catalog.length?'readonly':''} required></label>
     <div class="form" style="grid-template-columns:1fr 1fr">
       <label class="f">Turno<select id="ntTurno">${TURNOS.map(x=>`<option ${S&&x===S.cfg.turno?"selected":""}>${x}</option>`).join("")}</select></label>
       <label class="f">Módulo<input type="text" id="ntMod" value="I"></label>
@@ -553,7 +558,7 @@ function openTurmaModal(){
       <label class="f">Término<input type="date" id="ntFim" required></label>
       <label class="f">Aulas por dia<input type="number" id="ntAulas" min="1" max="8" value="4" required></label>
       <label class="f">Coordenador<input type="text" id="ntCoord" value="${esc(S?S.cfg.coord:"")}"></label></div>
-    <label class="f">Disciplinas e feriados<select id="ntCopy"><option value="">Começar vazia</option>${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}">Copiar da turma ${esc(st.cfg.turma)}</option>`).join("")}</select></label>
+    <label class="f">${catalog.length?"Estrutura da turma":"Disciplinas e feriados"}<select id="ntCopy">${catalog.length?'<option value="__course__">Usar modelo do curso selecionado</option>':''}<option value="">Começar vazia</option>${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}">Copiar da turma ${esc(st.cfg.turma)}</option>`).join("")}</select></label>
     <p class="small muted" style="margin:0">Copiar traz as disciplinas (com docente) e os feriados. As aulas ficam em branco para você lançar.</p>
     <div id="ntErr" class="small" role="alert" style="color:var(--bad)"></div>
     <div class="row"><button class="btn pri" data-act="turmasave">Criar turma</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;
@@ -567,9 +572,10 @@ function saveTurma(){
   if(T[id])return err("Já existe uma turma com esse código.");
   if(!v("ntIni")||!v("ntFim"))return err("Informe as datas de início e término.");
   if(v("ntFim")<v("ntIni"))return err("O término precisa ser depois do início.");
-  const src=T[v("ntCopy")];
+  const src=T[v("ntCopy")],selectedCourse=(G.cursos||[]).find(c=>c.id===document.getElementById('ntCourseCatalog')?.value);
   const st={cfg:{turma:cod,curso:v("ntCurso"),turno:v("ntTurno"),modulo:v("ntMod"),coord:v("ntCoord"),email:"",local:"",inicio:v("ntIni"),termino:v("ntFim"),aulasDia:Math.max(1,+v("ntAulas")||4),destinatarios:""},
-    ucs:src?clone(src.ucs):[],days:{},envios:[]};
+    ucs:src?clone(src.ucs):v('ntCopy')==='__course__'?SENAI_COURSES.templateUnits(selectedCourse,G.docentes):[],days:{},envios:[]};
+  if(selectedCourse)st.cfg.cursoId=selectedCourse.id;
   if(src)for(const [k,d] of Object.entries(src.days))if(d.t==="feriado"||d.t==="sem")st.days[k]={s:[],t:d.t,h:d.h};
   T[id]=st;CUR=id;normalize();UI.month=null;UI.ucFilter="";UI.tab=src?"calendario":"disciplinas";
   save();closeModal();renderView();toast(`Turma ${cod} criada`);
@@ -683,7 +689,7 @@ function vDoc(){
 /* ---------- TURMA ---------- */
 function vTurma(){
   const c=S.cfg,chT=S.ucs.reduce((a,u)=>a+(+u.ch||0),0);
-  const fld=(k,l,t="text")=>`<label class="f">${l}<input type="${t}" data-cfg="${k}" value="${esc(c[k])}" ${['turma','curso','inicio','termino'].includes(k)?'required':''} ${k==='termino'?`min="${esc(c.inicio)}"`:k==='inicio'?`max="${esc(c.termino)}"`:''}></label>`;
+  const fld=(k,l,t="text")=>`<label class="f">${l}<input type="${t}" data-cfg="${k}" ${k==="curso"&&(c.cursoId||UI.me?.courseRestricted)?"readonly":""} value="${esc(c[k])}" ${['turma','curso','inicio','termino'].includes(k)?'required':''} ${k==='termino'?`min="${esc(c.inicio)}"`:k==='inicio'?`max="${esc(c.termino)}"`:''}></label>`;
   return `<section class="panel"><h2>Dados da turma</h2><div class="form">
     ${fld("turma","Turma")}${fld("curso","Curso")}
     <label class="f">Turno<select data-cfg="turno">${TURNOS.map(t=>`<option ${t===c.turno?"selected":""}>${t}</option>`).join("")}</select></label>
@@ -1256,13 +1262,18 @@ function renderView(){
   if(MODE==="aluno"){renderAluno();return}
   if(MODE==="docente"){renderDocente();return}
   if(MODE==="landing"){renderLanding();return}
+  if(!S&&UI.role==='coord'){
+    document.getElementById('hdr').innerHTML='<h1>Cursos</h1><span class="meta">Organização acadêmica por curso</span>';
+    document.getElementById('tabs').innerHTML='<div class="nav-group"><div role="tablist" aria-label="Acadêmico"><button role="tab" aria-selected="true" data-act="tab" data-k="cursos">Cursos</button></div></div>';
+    document.getElementById('view').innerHTML=SENAI_COURSE_UI.render();afterRender();return;
+  }
   renderHead();
   const v=document.getElementById("view");
   // A refresh can happen before the asynchronous details toggle event is delivered.
   v.querySelectorAll('[data-doc-details]').forEach(el=>{UI.docDetails??={};UI.docDetails[el.dataset.docDetails]=el.open});
   const accountForm=UI.tab==="acesso"?v.querySelector("#account-form"):null;
   const accountFocus=accountForm?.contains(document.activeElement)?document.activeElement:null;
-  v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,frequencia:()=>`<section class="panel"><h2>Frequência de horistas</h2><p>Consulte os horários reais registrados nas chaves, confira ajustes e acompanhe o envio e a validação mensal.</p><a class="btn pri" href="/frequencia.html">Abrir frequência de horistas</a></section>`,dados:vDados,publicacao:vPublication,diagnostico:vDiagnostics,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
+  v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,cursos:()=>SENAI_COURSE_UI.render(),painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,frequencia:()=>`<section class="panel"><h2>Frequência de horistas</h2><p>Consulte os horários reais registrados nas chaves, confira ajustes e acompanhe o envio e a validação mensal.</p><a class="btn pri" href="/frequencia.html">Abrir frequência de horistas</a></section>`,dados:vDados,publicacao:vPublication,diagnostico:vDiagnostics,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
   if(accountForm){const fresh=v.querySelector("#account-form");if(fresh){fresh.replaceWith(accountForm);accountFocus?.focus({preventScroll:true})}}
   afterRender();
 }
@@ -1436,6 +1447,7 @@ renderView();
   try{u=window.claude&&await window.claude.use("user")}catch(e){}
   try{UI.cw=u?u.can("data.write"):null}catch(e){}
   try{const me=window.PLAN&&await PLAN.me();UI.role=me&&me.role;UI.me=me;if(me?.role==="aluno"){MODE="aluno";ALUNO_ID=me.turmaId.slice(6)}if(me?.role==="docente"){MODE="docente";DOC_ID=me.docenteId||""}}catch(e){}
+  if(UI.me?.courseRestricted){G={docentes:[],base:BASE0,cursos:[]};T={};CUR='';S=null;UI.tab='cursos';}
   if(db&&UI.cw===false&&MODE==="planner"){MODE="landing";T={x:emptyTurma()};CUR="x";normalize()}
   try{DL=window.claude&&await window.claude.use("downloads")}catch(e){}
   UI.boot=false;
@@ -1448,7 +1460,7 @@ renderView();
   dref.onSnapshot(snap=>{
     if(snap.metadata.hasPendingWrites)return;
     const docs={};snap.docs.forEach(d=>{docs[d.id]=d.data()});const previousReservations=canon(EXPORT_RESERVAS);EXPORT_RESERVAS=[...(Array.isArray(docs.reservas?.items)?docs.reservas.items:[]),...(Array.isArray(docs.reservas?.calendario)?docs.reservas.calendario:[])];const reservationsChanged=previousReservations!==canon(EXPORT_RESERVAS);
-    const r=fromDocs(docs);
+    const r=fromDocs(docs),coursesChanged=canon(G.cursos||[])!==canon(r.g.cursos||[]);
     if(MODE==="aluno"||MODE==="docente"){
       if(!Object.keys(r.t).length){UI.loaded=true;UI.empty=true;renderView();return}
       const prev=UI.loaded?canon([G,T,CUR]):null;
@@ -1458,6 +1470,7 @@ renderView();
       const changed=prev!==null&&prev!==canon([G,T,CUR]);UI.loaded=true;renderView();
       if(changed)toast("Calendário atualizado");return;
     }
+    if(!Object.keys(r.t).length&&UI.me?.courseRestricted){first=false;G=r.g;T={};CUR='';S=null;UI.loaded=true;UI.tab='cursos';lastJson={};renderView();return}
     if(!Object.keys(r.t).length){if(first){first=false;lastJson={};save()}return}
     first=false;UI.loaded=true;UI.empty=false;
     if(dirty||document.querySelector(".modal"))return;
@@ -1466,7 +1479,7 @@ renderView();
     const now=docItems();
     lastJson={};now.forEach(([k,d])=>{lastJson[k]=canon(d)});
     if(r.legacy)delete lastJson.geral;
-    if(canon([now])===cur&&!r.legacy&&!reservationsChanged){setStatus("saved");return}
+    if(canon([now])===cur&&!r.legacy&&!reservationsChanged&&!coursesChanged){setStatus("saved");return}
     persistLocal();renderView();
     if(r.legacy)save();else setStatus("saved");
   },()=>{if(MODE!=="planner"){UI.err="Não foi possível carregar o calendário agora.";renderView()}else setStatus("error")});

@@ -39,6 +39,8 @@ const turmaCopy=readFileSync(new URL('../lib/turma-copy.js',import.meta.url),'ut
 writeFileSync(new URL('../public/turma-copy.js',import.meta.url),`window.SENAI_TURMAS=(()=>{${turmaCopy};return {duplicateTurma}})();`);
 const search=readFileSync(new URL('../lib/search.js',import.meta.url),'utf8').replace(/export /g,'');
 writeFileSync(new URL('../public/search.js',import.meta.url),`window.SENAI_SEARCH=(()=>{${search};return {normalizeSearch,matchesSearch}})();`);
+const courses=readFileSync(new URL('../lib/courses.js',import.meta.url),'utf8').replace(/export /g,'');
+writeFileSync(new URL('../public/courses.js',import.meta.url),`window.SENAI_COURSES=(()=>{${courses};return {courseCatalog,courseOf,legacyCourseId,templateUnits}})();`);
 
 // QR codes locais: geração das etiquetas e leitura por câmera/foto.
 copyFileSync(new URL('../node_modules/qrcode-generator/dist/qrcode.mjs',import.meta.url),new URL('../public/vendor-qrcode.mjs',import.meta.url));
