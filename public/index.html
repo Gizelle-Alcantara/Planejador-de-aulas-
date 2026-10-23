@@ -224,6 +224,7 @@ function normalize(){
   if(CUR&&!T[CUR])CUR=MODE==="planner"?Object.keys(T)[0]:"";
   S=CUR?T[CUR]:null;
 }
+if(MODE==="planner")CUR="";
 normalize();
 /* ---------- salvamento: banco do artefato (db) + cópia local ---------- */
 let dref=null,saveTimer=null,saving=Promise.resolve(),dirty=false,lastJson={};
@@ -375,13 +376,13 @@ const DOCTABS=["relatorios","ambientes","frequencia"];
 function renderHead(){
   if(UI.me?.courseRestricted&&['docentes','ambientes','frequencia','avisos','enviar'].includes(UI.tab))UI.tab='cursos';
   if(['dados','publicacao','diagnostico'].includes(UI.tab)&&!UI.me?.master)UI.tab='painel';
-  const c=S.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
+  const c=S?.cfg;if(UI.role==="ambientes")UI.tab="ambientes";if(UI.role==="docente"&&!DOCTABS.includes(UI.tab))UI.tab="ambientes";
   const icon=path=>`<svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${path}"/></svg>`;
   document.getElementById("hdr").innerHTML=`
     <div class="class-brand"><strong>Agenda SENAI</strong><span>Gestão acadêmica</span></div>
-    <div class="class-heading"><p class="class-eyebrow">Planejamento de aulas</p><h1>${esc(c.curso)}</h1><div class="class-meta"><span class="class-code">Turma ${esc(c.turma)}</span><span>Módulo ${esc(c.modulo)}</span><span>${esc(c.turno)}</span><span>${br(c.inicio)} a ${br(c.termino)}</span></div></div>
-    <div class="class-actions"><label class="class-picker"><span>Turma ativa</span><select id="turmaSel" aria-label="Turma">${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select></label><button class="btn sm pri class-export" data-act="export">${icon('M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4')}Exportar calendário</button></div>
-    <div class="class-views"><div><button class="btn sm header-back" data-act="back">${icon('m12 5-7 7 7 7M5 12h14')}Voltar</button><button class="btn sm class-new" data-act="turmanew">${icon('M12 5v14M5 12h14')}Nova turma</button><a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a><a class="btn sm" href="#docente">Ver como docente</a></div><span id="stat" class="stat" role="status" aria-live="polite"></span></div>`;
+    <div class="class-heading"><p class="class-eyebrow">Planejamento de aulas</p>${c?`<h1>${esc(c.curso)}</h1><div class="class-meta"><span class="class-code">Turma ${esc(c.turma)}</span><span>Módulo ${esc(c.modulo)}</span><span>${esc(c.turno)}</span><span>${br(c.inicio)} a ${br(c.termino)}</span></div>`:'<h1>Selecione uma turma</h1>'}</div>
+    <div class="class-actions"><label class="class-picker"><span>Turma ativa</span><select id="turmaSel" aria-label="Turma"><option value="" ${!CUR?"selected":""}>Selecione uma turma</option>${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}" ${id===CUR?"selected":""}>${esc(st.cfg.turma)} · ${esc(st.cfg.curso)}</option>`).join("")}</select></label><button class="btn sm pri class-export" data-act="export" ${!S?"disabled":""}>${icon('M12 3v12m-5-5 5 5 5-5M5 16v4h14v-4')}Exportar calendário</button></div>
+    <div class="class-views"><div><button class="btn sm header-back" data-act="back">${icon('m12 5-7 7 7 7M5 12h14')}Voltar</button><button class="btn sm class-new" data-act="turmanew">${icon('M12 5v14M5 12h14')}Nova turma</button>${S?`<a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a>`:""}<a class="btn sm" href="#docente">Ver como docente</a></div><span id="stat" class="stat" role="status" aria-live="polite"></span></div>`;
   setStatus(UI.status);
   const available=TABS.filter(x=>x[0]!=="disciplinas"&&(!UI.me?.courseRestricted||!['docentes','ambientes','frequencia','avisos','enviar'].includes(x[0]))&&(!["dados","publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
   document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','frequencia','dados','publicacao','diagnostico'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','frequencia','dados','publicacao','diagnostico'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
@@ -1266,13 +1267,14 @@ function renderView(){
   if(MODE==="aluno"){renderAluno();return}
   if(MODE==="docente"){renderDocente();return}
   if(MODE==="landing"){renderLanding();return}
-  if(!S&&UI.role==='coord'){
+  if(!S&&UI.me?.courseRestricted&&!Object.keys(T).length){
     document.getElementById('hdr').innerHTML='<h1>Cursos</h1><span class="meta">Organização acadêmica por curso</span>';
     document.getElementById('tabs').innerHTML='<div class="nav-group"><div role="tablist" aria-label="Acadêmico"><button role="tab" aria-selected="true" data-act="tab" data-k="cursos">Cursos</button></div></div>';
     document.getElementById('view').innerHTML=SENAI_COURSE_UI.render();afterRender();return;
   }
   if(UI.tab==="disciplinas"&&UI.loaded&&S){UI.courseId=SENAI_COURSES.courseOf(S);UI.coursePage="detail";UI.courseDetail="class-units";UI.tab="cursos";}
   renderHead();
+  if(!S&&!["cursos","ambientes","frequencia","acesso","docentes","geral","dados","publicacao","diagnostico"].includes(UI.tab)){document.getElementById("view").innerHTML='<section class="panel"><h2>Escolha uma turma</h2><p class="muted">Selecione uma turma acima para visualizar seus dados e o planejamento de aulas.</p></section>';return}
   const v=document.getElementById("view");
   // A refresh can happen before the asynchronous details toggle event is delivered.
   v.querySelectorAll('[data-doc-details]').forEach(el=>{UI.docDetails??={};UI.docDetails[el.dataset.docDetails]=el.open});
@@ -1389,7 +1391,7 @@ document.addEventListener("click",async e=>{
 document.addEventListener("change",e=>{
   const t=e.target;
   if(t.id==='conflict-kind'){UI.conflictKind=t.value;renderView();queueMicrotask(()=>document.getElementById('conflict-kind')?.focus());return}
-  if(t.id==="turmaSel"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");CUR=t.value;normalize();if(UI.tab==="cursos"&&UI.courseDetail==="class-units")UI.courseId=SENAI_COURSES.courseOf(S);UI.month=null;UI.ucFilter="";persistLocal();renderView()}
+  if(t.id==="turmaSel"){Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]="");CUR=t.value;normalize();if(S&&UI.tab==="cursos"&&UI.courseDetail==="class-units")UI.courseId=SENAI_COURSES.courseOf(S);UI.month=null;UI.ucFilter="";persistLocal();renderView()}
   else if(t.dataset.calfilter){const key=t.dataset.calfilter;UI.calFilters[key]=t.value;renderView();queueMicrotask(()=>document.querySelector(`[data-calfilter="${key}"]`)?.focus())}
   else if(t.id==="mjump"){UI.month=t.value;renderView()}
   else if(t.id==="rfSel"){UI.rf=t.value;renderView()}
@@ -1479,12 +1481,12 @@ renderView();
     if(!Object.keys(r.t).length){if(first){first=false;lastJson={};save()}return}
     first=false;UI.loaded=true;UI.empty=false;
     if(dirty||document.querySelector(".modal"))return;
-    const cand={G:r.g,T:r.t},cur=canon([docItems()]);
-    const keep=requestedTurma&&r.t[requestedTurma]?requestedTurma:CUR;requestedTurma=null;G=r.g;T=r.t;CUR=T[keep]?keep:Object.keys(T)[0];normalize();
+    const cand={G:r.g,T:r.t},cur=canon([docItems()]),previousTurma=CUR;
+    const keep=requestedTurma&&r.t[requestedTurma]?requestedTurma:CUR;requestedTurma=null;G=r.g;T=r.t;CUR=T[keep]?keep:"";normalize();
     const now=docItems();
     lastJson={};now.forEach(([k,d])=>{lastJson[k]=canon(d)});
     if(r.legacy)delete lastJson.geral;
-    if(canon([now])===cur&&!r.legacy&&!reservationsChanged&&!coursesChanged){setStatus("saved");return}
+    if(CUR===previousTurma&&canon([now])===cur&&!r.legacy&&!reservationsChanged&&!coursesChanged){setStatus("saved");return}
     persistLocal();renderView();
     if(r.legacy)save();else setStatus("saved");
   },()=>{if(MODE!=="planner"){UI.err="Não foi possível carregar o calendário agora.";renderView()}else setStatus("error")});
