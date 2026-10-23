@@ -6,7 +6,7 @@ Na aba **Cursos**, cada curso técnico ou rápido tem sua própria tela com unid
 
 1. Cadastre os professores na aba **Docentes**. Os modelos usam esse cadastro; não criam professores duplicados.
 2. Abra **Cursos**. Cursos das turmas existentes já aparecem. Abra um deles para cadastrar seu modelo ou clique em **Novo curso**.
-3. Cadastre sigla, nome, carga horária, módulo opcional e professor sugerido de cada unidade. Salve o modelo. Também é possível abrir uma turma do mesmo curso e usar suas unidades como ponto de partida.
+3. Cadastre sigla, nome, carga horária, módulo opcional e professor sugerido de cada unidade. Salve o modelo. Em **Começar a partir de uma turma**, selecione uma turma de origem do próprio curso e clique em **Importar unidades da turma** para usar sua estrutura como ponto de partida. A importação preenche um rascunho e só altera o modelo depois de salvar.
 4. Em **Acesso**, crie as contas de coordenação, se necessário.
 5. Em **Cursos → Acessos por curso**, marque e salve os cursos de cada coordenador. Um coordenador pode atender vários cursos.
 6. Confira os vínculos e clique em **Ativar restrições por curso**. Coordenadores sem vínculo deixam de acessar turmas. O administrador continua com acesso completo.
@@ -19,7 +19,11 @@ A antiga aba principal **Disciplinas** agora fica em **Cursos → Abrir curso �
 
 Abra um curso e escolha **Nova turma deste curso**. A opção **Usar modelo do curso selecionado** copia suas unidades, cargas horárias e professores sugeridos. Cada turma pode ajustar essa cópia, inclusive trocar professores; mudanças não se propagam para o modelo nem para outras turmas. O calendário começa vazio.
 
-Em **Professores**, confira os docentes sugeridos pelo modelo. Em **Turmas**, abra o calendário de uma turma daquele curso. O professor sugerido é opcional e pode ser definido depois na turma.
+Em **Professores**, confira os docentes sugeridos pelo modelo e os professores vinculados às turmas, com as respectivas quantidades de unidades e turmas. Em **Turmas**, busque por código, turno ou módulo e use **Abrir calendário** ou **Ajustar unidades**. O professor sugerido é opcional e pode ser definido depois na turma.
+
+As alterações do modelo são mantidas como rascunho enquanto você navega pelas seções do curso. Use **Salvar modelo do curso** para gravar ou **Descartar alterações** para voltar à versão salva. Recarregar ou fechar a página com rascunhos pede confirmação do navegador. Esses rascunhos não são uma cópia persistente e não substituem o salvamento.
+
+Uma conta de coordenação sem restrições por curso ativadas consulta o modelo, com aviso explícito sobre a permissão de edição. O administrador edita todos os modelos; após a ativação, coordenadores vinculados editam os modelos de seus cursos. Os campos de consulta ficam identificados e desabilitados; os ajustes das turmas seguem as permissões existentes.
 
 Depois da ativação, o coordenador vê somente cursos e turmas vinculados à sua conta. O servidor também protege operações diretas, exportações, histórico e relatórios. Cadastros globais, frequência, ambientes, envio de avisos, exportação global de docente e backups permanecem com o administrador ou os perfis específicos desses módulos.
 

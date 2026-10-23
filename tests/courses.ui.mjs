@@ -28,15 +28,26 @@ try{
  // Criar curso rápido pelo formulário e verificar persistência.
  await page.getByRole('button',{name:'Novo curso',exact:true}).click();await page.getByLabel('Nome do curso',{exact:true}).fill('Excel profissional');
  await page.getByLabel('Tipo',{exact:true}).selectOption('rapido');await page.getByRole('button',{name:'Adicionar unidade curricular',exact:true}).click();
- await page.getByLabel('Sigla',{exact:true}).fill('EXC');await page.getByLabel('Unidade curricular',{exact:true}).fill('Planilhas');await page.getByLabel('Carga horária',{exact:true}).fill('20');await page.getByLabel('Professor sugerido',{exact:true}).selectOption('t1');
+ await page.getByLabel('Sigla',{exact:true}).fill('exc');assert.equal(await page.getByLabel('Sigla',{exact:true}).inputValue(),'EXC');await page.getByLabel('Unidade curricular',{exact:true}).fill('Planilhas');await page.getByLabel('Carga horária',{exact:true}).fill('20');await page.getByLabel('Professor sugerido',{exact:true}).selectOption('t1');
  for(const width of [320,768,1280]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)}
  const editorAudit=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(editorAudit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[]);
  await page.getByRole('button',{name:'Salvar modelo do curso',exact:true}).click();await page.waitForFunction(()=>G.cursos.some(c=>c.nome==='Excel profissional'&&c.ucs.length===1));
  await page.getByRole('button',{name:'Voltar aos cursos',exact:true}).first().click();
  const card=page.locator('.course-card').filter({hasText:'Técnico A'});await card.getByRole('button',{name:'Abrir curso',exact:true}).click();
  await page.getByRole('button',{name:'Adicionar unidade curricular',exact:true}).click();await page.getByLabel('Sigla',{exact:true}).fill('LOG');await page.getByLabel('Unidade curricular',{exact:true}).fill('Lógica');
- await page.getByLabel('Carga horária',{exact:true}).fill('40');await page.getByLabel('Professor sugerido',{exact:true}).selectOption('t1');await page.getByRole('button',{name:'Salvar modelo do curso',exact:true}).click();
- await page.waitForFunction(()=>G.cursos.find(c=>c.nome==='Técnico A')?.ucs.length===1);await page.getByRole('button',{name:'Voltar aos cursos',exact:true}).first().click();
+ await page.getByLabel('Carga horária',{exact:true}).fill('40');await page.getByLabel('Professor sugerido',{exact:true}).selectOption('t1');
+ await page.getByRole('button',{name:'Professores',exact:true}).click();await page.getByRole('button',{name:'Unidades curriculares',exact:true}).click();assert.equal(await page.getByLabel('Unidade curricular',{exact:true}).inputValue(),'Lógica');assert.equal(await page.getByLabel('Carga horária',{exact:true}).inputValue(),'40');
+ await page.getByRole('button',{name:'Salvar modelo do curso',exact:true}).click();
+
+ await page.waitForFunction(()=>G.cursos.find(c=>c.nome==='Técnico A')?.ucs.length===1);
+ await page.getByRole('button',{name:'Adicionar unidade curricular',exact:true}).click();const duplicate=page.locator('.course-unit').last();await duplicate.getByLabel('Sigla',{exact:true}).fill('LOG');await duplicate.getByLabel('Unidade curricular',{exact:true}).fill('Duplicada');await duplicate.getByLabel('Carga horária',{exact:true}).fill('20');await page.getByRole('button',{name:'Salvar modelo do curso',exact:true}).click();await page.locator('#course-feedback').filter({hasText:'siglas únicas'}).waitFor();assert.equal(await page.locator('.course-unit').count(),2);assert.equal((await call({op:'course_list'})).items.find(c=>c.nome==='Técnico A').ucs.length,1);
+ await page.getByRole('button',{name:'Remover unidade',exact:true}).last().click();assert.equal(await page.locator('.course-unit').count(),1);
+ await page.getByLabel('Unidade curricular',{exact:true}).fill('Rascunho para descartar');await page.getByRole('button',{name:'Descartar alterações',exact:true}).click();assert.equal(await page.getByLabel('Unidade curricular',{exact:true}).inputValue(),'Lógica');
+ await page.getByRole('button',{name:'Voltar aos cursos',exact:true}).first().click();
+
+
+ // Coordenação sem restrição ativada tem consulta do modelo com explicação explícita.
+ const legacyContext=await browser.newContext({serviceWorkers:'block'});await legacyContext.route('https://**',route=>route.abort());await legacyContext.request.post(base+'/api',{data:{op:'login',login:'coord',password:'senha-coord-123'}});const legacy=await legacyContext.newPage();await legacy.goto(base+'/?aba=cursos');await legacy.locator('.course-card').filter({hasText:'Técnico A'}).getByRole('button',{name:'Abrir curso',exact:true}).click();await legacy.getByText('Consulta do modelo.',{exact:false}).waitFor();assert.equal(await legacy.getByRole('button',{name:'Salvar modelo do curso',exact:true}).count(),0);assert.equal(await legacy.locator('.course-unit input').first().isDisabled(),true);await legacyContext.close();
  await page.getByRole('button',{name:'Acessos por curso',exact:true}).click();const account=page.locator('.course-access-form[data-login=coord]');await account.getByLabel('Técnico A',{exact:true}).check();await account.getByRole('button',{name:'Salvar vínculos de Coordenação A',exact:true}).click();await account.getByRole('status').filter({hasText:'Vínculos salvos'}).waitFor();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Ativar restrições por curso',exact:true}).click();await page.getByText('Restrições por curso ativas.',{exact:true}).waitFor();
 
@@ -57,11 +68,27 @@ try{
  for(const width of [320,768,1280]){await cp.setViewportSize({width,height:900});assert.equal(await cp.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)}
  const classAudit=await new AxeBuilder({page:cp}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(classAudit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[]);
  await cp.getByRole('button',{name:'Modelo do curso',exact:true}).click();assert.equal(await cp.getByLabel('Carga horária',{exact:true}).inputValue(), '40');
+
+ // Professores das turmas e navegação/consulta são testados em ambos os temas.
+ await cp.getByRole('button',{name:'Professores',exact:true}).click();await cp.getByRole('heading',{name:'Professores do curso',exact:true}).waitFor();await cp.getByRole('heading',{name:'Ana',exact:true}).waitFor();
+ await cp.getByRole('button',{name:'Turmas',exact:true}).click();await cp.getByLabel('Buscar turma',{exact:true}).fill('NOVA');assert.equal(await cp.locator('.course-class:visible').count(),1);await cp.getByLabel('Buscar turma',{exact:true}).fill('não existe');await cp.getByRole('status').filter({hasText:'Nenhuma turma corresponde à busca.'}).waitFor();await cp.getByLabel('Buscar turma',{exact:true}).fill('');
+ await cp.locator('.course-class').filter({hasText:'Turma NOVA'}).getByRole('button',{name:'Ajustar unidades',exact:true}).click();assert.equal(await cp.getByLabel('Turma para ajustar',{exact:true}).inputValue(),'nova');
+ for(const theme of ['light','dark']){await cp.evaluate(t=>document.documentElement.dataset.theme=t,theme);for(const section of ['Unidades curriculares','Professores','Turmas']){await cp.getByRole('button',{name:section,exact:true}).click();for(const width of [320,768,1280]){await cp.setViewportSize({width,height:900});assert.equal(await cp.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)}const audit=await new AxeBuilder({page:cp}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[]);}}
+ await cp.getByRole('button',{name:'Unidades curriculares',exact:true}).click();
+ if(process.env.UI_EVIDENCE_DIR){mkdirSync(process.env.UI_EVIDENCE_DIR,{recursive:true});await cp.locator('.course-workspace h2').click();await cp.locator('.course-workspace').screenshot({path:join(process.env.UI_EVIDENCE_DIR,'modelo-escuro.png')});await cp.evaluate(()=>document.documentElement.dataset.theme='light');await cp.locator('.course-workspace').screenshot({path:join(process.env.UI_EVIDENCE_DIR,'modelo-claro.png')});await cp.setViewportSize({width:390,height:844});await cp.locator('.course-workspace').screenshot({path:join(process.env.UI_EVIDENCE_DIR,'modelo-celular.png')});await cp.setViewportSize({width:1280,height:900});}
  await cp.getByRole('button',{name:'Voltar aos cursos',exact:true}).first().click();
 
  for(const width of [320,768,1280]){await cp.setViewportSize({width,height:900});assert.equal(await cp.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)}
  const audit=await new AxeBuilder({page:cp}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[]);
  if(process.env.UI_EVIDENCE_DIR){mkdirSync(process.env.UI_EVIDENCE_DIR,{recursive:true});await cp.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'cursos-coordenador.png'),fullPage:true})}
+
+ // A importação escolhe uma turma do curso mesmo com outro curso ativo no cabeçalho.
+ await page.goto(base+'/?aba=cursos&turma=b');await page.locator('.course-card').filter({hasText:'Técnico A'}).getByRole('button',{name:'Abrir curso',exact:true}).click();
+ const beforeImport=(await(await context.request.get(base+'/api')).json()).docs.find(d=>d.id==='turma-nova').data;
+ await page.getByLabel('Turma de origem',{exact:true}).selectOption('nova');page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Importar unidades da turma',exact:true}).click();assert.equal(await page.getByLabel('Carga horária',{exact:true}).inputValue(),'60');
+ assert.equal((await call({op:'course_list'})).items.find(c=>c.nome==='Técnico A').ucs[0].ch,40);
+ await page.getByRole('button',{name:'Salvar modelo do curso',exact:true}).click();await page.waitForFunction(()=>G.cursos.find(c=>c.nome==='Técnico A')?.ucs[0].ch===60);
+ assert.deepEqual((await(await context.request.get(base+'/api')).json()).docs.find(d=>d.id==='turma-nova').data,beforeImport);
  await call({op:'user_courses',login:'coord',courseIds:[]});await cp.getByText('Nenhum curso vinculado à sua conta. Solicite o vínculo ao administrador.',{exact:true}).waitFor();assert.equal(await cp.evaluate(()=>Object.keys(T).length),0);
  const empty=await browser.newContext({serviceWorkers:'block'});await empty.route("https://**",route=>route.abort());await empty.request.post(base+'/api',{data:{op:'login',login:'vazio',password:'senha-coord-123'}});const ep=await empty.newPage();ep.on('pageerror',e=>errors.push(e.message));await ep.goto(base);await ep.getByText('Nenhum curso vinculado à sua conta. Solicite o vínculo ao administrador.',{exact:true}).waitFor();assert.equal(await ep.evaluate(()=>Object.keys(T).length),0);
  assert.deepEqual(errors,[]);console.log('Cursos aprovados: cadastro de modelo/professor, vínculo por coordenador, ativação, nova turma, persistência, conta sem curso, acessibilidade e telas de 320/768/1280px.');
