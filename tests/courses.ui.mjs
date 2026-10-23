@@ -39,13 +39,26 @@ try{
  await page.waitForFunction(()=>G.cursos.find(c=>c.nome==='Técnico A')?.ucs.length===1);await page.getByRole('button',{name:'Voltar aos cursos',exact:true}).first().click();
  await page.getByRole('button',{name:'Acessos por curso',exact:true}).click();const account=page.locator('.course-access-form[data-login=coord]');await account.getByLabel('Técnico A',{exact:true}).check();await account.getByRole('button',{name:'Salvar vínculos de Coordenação A',exact:true}).click();await account.getByRole('status').filter({hasText:'Vínculos salvos'}).waitFor();
  page.once('dialog',d=>d.accept());await page.getByRole('button',{name:'Ativar restrições por curso',exact:true}).click();await page.getByText('Restrições por curso ativas.',{exact:true}).waitFor();
+
+ await page.goto(base+'/?aba=disciplinas&turma=b');await page.getByLabel('Turma para ajustar',{exact:true}).waitFor();assert.equal(await page.getByRole('tab',{name:'Cursos',exact:true}).getAttribute('aria-selected'),'true');assert.equal(await page.getByLabel('Turma para ajustar',{exact:true}).inputValue(),'b');assert.equal(await page.locator('#course-unit-class option').count(),1);
  const coord=await browser.newContext({serviceWorkers:'block'});await coord.route("https://**",route=>route.abort());await coord.request.post(base+'/api',{data:{op:'login',login:'coord',password:'senha-coord-123'}});
  const cp=await coord.newPage();cp.on('pageerror',e=>errors.push(e.message));await cp.goto(base);await cp.waitForFunction(()=>UI.loaded&&UI.courseLoaded);assert.equal(await cp.locator('.course-card').count(),1);assert.equal(await cp.getByText('Rápido B',{exact:true}).count(),0);
  await cp.getByRole('button',{name:'Abrir curso',exact:true}).click();await cp.getByRole('button',{name:'Nova turma deste curso',exact:true}).click();const dialog=cp.getByRole('dialog',{name:'Nova turma',exact:true});
  await dialog.getByLabel('Código da turma',{exact:true}).fill('NOVA');await dialog.getByLabel('Início',{exact:true}).fill('2099-01-01');await dialog.getByLabel('Término',{exact:true}).fill('2099-06-30');await dialog.getByRole('button',{name:'Criar turma',exact:true}).click();
  await cp.waitForFunction(()=>CUR==='nova'&&!dirty&&UI.status==='saved');assert.equal(await cp.evaluate(()=>S.ucs[0].nome),'Lógica');assert.equal(await cp.evaluate(()=>S.ucs[0].docente),'Ana');
  await cp.reload();await cp.waitForFunction(()=>UI.loaded);assert.equal(await cp.evaluate(()=>T.nova.ucs[0].ch),40);assert.equal(await cp.getByRole('tab',{name:'Docentes',exact:true}).count(),0);
+
  await cp.getByRole('tab',{name:'Cursos',exact:true}).click();
+ assert.equal(await cp.getByRole('tab',{name:'Disciplinas',exact:true}).count(),0);
+ await cp.getByRole('button',{name:'Abrir curso',exact:true}).click();await cp.getByRole('button',{name:'Unidades curriculares',exact:true}).click();
+ await cp.getByRole('button',{name:'Ajustes por turma',exact:true}).click();await cp.getByLabel('Turma para ajustar',{exact:true}).selectOption('nova');
+ const hours=cp.locator('input[data-uc="0"][data-f="ch"]');await hours.fill('60');await hours.press('Tab');await cp.waitForFunction(()=>!dirty&&UI.status==='saved'&&T.nova.ucs[0].ch===60);
+ assert.equal(await cp.evaluate(()=>G.cursos.find(c=>c.nome==='Técnico A').ucs[0].ch),40);assert.equal(await cp.evaluate(()=>T.a.ucs.length),0);
+ for(const width of [320,768,1280]){await cp.setViewportSize({width,height:900});assert.equal(await cp.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)}
+ const classAudit=await new AxeBuilder({page:cp}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(classAudit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[]);
+ await cp.getByRole('button',{name:'Modelo do curso',exact:true}).click();assert.equal(await cp.getByLabel('Carga horária',{exact:true}).inputValue(), '40');
+ await cp.getByRole('button',{name:'Voltar aos cursos',exact:true}).first().click();
+
  for(const width of [320,768,1280]){await cp.setViewportSize({width,height:900});assert.equal(await cp.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false)}
  const audit=await new AxeBuilder({page:cp}).withTags(['wcag2a','wcag2aa','wcag21aa']).analyze();assert.deepEqual(audit.violations.map(v=>({id:v.id,target:v.nodes.map(n=>n.target)})),[]);
  if(process.env.UI_EVIDENCE_DIR){mkdirSync(process.env.UI_EVIDENCE_DIR,{recursive:true});await cp.screenshot({path:join(process.env.UI_EVIDENCE_DIR,'cursos-coordenador.png'),fullPage:true})}

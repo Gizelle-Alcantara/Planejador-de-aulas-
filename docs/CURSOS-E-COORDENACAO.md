@@ -15,6 +15,8 @@ Os acessos atuais são mantidos até essa ativação explícita. Não há exclus
 
 ## Uso diário
 
+A antiga aba principal **Disciplinas** agora fica em **Cursos → Abrir curso → Unidades curriculares**. Use **Modelo do curso** para preparar as próximas turmas e **Ajustes por turma** para selecionar uma turma e editar suas unidades, professores, cargas horárias e ambientes. Os ajustes da turma são salvos automaticamente. Atalhos antigos de disciplinas levam a essa mesma área dentro do curso.
+
 Abra um curso e escolha **Nova turma deste curso**. A opção **Usar modelo do curso selecionado** copia suas unidades, cargas horárias e professores sugeridos. Cada turma pode ajustar essa cópia, inclusive trocar professores; mudanças não se propagam para o modelo nem para outras turmas. O calendário começa vazio.
 
 Em **Professores**, confira os docentes sugeridos pelo modelo. Em **Turmas**, abra o calendário de uma turma daquele curso. O professor sugerido é opcional e pode ser definido depois na turma.

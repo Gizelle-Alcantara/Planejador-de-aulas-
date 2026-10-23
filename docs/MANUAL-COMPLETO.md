@@ -31,6 +31,8 @@ Preserve os cadastros existentes ao corrigir nomes; não duplique pessoas para r
 
 ## 3. Turmas, disciplinas e programação
 
+As unidades curriculares ficam em **Cursos → Abrir curso → Unidades curriculares**. Escolha **Modelo do curso** para definir a estrutura das novas turmas ou **Ajustes por turma** para editar uma turma existente. Essa área substitui a antiga aba principal Disciplinas; alterar uma turma preserva o modelo e as demais turmas.
+
 Selecione a turma e confira código, curso, módulo, turno, início/término e aulas por dia. Cadastre disciplinas com sigla, nome, carga horária, docente e ambiente quando necessário. O local padrão da turma pode atender disciplinas sem local específico.
 
 No calendário, abra o dia e distribua disciplinas pelas posições de aula. Um bloco reúne posições consecutivas da mesma disciplina; pausas podem separar blocos. Revise os totais, salve e aguarde a confirmação antes de exportar ou sair.
