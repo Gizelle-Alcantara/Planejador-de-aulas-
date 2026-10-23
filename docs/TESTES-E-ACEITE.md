@@ -1,6 +1,6 @@
 # Testes, homologação e aceite
 
-Edição: 19/10/2026. Resultados históricos valem para código/ambiente testados.
+Edição: 23/10/2026. Código funcional de referência: f816e609a5dce02e3e04d58db4169cf8805b7ff0. Resultados valem para o código e ambiente de cada execução; histórico não equivale a nova homologação.
 
 ## 1. Execução
 
@@ -49,6 +49,16 @@ Use testes pertinentes à mudança; em entrega ampla, rode a matriz completa. Os
 
 ## 3. Última auditoria registrada
 
+### Validação mais recente — melhorias de cursos (23/10/2026)
+
+Build aprovado e **191 testes de unidade/API em 26 arquivos aprovados, sem falhas**. O teste ampliado de cursos cobre criação/edição do modelo, maiúsculas e siglas duplicadas, rascunho entre seções, remoção/descarte, consulta sem permissão, vínculo/ativação/revogação por coordenador, criação de turma, importação sem alterar a origem, professores, busca e ajustes por turma. As seções Unidades curriculares, Professores e Turmas foram verificadas nos temas claro e escuro e em larguras de 320, 768 e 1280 px; auditoria automatizada WCAG 2 A/AA e 2.1 AA sem violações nesses cenários. Regressões de Ambientação/EAD e navegação móvel aprovadas.
+
+Evidências locais: artifacts/cursos/melhorias-testes.log, melhorias-ui.log, melhorias-ead.log, melhorias-mobile.log e melhorias/VALIDACAO.md. Usam dados fictícios e bancos temporários. Esta execução não repetiu a auditoria de carga nem substitui testes em celulares físicos, câmera, envio real de e-mail ou Excel desktop.
+
+Após publicar f816e609, a implantação Vercel foi concluída e foram conferidos os arquivos JavaScript/CSS e a API anônima em produção. Não havia sessão administrativa no navegador nessa conferência, portanto os fluxos privados em produção não foram novamente homologados; foram testados em ambiente isolado. A atualização documental valida geração, conteúdo, links e publicação da documentação, sem alegar uma nova execução dos 191 testes.
+
+### Auditoria histórica — edição de 19/10/2026
+
 Antes da publicação de referência: build aprovado, **163 testes de unidade/API em 21 arquivos**, **19 suítes UI** e **30.822 requisições medidas de carga local sem erros/falhas de processo**. Estágio sustentado: 50 requisições HTTP concorrentes, 30,11 s, 624,12 req/s, p95 152,1 ms. Concorrência de revisão: uma gravação aceita e 24 conflitos esperados para 25 tentativas.
 
 Isso descreve carga local com sessão compartilhada, não capacidade garantida da Vercel/Turso ou 50 usuários reais. Evidências locais: artifacts/auditoria-final/RELATORIO.md, consolidado.json, interfaces.json, carga.json.
@@ -60,7 +70,7 @@ Na publicação foram conferidos Minhas chaves com sessão docente, ausência de
 | Perfil | Critérios |
 |---|---|
 | Mestre | Contas, vínculos, diagnóstico, Publicação e backup completo |
-| Coordenação | Turma de teste, salvar/recarregar, conflitos e exportação |
+| Coordenação | Antes da ativação, acessos legados e consulta dos modelos; depois, somente cursos vinculados, com leitura/escrita/exportação/histórico limitados e recusa de operações globais |
 | Ambientes | Manutenção, sala, decisão de reserva, Excel/HTML diário e alocação de chave |
 | Docente | Própria agenda, laboratório no pedido, próprias reservas/Minhas chaves, sem administração |
 | Aluno | Só turma do código, sem escrita/gestão/exportações de API |
@@ -76,6 +86,9 @@ Na publicação foram conferidos Minhas chaves com sessão docente, ausência de
 7. Em teste, alocar, retirar com QR/assinatura e devolver; negar QR errado, conta alheia e retirada futura.
 8. Exportar programação planejada com reservas/bloqueios.
 9. Restaurar backup de teste e conferir contas, vínculos, chaves e comprovantes.
+10. Atribuir cursos a duas contas, ativar restrições e confirmar isolamento, conta sem curso, alteração de vínculo com sessão aberta e recusa de turma alheia por URL/API.
+11. Importar unidades de uma turma do curso com outro curso ativo no cabeçalho; conferir que modelo só muda ao salvar e que a turma de origem não muda.
+12. Editar rascunho, alternar seções, descartar ou salvar; rejeitar siglas duplicadas sem perder campos. Ajustar uma turma e conferir que o modelo e outras turmas permanecem iguais.
 
 ### Dispositivos e serviços
 

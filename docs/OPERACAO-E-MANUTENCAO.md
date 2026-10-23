@@ -1,6 +1,6 @@
 # Instalação, publicação e manutenção
 
-Edição: 19/10/2026. Público: administração e equipe técnica.
+Edição: 23/10/2026. Público: administração e equipe técnica. Código funcional de referência: f816e609a5dce02e3e04d58db4169cf8805b7ff0.
 
 ## 1. Instalação local
 
@@ -82,6 +82,12 @@ vercel.json define build node scripts/build.js, saída public, api/index.js com 
 Use Turso remoto persistente. .vercelignore exclui dados, bancos, backups, artefatos, testes, docs e segredos da implantação; não apaga arquivos já enviados ao histórico Git. Revise o conteúdo do commit.
 
 npm run check:publish avalia o ambiente local do processo. Variáveis ausentes localmente não comprovam falha remota. Confira Publicação com mestre no destino e homologue os fluxos.
+
+### Documentação publicada
+
+Edite os doze capítulos Markdown em docs, execute `node scripts/build-docs.js` e depois `node scripts/check-docs.js`. O gerador escreve docs/DOCUMENTACAO.html, os endereços locais de compatibilidade README.html/MANUAL-COMPLETO.html e public/documentacao.html. A página pública é uma cópia estática da edição, com consulta e impressão em PDF pelo navegador; não consulta banco, usuários ou backups.
+
+Inclua fontes, gerador e saída pública no mesmo commit documental. O build da aplicação não executa o gerador de documentação: ele deve ser rodado antes de publicar fontes documentais alteradas. A exclusão de docs pela .vercelignore permanece; public/documentacao.html faz parte da saída hospedada. Confira a página online e a edição após a implantação. Regenerar arquivos localmente não atualiza o site por si só.
 
 ## 4. Netlify e servidor próprio
 

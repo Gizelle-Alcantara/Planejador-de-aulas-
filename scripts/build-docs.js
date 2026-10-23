@@ -1,7 +1,7 @@
 // Documentação local: sem dependências, sem leitura de dados operacionais.
-import {readFileSync,writeFileSync} from 'node:fs';
+import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 const root=new URL('../docs/',import.meta.url);
-export const documents=['README.md','MANUAL-COMPLETO.md','CURSOS-E-COORDENACAO.md','REFERENCIA-TECNICA.md','API.md','OPERACAO-E-MANUTENCAO.md','SEGURANCA-E-RECUPERACAO.md','TESTES-E-ACEITE.md','ENTREGA-TECNICA.md','PLANO-DE-IMPLEMENTACAO.md','PROCESSOS-FISICOS.md'];
+export const documents=['README.md','MANUAL-COMPLETO.md','CURSOS-E-COORDENACAO.md','FREQUENCIA-HORISTAS.md','REFERENCIA-TECNICA.md','API.md','OPERACAO-E-MANUTENCAO.md','SEGURANCA-E-RECUPERACAO.md','TESTES-E-ACEITE.md','ENTREGA-TECNICA.md','PLANO-DE-IMPLEMENTACAO.md','PROCESSOS-FISICOS.md'];
 const escape=s=>s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
 const id=name=>name.replace('.md','').toLowerCase();
 function inline(s){
@@ -42,10 +42,13 @@ function render(text,prefix){
 }
 const sections=documents.map(file=>({file,text:readFileSync(new URL(file,root),'utf8')}));
 const nav=sections.map(({file,text})=>`<li><a href="#${id(file)}">${escape(text.split('\n')[0].replace(/^# /,''))}</a></li>`).join('');
-const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Documentação técnica e manuais — Agenda SENAI</title><style>
+const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="documentation-edition" content="23/10/2026"><title>Documentação técnica e manuais — Agenda SENAI</title><style>
 :root{color-scheme:light;--blue:#075aa8}*{box-sizing:border-box}body{margin:0;background:#f3f6fa;color:#172b40;font:16px/1.65 system-ui,Segoe UI,sans-serif}header{background:#073e70;color:white;padding:42px max(24px,calc((100vw - 1100px)/2))}header p{max-width:760px}h1{font-size:2rem;margin:0}main{max-width:1100px;margin:24px auto;padding:0 20px}nav,article{background:white;padding:30px;border:1px solid #dbe3ec;border-radius:12px;margin-bottom:24px}nav a,a{color:#075aa8}h2{color:#073e70;border-bottom:2px solid #dbe3ec;padding-bottom:12px}h3{margin-top:32px}h4{color:#36516b}.table-wrap{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.93rem}th,td{border:1px solid #cedae7;padding:10px 12px;text-align:left;vertical-align:top}th{background:#eaf2fa}pre{overflow-x:auto;background:#11283e;color:#eef5fc;padding:18px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}code{font-family:Consolas,monospace;font-size:.92em}p,li,td{overflow-wrap:anywhere}a:focus-visible{outline:3px solid #e49a00;outline-offset:3px}.back{font-size:.9rem}@media(max-width:620px){nav,article{padding:18px}h1{font-size:1.6rem}}@media print{body{background:white;font-size:10pt;color:black}header{background:white;color:black;padding:0}main{max-width:none;padding:0}nav{break-after:page}article{border:0;padding:0;break-before:page}h2,h3,h4{break-after:avoid}tr,pre{break-inside:avoid}thead{display:table-header-group}.back{display:none}a{color:inherit;text-decoration:none}.table-wrap{overflow:visible}@page{size:A4;margin:18mm}}
-</style></head><body><header><h1>Agenda SENAI</h1><p>Documentação técnica, manual de utilização e operação<br>Edição de 19 de outubro de 2026</p><p>Consulta local e impressão. Para gerar PDF, use Imprimir → Salvar em PDF.</p></header><main><nav id="indice" aria-label="Índice da documentação"><h2>Índice</h2><ol>${nav}</ol></nav>${sections.map(({file,text})=>`<article id="${id(file)}">${render(text,id(file))}<p class="back"><a href="#indice">Voltar ao índice</a></p></article>`).join('\n')}</main></body></html>`;
+</style></head><body><header><h1>Agenda SENAI</h1><p>Documentação técnica, manual de utilização e operação<br>Edição de 23 de outubro de 2026</p><p>Consulta online e local. Para gerar PDF, use Imprimir → Salvar em PDF. Código funcional documentado: f816e609a5dce02e3e04d58db4169cf8805b7ff0.</p></header><main><nav id="indice" aria-label="Índice da documentação"><h2>Índice</h2><ol>${nav}</ol></nav>${sections.map(({file,text})=>`<article id="${id(file)}">${render(text,id(file))}<p class="back"><a href="#indice">Voltar ao índice</a></p></article>`).join('\n')}</main></body></html>`;
 writeFileSync(new URL('DOCUMENTACAO.html',root),html);
 // Endereços antigos continuam abrindo a edição consolidada.
 for(const file of ['README.html','MANUAL-COMPLETO.html'])writeFileSync(new URL(file,root),html);
+const publicHtml=html.replace(/href="([^"#]+\.html)"/g,(_,file)=>['DOCUMENTACAO.html','README.html','MANUAL-COMPLETO.html'].includes(file)?'href="#indice"':'href="https://github.com/Gizelle-Alcantara/Planejador-de-aulas-/blob/main/docs/'+encodeURIComponent(file)+'"');
+mkdirSync(new URL('../public/',import.meta.url),{recursive:true});
+writeFileSync(new URL('../public/documentacao.html',import.meta.url),publicHtml);
 console.log(`Documentação gerada: ${sections.length} capítulos; ${Buffer.byteLength(html)} bytes.`);

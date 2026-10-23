@@ -1,6 +1,6 @@
 # Referência técnica e arquitetura
 
-Edição: 19/10/2026. Veja também [API](API.md), [operação](OPERACAO-E-MANUTENCAO.md) e [segurança](SEGURANCA-E-RECUPERACAO.md).
+Edição: 23/10/2026, referente ao código f816e609a5dce02e3e04d58db4169cf8805b7ff0. Veja também [API](API.md), [operação](OPERACAO-E-MANUTENCAO.md) e [segurança](SEGURANCA-E-RECUPERACAO.md).
 
 ## 1. Arquitetura
 
@@ -19,6 +19,8 @@ Fluxo: navegador → `/api` → autenticação/projeção por perfil → valida�
 | lib/local-database.js | Conexão local reutilizada e fila transacional |
 | lib/schedule.js | Turnos, blocos, EAD, Ambientação e conflitos |
 | lib/docentes.js | Validação de docentes |
+| lib/courses.js, src/static/course-ui.js | Catálogo, vínculos, modelos e telas de cursos; edição de modelos e ajustes por turma |
+| lib/frequency.js, frequency-export.js | Folhas mensais de horistas, validação e exportação |
 | lib/planning.js, turma-copy.js, search.js | Planejamento, cópia e busca |
 | lib/environments.js, environment-import.js | Ambientes e importação |
 | lib/reservations.js | Reservas, ocupação e sincronização |
@@ -46,7 +48,7 @@ A API usa tabelas operacionais e documentos JSON. Os arquivos de banco/ não sub
 |---|---|
 | docs | id, JSON data, updated_at, rev, updated_by |
 | history | doc_id, snapshot, data, autor, revisão e nota |
-| users | login, nome, salt/hash, role, docente/docente_id, recovery_email, session_key, criação |
+| users | login, nome, salt/hash, role, docente/docente_id, course_ids (JSON de cursos), recovery_email, session_key, criação |
 | backups | Data, tipo, autor, tamanho, hash, contagem e payload compactado |
 | notify_state | Base de comparação e último lembrete por turma |
 | notify_log | Resultado, canal, resumo e erro dos envios |
@@ -57,8 +59,19 @@ A API usa tabelas operacionais e documentos JSON. Os arquivos de banco/ não sub
 | password_reset_limits | Contadores e janela da recuperação |
 | system_events | Fingerprint, categoria, código, referência, contagem e resolução |
 | diagnostic_limits | Limites de incidentes enviados pelo cliente |
+| frequency_sheets | id, JSON data e rev das folhas de frequência |
+| auth_state | Versão e impressão da credencial mestre |
+| login_limits | Contadores e janela do limite de tentativas de login |
 
-Documentos: geral (docentes/configuração), turma-CODIGO (state), ambientes, reservas e bloqueios (items). IDs são referências estáveis; nomes são rótulos. Preserve IDs ao renomear pessoas/recursos.
+Documentos: geral (docentes/configuração), turma-CODIGO (state), cursos (items e enabled), ambientes, reservas e bloqueios (items). IDs são referências estáveis; nomes são rótulos. Preserve IDs ao renomear pessoas/recursos.
+
+### Cursos, modelos e autorização
+
+cursos.items contém id, nome, tipo (tecnico/rapido) e ucs; cada unidade do modelo tem sigla, nome, ch, docenteId opcional e modulo opcional. Turmas novas guardam cfg.cursoId e uma cópia independente do modelo; não há propagação automática para turmas existentes. Cursos das turmas antigas são reconhecidos por identificador determinístico derivado do nome normalizado. O nome de curso existente é preservado para manter esses vínculos.
+
+users.course_ids guarda uma lista JSON, com [] como padrão. Quando cursos.enabled é true, makeCourseScope restringe coordenadores não administradores aos cursos atribuídos. Cada requisição reconsulta a conta e o catálogo; escrita, histórico, restauração e exportações também validam o curso. Operações globais fora da lista permitida são recusadas. O administrador não recebe esse recorte. As quatro operações de cursos estão na [API](API.md).
+
+O build gera public/courses.js a partir das regras compartilhadas. course-ui.js organiza modelo, ajustes, professores e turmas. Rascunhos de modelo ficam apenas na memória da aba, separados dos documentos gravados, com aviso ao sair; salvar usa a revisão global do catálogo. A importação lê uma turma do mesmo curso sem gravar nela. O backend permanece a autoridade das permissões e validações.
 
 ### Exemplo didático de programação
 
@@ -96,6 +109,8 @@ Excel diário e HTML externo derivam de aulas planejadas, reservas e bloqueios, 
 ## 7. Mobile e cache
 
 mobile.js escolhe Agenda em telas pequenas e preserva preferência da sessão. mobile-app.js oferece instalação, menu, navegação e aviso offline. Manifest define aplicação instalável; sw.js cacheia shell e não respostas da API. Não há fila de gravação offline.
+
+Os rascunhos de modelos não são uma fila offline nem um backup. Alterações nos vínculos de cursos detectadas pela sessão recarregam a interface; salvar antes de encerrar continua necessário.
 
 Minhas chaves usa key_list com upcoming=true para próprias futuras pendentes e retiradas abertas. Leitor aparece após selecionar ação; a interface e o servidor conferem correspondência da alocação.
 

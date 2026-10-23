@@ -1,6 +1,6 @@
 # Manual de utilização — Agenda SENAI
 
-Edição: 19/10/2026. Consulte o [índice](README.md) para instalação e documentação técnica.
+Edição: 23/10/2026, referente ao sistema publicado em f816e609a5dce02e3e04d58db4169cf8805b7ff0. Consulte o [índice](README.md) para instalação e documentação técnica.
 
 ## 1. Finalidade e entrada
 
@@ -10,13 +10,16 @@ Abra o endereço da unidade. Gestores e docentes entram com usuário e senha. Al
 
 | Perfil | Responsabilidades |
 |---|---|
-| Administrador mestre | Planejamento e gestão; contas, vínculos, importação Excel de ambientes, diagnóstico e Publicação |
-| Coordenação | Turmas, docentes, disciplinas, calendário, relatórios, reservas, chaves e códigos de alunos |
+| Administrador (senha mestre) | Todos os cursos e modelos; planejamento, cadastros globais, contas, vínculos, ambientes, diagnóstico, Publicação e backups completos |
+| Coordenação antes da ativação por curso | Acessos anteriores de planejamento e gestão preservados; consulta dos modelos de cursos; sem administração de contas |
+| Coordenação após a ativação por curso | Somente cursos e turmas vinculados; modelos, unidades da turma, calendário, relatórios, histórico e códigos de alunos no escopo autorizado |
 | Administração de ambientes | Ocupação, cadastro/manutenção, reservas, programação externa e controle de chaves |
 | Docente | Sua agenda, ocupação diária, suas reservas de laboratórios e Minhas chaves |
 | Aluno | Consulta exclusiva da turma autorizada pelo código |
 
 O docente não recebe catálogo geral de chaves nem ferramentas de cadastro/alocação. A autorização também é verificada no servidor.
+
+Após ativar as restrições por curso, coordenadores sem curso vinculado não recebem turmas. Cadastros globais de docentes, ambientes, frequência, avisos, contas e backups, além da exportação global por docente, ficam com o administrador ou os perfis específicos desses módulos. As descrições dos módulos deste manual devem ser lidas com esse limite de acesso. Alterar os vínculos vale também para sessões existentes. Veja [Cursos e coordenação](CURSOS-E-COORDENACAO.md).
 
 ## 2. Preparação pela administração
 
@@ -24,14 +27,20 @@ O docente não recebe catálogo geral de chaves nem ferramentas de cadastro/aloc
 2. Em **Acesso**, com a senha mestre, crie contas com o perfil correto.
 3. Vincule cada conta docente ao seu cadastro. Login e nome profissional são informações diferentes.
 4. Cadastre ambientes e confira disponibilidade.
-5. Configure turmas, disciplinas e calendário.
-6. Revise pendências/conflitos antes de compartilhar códigos ou exportações.
+5. Em **Cursos**, cadastre cursos técnicos/rápidos e seus modelos de unidades e professores. Importe de uma turma de origem quando necessário e salve o modelo.
+6. Configure as turmas e seus calendários; ajuste unidades de uma turma em **Cursos → Abrir curso → Unidades curriculares → Ajustes por turma**.
+7. Em **Acessos por curso**, atribua e salve os cursos de cada coordenador. Confira os vínculos antes de **Ativar restrições por curso**. O administrador permanece com acesso completo.
+8. Revise pendências/conflitos antes de compartilhar códigos ou exportações.
 
 Preserve os cadastros existentes ao corrigir nomes; não duplique pessoas para resolver vínculos. Uma conta sem vínculo pode entrar sem encontrar suas aulas/chaves.
 
 ## 3. Turmas, disciplinas e programação
 
 As unidades curriculares ficam em **Cursos → Abrir curso → Unidades curriculares**. Escolha **Modelo do curso** para definir a estrutura das novas turmas ou **Ajustes por turma** para editar uma turma existente. Essa área substitui a antiga aba principal Disciplinas; alterar uma turma preserva o modelo e as demais turmas.
+
+O modelo é gravado com **Salvar modelo do curso**. Rascunhos são preservados durante a navegação entre seções da aba, mas precisam ser salvos antes de fechar/recarregar. **Descartar alterações** restaura a versão salva. Em **Importar unidades da turma**, selecione uma turma do próprio curso: a importação preenche o rascunho e não modifica a origem. A substituição de unidades já preenchidas pede confirmação.
+
+**Professores** reúne sugestões do modelo e vínculos das turmas, sem duplicar pessoas. **Turmas** oferece busca por código, turno ou módulo, resumo de carga horária e atalhos para calendário e ajustes de unidades. Campos de consulta identificam a falta de permissão para editar modelos. Os ajustes de turma continuam com salvamento automático e confirmação de gravação.
 
 Selecione a turma e confira código, curso, módulo, turno, início/término e aulas por dia. Cadastre disciplinas com sigla, nome, carga horária, docente e ambiente quando necessário. O local padrão da turma pode atender disciplinas sem local específico.
 
@@ -190,7 +199,11 @@ Na turma correta, a coordenação abre **Compartilhar → Acesso dos alunos → 
 
 Substituir o código invalida o anterior e suas sessões; desativar bloqueia o acesso. O código é compartilhado, não identifica matrícula individual. Após restauração de backup, gere novos códigos.
 
-## 13. Suporte rápido
+## 13. Frequência mensal de horistas
+
+O módulo mensal fica em **Minha frequência** para o docente e **Frequência** para a gestão autorizada, ou em `/frequencia.html`. Usa horários reais de retiradas/devoluções assinadas, com conferência, ajustes justificados, envio mensal e validação. Não calcula pagamento. O administrador configura o vínculo Horista, matrícula, unidade e coordenador responsável; não reutilize a assinatura de chave como assinatura automática da folha. Após ativar a restrição por curso, coordenadores restritos não acessam esse módulo global; o administrador e o docente no próprio escopo conservam os acessos. Consulte o [guia de frequência mensal](FREQUENCIA-HORISTAS.md).
+
+## 14. Suporte rápido
 
 | Sintoma | Primeira verificação |
 |---|---|

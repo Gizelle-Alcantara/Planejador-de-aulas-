@@ -1,5 +1,7 @@
 # Cursos e coordenação
 
+Edição: 23/10/2026. Código funcional de referência: f816e609a5dce02e3e04d58db4169cf8805b7ff0.
+
 Na aba **Cursos**, cada curso técnico ou rápido tem sua própria tela com unidades curriculares, professores sugeridos e lista de turmas.
 
 ## Configuração pelo administrador

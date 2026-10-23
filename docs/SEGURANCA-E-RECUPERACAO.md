@@ -1,6 +1,6 @@
 # Segurança, backup e recuperação
 
-Edição: 19/10/2026. Descreve implementação e procedimentos; não é certificação jurídica ou auditoria independente.
+Edição: 23/10/2026, referente ao código f816e609a5dce02e3e04d58db4169cf8805b7ff0. Descreve implementação e procedimentos; não é certificação jurídica ou auditoria independente.
 
 ## 1. Acesso
 
@@ -9,6 +9,14 @@ Contas usam scrypt/salt aleatório; mestre vem de ADMIN_PASSWORD. Cookie plan_se
 Mestre é coordenação com master. Coordenação comum não administra contas. As abas Dados, Publicação e Diagnóstico aparecem somente no acesso com a senha mestre; tentativas de abrir essas abas diretamente retornam ao Painel. Ambientes não recebe edição acadêmica geral. Docentes recebem projeções próprias; alunos, só sua turma. Não há MFA. Login comum, de aluno e do terminal possuem limite persistente de 10 tentativas por conta/código e 100 por IP em 15 minutos, com HTTP 429 e Retry-After. Sucessos limpam o contador da conta e descontam sua tentativa no contador do IP; tentativas em andamento também contam. O IP encaminhado deve ser definido por proxy confiável da hospedagem. Limites de recuperação/diagnóstico continuam específicos.
 
 POSTs exigem Content-Type application/json, rejeitam Origin diferente da origem da requisição e Fetch Metadata cross-site/same-site. Clientes sem cabeçalhos de navegador podem usar JSON; não habilite CORS para origens externas. Não há token CSRF separado. HTTPS deve ser preservado na URL recebida pelo backend e pelo proxy.
+
+### Escopo de cursos
+
+O administrador atribui cursos por conta de coordenação em user_courses e ativa a proteção com course_enable. Antes da ativação, os acessos existentes são preservados; os modelos ficam em consulta para coordenadores comuns. Depois, users.course_ids define os cursos autorizados. O servidor reconsulta a lista por requisição, inclusive para sessões anteriores, e a interface detecta mudanças e recarrega. Lista vazia não autoriza turmas. O administrador mantém todos os cursos.
+
+Leitura, gravação individual/lote, exclusão, histórico, restauração de versão, códigos de alunos, planejamento, exportação de turma e relatórios verificam o curso. Lotes com itens proibidos são recusados integralmente. Conflitos entre cursos continuam sendo verificados sem expor a turma protegida na mensagem. Coordenadores restritos não usam operações globais de cadastros, ambientes, frequência, avisos, contas, backups ou exportação de docente; perfis próprios de docente/ambientes/aluno conservam suas regras.
+
+O catálogo cursos não pode ser sobrescrito por set, excluído por delete ou restaurado pelo histórico genérico. Atualizações passam pelas operações de cursos; conflitos de modelo retornam revisão, sem conteúdo de outros cursos. Consulte o [guia de cursos](CURSOS-E-COORDENACAO.md) e a [API](API.md).
 
 ## 2. Recuperação por e-mail
 
@@ -34,8 +42,9 @@ Política institucional deve abranger exportações, cópias externas e históri
 
 | Tipo | Conteúdo |
 |---|---|
-| Completo v2 pelo mestre | Documentos, contas com hashes/salts/vínculos, notificações e controle de chaves quando presentes |
-| Download por coordenação comum | Escopo reduzido, sem contas, notificações individuais ou controle de chaves |
+| Completo v2 pelo administrador | Documentos, incluindo modelos de cursos; contas com hashes/salts e vínculos docentes/de cursos; notificações, controle de chaves e folhas de frequência quando presentes |
+| Download por coordenação antes da ativação por curso | Escopo reduzido, sem contas, notificações individuais, controle de chaves ou folhas de frequência |
+| Coordenação restrita por curso | Operações globais de backup/download/restauração recusadas; solicitar ao administrador |
 | E-mail | Documentos; opção sem alunos; não equivale ao completo mestre |
 | Legado v1 | Documentos compatíveis; não assumir contas/chaves completas |
 
@@ -60,6 +69,8 @@ node --env-file=.env.teste scripts/restore-backup.js caminho/backup-completo.jso
 ```
 
 O comando altera o banco configurado; não execute apenas para conferir sintaxe. O sistema gera cópia prévia e usa transação. v2 pode substituir o conjunto do snapshot/remover documentos e contas posteriores nos escopos incluídos. Restauração não é mesclagem livre.
+
+Backups completos incluem os modelos e users.course_ids. Restaurar contas encerra as sessões afetadas. Backups antigos sem vínculos de cursos restauram as contas com lista vazia; se a proteção estiver ativa, o administrador deve atribuir os cursos novamente antes do uso pela coordenação. Inclua esse cenário no ensaio isolado.
 
 ## 7. Continuidade
 

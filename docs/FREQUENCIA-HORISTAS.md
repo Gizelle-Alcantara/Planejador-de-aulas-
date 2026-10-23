@@ -1,5 +1,7 @@
 # Frequência mensal dos horistas
 
+Edição: 23/10/2026. Código funcional de referência: f816e609a5dce02e3e04d58db4169cf8805b7ff0.
+
 O módulo usa os horários reais do servidor nas retiradas e devoluções assinadas de chaves. O horário planejado da aula não substitui esses registros. O preenchimento inicia na retirada; a devolução fecha o período.
 
 ## Configuração inicial
@@ -28,6 +30,8 @@ Após encerrar o mês, o docente escolhe o mês, confere os horários e interval
 O coordenador responsável pode consultar os registros, devolver com parecer ou validar. Ajustar uma frequência enviada a devolve para nova conferência do docente. Frequências validadas ficam bloqueadas; reabri-las exige justificativa e novo envio. Um movimento novo após envio ou validação reabre o mês e preserva o histórico anterior.
 
 Coordenadores comuns só acessam seus docentes. O mestre consulta todos. Docentes só consultam o próprio cadastro. Perfis de aluno e ambientes, assim como a sessão restrita do terminal, não acessam o módulo mensal.
+
+Esse acesso da coordenação comum vale antes da ativação das restrições por curso. Depois da ativação, as operações globais de frequência são recusadas para coordenadores restritos, mesmo quando há vínculo de coordenador da frequência. O administrador continua responsável pela análise administrativa e o docente mantém acesso próprio. A atribuição de curso não amplia permissões desse módulo.
 
 ## Excel e pagamento
 

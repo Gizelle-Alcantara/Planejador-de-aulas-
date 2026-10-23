@@ -1,12 +1,14 @@
 # Referência da API
 
-Edição: 19/10/2026. Contrato interno de manutenção, baseado em lib/core.js e lib/key-control.js. Não há garantia de compatibilidade pública entre versões nem token público de integração.
+Edição: 23/10/2026. Contrato interno de manutenção, referente ao código f816e609a5dce02e3e04d58db4169cf8805b7ff0, baseado em lib/core.js e lib/key-control.js. Não há garantia de compatibilidade pública entre versões nem token público de integração.
 
 ## 1. Convenções
 
 Rota única: `/api`. POST recebe JSON com `op`; navegador envia cookie plan_sess da mesma origem. Content-Type: application/json. Não coloque senha/cookie/token em URL. Sem sessão, GET básico devolve user:null e docs vazios; operações protegidas exigem autenticação. Perfis: M=mestre; C=coordenação; A=ambientes; D=docente; E=aluno; P=entrada pública.
 
 JSON de erro usa `error`; respostas podem incluir outros campos. x-request-id identifica a requisição para suporte. Algumas operações retornam ok e outras um objeto próprio: confira response.ok/status, não suponha um envelope universal.
+
+Nas tabelas abaixo, C descreve a coordenação antes de ativar as restrições por curso. Após a ativação, C fica limitado às operações e turmas descritas em **Organização por cursos** (seção 5); a indicação M/C não libera operações globais. M mantém acesso administrativo. Autorização é conferida no servidor por requisição; esconder uma aba não substitui essa proteção.
 
 | HTTP | Interpretação |
 |---|---|
@@ -188,7 +190,22 @@ WhatsApp manual usa link wa.me no navegador e não uma operação de envio dessa
 | diagnostics_resolve | M | id, count; só resolve se contagem ainda corresponde |
 | publication_status | M | Configuração, conexão, integridade/atualidade de backup e checks manuais |
 
-## 10. Alterações no contrato
+## 10. Frequência mensal de horistas — POST
+
+As operações são delegadas a lib/frequency.js. M acessa os horistas; D acessa o próprio cadastro; C acessa somente docentes/folhas sob sua responsabilidade antes de ativar a restrição por curso. Coordenadores restritos por curso, perfis ambientes/aluno e sessão de terminal não acessam estas operações.
+
+| op | Perfil | Campos e resultado |
+|---|---|---|
+| frequency_config | M/C/D autorizado | teachers disponíveis; coordinators somente para M |
+| frequency_month | M/C/D autorizado | teacherId (D pode omitir para usar o próprio), month YYYY-MM; sheet, canReview e isOwner |
+| frequency_day_edit | M/C/D autorizado | teacherId, month, rev, date, note, periods [[início,fim]]; até dois períodos em minutos de 0 a 1440; justificativa de 5 a 1000 caracteres; respeita estado/propriedade |
+| frequency_submit | D proprietário | teacherId, month, rev, consent:true; envia mês encerrado após conferir pendências, matrícula, unidade e coordenador |
+| frequency_review | M/C responsável | teacherId, month, rev, note e decision validate/return/reopen; valida/devolve folha enviada ou reabre validada |
+| frequency_export | M/C/D autorizado | teacherId, month; responde XLSX, não JSON |
+
+Gravações exigem revisão inteira atual; divergência retorna 409. O histórico original dos eventos assinados de chave não é substituído pelo ajuste. Novas movimentações podem reabrir uma folha enviada/validada. Veja [Frequência de horistas](FREQUENCIA-HORISTAS.md) para regras operacionais e limites.
+
+## 11. Painel compartilhado e integrações
 
 ### Modo de painel compartilhado
 
