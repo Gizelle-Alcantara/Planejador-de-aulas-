@@ -1207,7 +1207,7 @@ function printManagementReport(){
 /* ---------- ACESSO (contas e histórico) ---------- */
 async function loadAcc(){
   const me=await PLAN.me().catch(()=>null);const A={me,users:null,hist:[],details:{}};
-  if(me&&me.master){const h=await PLAN.api({op:"history"});A.hist=h.items||[];const u=await PLAN.api({op:"users"});A.users=u.users||[]}
+  if(me&&me.master){const h=await PLAN.api({op:"history"});A.hist=h.items||[];const u=await PLAN.api({op:"users"});A.users=u.users||[];A.mfa=await PLAN.api({op:'master_mfa_status'})}
   UI.acc=A;if(MODE==="planner"&&UI.tab==="acesso")renderView();
 }
 const diagnosticCategories={exportacao:'Exportações',salvamento:'Salvamento',servicos:'Serviços externos',servidor:'Servidor',interface:'Interface',conexao:'Conexão'};
@@ -1247,6 +1247,24 @@ document.addEventListener('submit',async e=>{
  const form=e.target;if(!form.matches('[data-work-profile]'))return;e.preventDefault();const button=form.querySelector('button'),status=form.querySelector('[role="status"]');button.disabled=true;
  try{const r=await PLAN.api({op:'user_work_profile',login:form.dataset.workProfile,workProfile:Object.fromEntries(new FormData(form))});status.textContent=r.ok?'Dados profissionais salvos.':r.error||'Não foi possível salvar.';if(r.ok){const u=UI.acc?.users?.find(u=>u.login===form.dataset.workProfile);if(u)u.workProfile=Object.fromEntries(new FormData(form))}}catch{status.textContent='Não foi possível conectar. Tente novamente.'}finally{button.disabled=false}
 });
+
+function masterMfaPanel(state){
+ const enabled=state?.enabled;
+ return `<section class="panel"><h2>Autenticação em dois fatores</h2><p>${enabled?'Ativa para o administrador master. Códigos de recuperação restantes: '+state.recoveryRemaining+'.':'Proteja a conta master com um aplicativo autenticador no celular.'}</p><form id="master-mfa-form" data-enabled="${!!enabled}"><div class="form"><label class="f">Senha mestre atual<input type="password" name="password" required autocomplete="current-password"></label>${enabled?'<label class="f">Código do autenticador ou de recuperação<input type="text" name="code" required maxlength="32" autocomplete="one-time-code"></label>':''}</div><div data-mfa-setup hidden><p>Escaneie o QR no aplicativo autenticador ou cadastre a chave manualmente. Esta configuração expira em 10 minutos.</p><div data-mfa-qr></div><label class="f">Chave de configuração<input name="secret" readonly autocomplete="off"></label><label class="f">Código de confirmação<input name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" disabled></label></div><p class="form-feedback" role="status" aria-live="polite"></p><button class="btn ${enabled?'bad':'pri'}" type="submit">${enabled?'Desativar dois fatores':'Configurar autenticador'}</button></form><div data-mfa-recovery hidden><p><strong>Dois fatores ativados.</strong> Guarde estes códigos fora deste dispositivo. Cada um funciona uma vez, junto com sua senha mestre. Eles aparecem somente agora.</p><label class="f">Códigos de recuperação<textarea readonly rows="10" autocomplete="off"></textarea></label><button type="button" class="btn" data-mfa-done>Já guardei os códigos</button></div></section>`;
+}
+document.addEventListener('click',e=>{if(e.target.closest('[data-mfa-done]'))location.reload()});
+document.addEventListener('submit',async e=>{
+ if(e.target.id!=='master-mfa-form')return;e.preventDefault();const form=e.target,button=form.querySelector('button[type=submit]'),status=form.querySelector('[role=status]'),panel=form.parentElement;button.disabled=true;
+ try{
+ const enabled=form.dataset.enabled==='true',pending=form.dataset.pending==='true';
+ const r=await PLAN.api({op:enabled?'master_mfa_disable':pending?'master_mfa_confirm':'master_mfa_begin',password:form.elements.password.value,code:form.elements.code?.value});
+ if(!r.ok){status.textContent=r.error||'Não foi possível concluir. Tente novamente.';return}
+ if(enabled){form.reset();location.reload();return}
+ if(pending){form.reset();form.hidden=true;form.querySelector('[data-mfa-qr]').replaceChildren();const box=panel.querySelector('[data-mfa-recovery]');box.hidden=false;box.querySelector('textarea').value=r.recoveryCodes.join('\n');return}
+ form.dataset.pending='true';form.querySelector('[data-mfa-setup]').hidden=false;form.elements.secret.value=r.secret;form.elements.code.disabled=false;form.elements.code.required=true;button.textContent='Confirmar ativação';status.textContent='Cadastre a chave no autenticador e confirme o código de seis dígitos.';
+ try{const {default:qrcode}=await import('/vendor-qrcode.mjs');const qr=qrcode(0,'M');qr.addData(r.uri);qr.make();form.querySelector('[data-mfa-qr]').innerHTML=qr.createSvgTag({cellSize:4,margin:4})}catch{status.textContent='Cadastre a chave manualmente no autenticador e confirme o código.'}
+ }catch{status.textContent='Não foi possível conectar. Tente novamente.'}finally{button.disabled=false}
+});
 function vAcesso(){
   if(!UI.acc){UI.acc={loading:true};loadAcc()}
   const A=UI.acc;if(A.loading)return '<section class="panel"><p class="muted">Carregando…</p></section>';
@@ -1264,7 +1282,7 @@ function vAcesso(){
   };
   const hist=`<section class="panel"><div class="row" style="justify-content:space-between"><h2>Histórico de alterações</h2><button class="btn sm" data-act="histload">Atualizar</button></div><p class="small muted" style="margin-top:-4px">As últimas versões de cada turma ficam guardadas. Restaurar volta a turma (ou a lista de docentes) ao estado daquela hora; a versão atual também fica no histórico.</p>
     <div class="tw"><table><thead><tr><th>Quando</th><th>Quem</th><th>O quê</th><th></th></tr></thead><tbody>${(A.hist||[]).map(h=>`<tr><td class="mono">${when(h.at)}</td><td>${esc(h.by||"-")}</td><td>${esc(h.label)}${h.note?` <span class="muted">(${esc(h.note)})</span>`:""}</td><td><button class="btn sm" data-act="histdetail" data-h="${h.id}" aria-expanded="${!!A.details?.[h.id]}">${A.details?.[h.id]?"Ocultar alterações":"Ver alterações"}</button> <button class="btn sm" data-act="histrestore" data-h="${h.id}">${UI.confirm==="h"+h.id?"Confirmar restauração":"Restaurar"}</button></td></tr>${A.details?.[h.id]?`<tr><td colspan="4">${historyDetails(h)}</td></tr>`:""}`).join("")||'<tr><td colspan="4" class="muted">Sem alterações registradas.</td></tr>'}</tbody></table></div></section>`;
-  return `<div class="grid2" style="grid-template-columns:1fr"><section class="panel"><a class="btn" href="/ambientes.html">Ambientes e vínculos de docentes</a></section>${users}${A.me?.master?hist:''}</div>`;
+  return `<div class="grid2" style="grid-template-columns:1fr"><section class="panel"><a class="btn" href="/ambientes.html">Ambientes e vínculos de docentes</a></section>${A.me?.master?masterMfaPanel(A.mfa):''}${users}${A.me?.master?hist:''}</div>`;
 }
 window.addEventListener("plan-conflict",()=>toast("Outra pessoa salvou esta turma ao mesmo tempo. Sua última alteração não foi aplicada: a versão mais recente foi carregada."));
 
@@ -1286,8 +1304,12 @@ function renderView(){
   v.querySelectorAll('[data-doc-details]').forEach(el=>{UI.docDetails??={};UI.docDetails[el.dataset.docDetails]=el.open});
   const accountForm=UI.tab==="acesso"?v.querySelector("#account-form"):null;
   const accountFocus=accountForm?.contains(document.activeElement)?document.activeElement:null;
+  const mfaForm=UI.tab==='acesso'&&UI.me?.master?v.querySelector('#master-mfa-form'):null;
+  const mfaPanel=mfaForm&&(mfaForm.dataset.pending==='true'||mfaForm.elements.password.value)?mfaForm.parentElement:null;
+  const mfaFocus=mfaPanel?.contains(document.activeElement)?document.activeElement:null;
   v.innerHTML={ambientes:()=>`<section class="panel"><h2>Salas e laboratórios</h2><p>Cadastre os ambientes e vincule as contas aos docentes para consultar as aulas programadas.</p><a class="btn pri" href="/ambientes.html">Abrir gestão de ambientes</a></section>`,cursos:()=>SENAI_COURSE_UI.render(),painel:vPainel,geral:vOverview,calendario:vCal,cronograma:vCron,enviar:vEnviar,compartilhar:vShare,disciplinas:vDisc,docentes:vDoc,turma:vTurma,frequencia:()=>`<section class="panel"><h2>Frequência de horistas</h2><p>Consulte os horários reais registrados nas chaves, confira ajustes e acompanhe o envio e a validação mensal.</p><a class="btn pri" href="/frequencia.html">Abrir frequência de horistas</a></section>`,dados:vDados,publicacao:vPublication,diagnostico:vDiagnostics,relatorios:vRel,acesso:vAcesso,avisos:vAvisos}[UI.tab]();
   if(accountForm){const fresh=v.querySelector("#account-form");if(fresh){fresh.replaceWith(accountForm);accountFocus?.focus({preventScroll:true})}}
+  if(mfaPanel){const fresh=v.querySelector('#master-mfa-form')?.parentElement;if(fresh){fresh.replaceWith(mfaPanel);mfaFocus?.focus({preventScroll:true})}}
   afterRender();
 }
 const view=document.getElementById("view");

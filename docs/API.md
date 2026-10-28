@@ -220,3 +220,9 @@ Antes de integrar, confira campos exatos na implementação e nos testes de dom�
 ### Autoatendimento sem celular
 
 POST key_terminal_prepare com id da alocação exige sessão plan_key_kiosk de docente vinculado e proprietário. Retorna key com token para exibir o QR; não altera a movimentação. key_sign mantém validações de aula, reserva, assinatura e aceite. Eventos do terminal incluem method=terminal.
+
+### Segundo fator master
+
+Todas as operações master_mfa_* exigem sessão master. master_mfa_status retorna enabled e recoveryRemaining, sem chaves ou códigos. master_mfa_begin exige password e retorna secret/uri temporários. master_mfa_confirm exige password e code; ativa e retorna recoveryCodes uma única vez. master_mfa_disable exige password e code, autenticador ou recuperação. Confirmação e desativação renovam o cookie atual e revogam as outras sessões master. As operações de escrita usam o limite persistente de tentativas do administrador.
+
+login aceita code para o master. Com senha correta e MFA ativo, a ausência ou invalidade do segundo fator retorna 401 com mfaRequired:true, sem criar sessão. Os códigos TOTP e de recuperação são consumidos atomicamente. A configuração usa uma tabela separada das exportações/restaurações da aplicação.

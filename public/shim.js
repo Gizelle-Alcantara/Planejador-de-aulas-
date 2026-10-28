@@ -90,7 +90,7 @@
         document.body.appendChild(b);
       } else if (["#login","#login-docente","#login-aluno"].includes(location.hash)) {
         const ov = document.createElement("div"); ov.className = "lg-ov";
-        ov.innerHTML = '<form class="lg-box" role="dialog" aria-modal="true" aria-label="Acesso ao sistema"><h2>Acesso ao sistema</h2><input type="text" class="lg-user" placeholder="Usuário (deixe vazio para a senha mestre)" autocomplete="username" aria-label="Usuário"><input type="password" placeholder="Senha" autocomplete="current-password" aria-label="Senha"><p class="lg-err" role="alert"></p><button type="submit">Entrar</button><button type="button" class="x">Cancelar</button></form>';
+        ov.innerHTML = '<form class="lg-box" role="dialog" aria-modal="true" aria-label="Acesso ao sistema"><h2>Acesso ao sistema</h2><input type="text" class="lg-user" placeholder="Usuário (deixe vazio para a senha mestre)" autocomplete="username" aria-label="Usuário"><input type="password" placeholder="Senha" autocomplete="current-password" aria-label="Senha"><label class="lg-mfa" hidden>Código do autenticador ou de recuperação<input type="text" class="lg-code" autocomplete="one-time-code" maxlength="32" spellcheck="false"></label><p class="lg-err" role="alert"></p><button type="submit">Entrar</button><button type="button" class="x">Cancelar</button></form>';
         const student=location.hash==='#login-aluno';
         if(student){ov.querySelector('h2').textContent='Acesso do aluno';ov.querySelector('form').setAttribute('aria-label','Acesso do aluno');ov.querySelector('.lg-user').outerHTML='<label>Código da turma<input class="lg-user" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" required placeholder="Código fornecido pela coordenação"></label>';ov.querySelector('input[type=password]').hidden=true;}
         if(!student){const help=document.createElement("p"),a=document.createElement("a");a.href="/recuperar.html";a.textContent="Esqueci minha senha";help.append(a);ov.firstChild.append(help)}document.body.appendChild(ov);ov.querySelector("input").focus();
@@ -101,8 +101,8 @@
           e.preventDefault(); err.textContent = "";
           const submit=f.querySelector('[type=submit]');submit.disabled=true;
           try {
-            const r = await api(student?{op:"student_login",code:f.querySelector(".lg-user").value}:{ op: "login", login: f.querySelector(".lg-user").value, password: inp.value }); const j = await r.json().catch(() => ({}));
-            if (r.ok) { history.replaceState(null, "", student?"/#aluno":j.user?.role==="docente"?"/#docente":location.pathname); location.reload(); } else err.textContent = j.error || "Não foi possível entrar.";
+            const r = await api(student?{op:"student_login",code:f.querySelector(".lg-user").value}:{ op: "login", login: f.querySelector(".lg-user").value, password: inp.value,code:f.querySelector(".lg-code").value }); const j = await r.json().catch(() => ({}));
+            if (r.ok) { history.replaceState(null, "", student?"/#aluno":j.user?.role==="docente"?"/#docente":location.pathname); location.reload(); } else {err.textContent = j.error || "Não foi possível entrar.";if(j.mfaRequired){f.querySelector(".lg-mfa").hidden=false;f.querySelector(".lg-code").focus()}}
           } catch {err.textContent="Não foi possível conectar. Tente novamente."} finally {submit.disabled=false}
 
         };
