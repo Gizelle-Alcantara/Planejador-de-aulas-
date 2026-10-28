@@ -25,7 +25,17 @@ try{
  await row.getByRole('button',{name:'Ocultar alterações'}).click();assert.equal(await page.getByRole('cell',{name:'"Curso anterior"',exact:true}).count(),0);
  await row.getByRole('button',{name:'Ver alterações',exact:true}).click();await page.getByRole('cell',{name:'"Curso anterior"',exact:true}).waitFor();
  await page.getByRole('button',{name:'Atualizar',exact:true}).click();await page.getByRole('cell',{name:'"Curso anterior"',exact:true}).waitFor({state:'hidden'});
- assert.deepEqual(errors,[]);console.log('Histórico aprovado no navegador: abrir, comparar, escapar HTML, fechar, reabrir e atualizar.');
+ await api({op:'user_add',login:'coord-history',nome:'Coordenador',password:'senha-coordenador',role:'coordenador'});
+ const coordinator=await browser.newContext({serviceWorkers:'block'});await coordinator.route(/https:\/\//,r=>r.abort());
+ const login=await coordinator.request.post(base+'/api',{data:{op:'login',login:'coord-history',password:'senha-coordenador'}});assert.equal(login.status(),200);
+ const coordinatorPage=await coordinator.newPage(),historyRequests=[];
+ coordinatorPage.on('request',r=>{if(r.method()==='POST'&&r.url().endsWith('/api')&&r.postDataJSON()?.op==='history')historyRequests.push(r)});
+ await coordinatorPage.goto(base+'/?aba=acesso');
+ await coordinatorPage.getByRole('link',{name:'Ambientes e vínculos de docentes',exact:true}).waitFor();
+ assert.equal(await coordinatorPage.getByRole('heading',{name:'Histórico de alterações',exact:true}).count(),0);
+ assert.equal(await coordinatorPage.locator('[data-act="histdetail"], [data-act="histrestore"], [data-act="histload"]').count(),0);
+ assert.equal(historyRequests.length,0);await coordinator.close();
+ assert.deepEqual(errors,[]);console.log('Histórico aprovado no navegador: comparação e atualização para master; oculto e sem consulta para coordenador.');
 }finally{
  if(browser)await browser.close();if(server.exitCode===null){const done=new Promise(r=>server.once('exit',r));server.kill();await done}
  if(dirname(resolve(temp))!==resolve(tmpdir())||!basename(temp).startsWith('senai-history-'))throw Error('Diretório temporário inesperado');rmSync(temp,{recursive:true,force:true});

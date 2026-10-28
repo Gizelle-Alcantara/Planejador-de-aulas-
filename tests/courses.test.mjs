@@ -74,8 +74,8 @@ test('cursos: atribuição, ativação, isolamento em leitura, escrita, exporta�
  assert.equal((await get(a,'?ics=turma-a')).status,200);
  const history=await json({op:'history'},admin),foreign=history.items.find(h=>h.doc==='turma-b');
  for(const op of ['history_detail','restore'])await json({op,hid:foreign.id},a,403);
- assert.ok((await json({op:'history'},a)).items.every(h=>h.doc==='turma-a'||h.doc==='turma-nova'));
- const own=history.items.find(h=>h.doc==='turma-a');await json({op:'history_detail',hid:own.id},a);
+ await json({op:'history'},a,403);
+ const own=history.items.find(h=>h.doc==='turma-a');for(const op of ['history_detail','restore'])await json({op,hid:own.id},a,403);
  // Um histórico com versão anterior de outro curso não pode revelar a comparação.
  await json({op:'set',id:'turma-movida',data:turma('Rápido B'),base:0},admin);
  await json({op:'set',id:'turma-movida',data:turma('Técnico A'),base:1},admin);

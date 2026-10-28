@@ -272,7 +272,7 @@ test("backup: cópia por e-mail aos domingos com anexo (e sem alunos se pedido)"
     assert.equal(att2.docs["turma-n1"].state.alunos, undefined);
   } finally { globalThis.fetch = real; delete process.env.BACKUP_EMAIL_SEM_ALUNOS; }
 });
-test("backup: só coordenador acessa; docente e visitante não", async () => {
+test("backup: master acessa; docente e visitante não", async () => {
   assert.equal((await call({ op: "backup_list" })).status, 401);
   const d = await login({ login: "prof", password: "senha-docente-1" });
   assert.equal((await call({ op: "backup_list" }, d.cookie)).status, 403);
@@ -452,7 +452,7 @@ test('backup completo: inclui contas e vínculos, detecta mudanças só de conta
  const payload=JSON.parse((await (await call({op:'backup_download',id:saved.id},m.cookie)).json()).data);
  assert.equal(payload.versao,2);assert.equal(payload.users.find(u=>u.login==='prof').docente,'Ana');assert.ok(Array.isArray(payload.notifications));assert.ok(!JSON.stringify(payload).includes('senha-docente-1'));
  const coordinator=await login({login:'maria',password:'senha-longa-1'});
- const redacted=JSON.parse((await (await call({op:'backup_download',id:saved.id},coordinator.cookie)).json()).data);assert.ok(!redacted.users);
+ assert.equal((await call({op:'backup_download',id:saved.id},coordinator.cookie)).status,403);
  assert.equal((await call({op:'backup_restore',id:saved.id},coordinator.cookie)).status,403);
  await call({op:'user_pw',login:'prof',password:'senha-nova-1'},m.cookie);assert.equal((await runBackup('agendado','teste')).saved,true);
  await call({op:'user_link',login:'prof',docente:''},m.cookie);
@@ -612,3 +612,13 @@ test('código de turma: escopo exclusivo, somente leitura, renovação e revoga�
  const renewed=await enter(second.code);assert.equal((await call({op:'student_code_revoke',turmaId:'turma-codigo'},m.cookie)).status,200);assert.equal((await get('',renewed)).status,401);assert.equal((await call({op:'student_login',code:second.code})).status,401);
  const third=await(await generate()).json();await call({op:'delete',id:'turma-codigo'},m.cookie);await setDoc(m.cookie,'turma-codigo',{state});assert.equal((await call({op:'student_login',code:third.code})).status,401);
 });
+
+ test('dados profissionais de coordenadores exigem master e validam email',async()=>{
+ const {cookie}=await login({password:'mestre-123'});
+ assert.equal((await call({op:'user_add',login:'coord-profile',password:'senha-profile',role:'coord',workProfile:{company:'SENAI',workEmail:'coord@example.com'}},cookie)).status,200);
+ const other=await login({login:'coord-profile',password:'senha-profile'});
+ assert.equal((await call({op:'user_work_profile',login:'coord-profile',workProfile:{company:'Alterado'}},other.cookie)).status,403);
+ assert.equal((await call({op:'user_work_profile',login:'coord-profile',workProfile:{workEmail:'invalido'}},cookie)).status,400);
+ assert.equal((await call({op:'user_work_profile',login:'coord-profile',workProfile:{department:'Gestão',workEmail:'novo@example.com'}},cookie)).status,200);
+ const user=(await(await call({op:'users'},cookie)).json()).users.find(u=>u.login==='coord-profile');assert.equal(user.workProfile.department,'Gestão');assert.equal(user.workProfile.workEmail,'novo@example.com');
+ });

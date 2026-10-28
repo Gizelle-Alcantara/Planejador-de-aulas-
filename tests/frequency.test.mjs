@@ -73,9 +73,9 @@ test('ajustes inválidos e envio prematuro não são aceitos',async()=>{
  await assert.rejects(()=>direct({op:'frequency_day_edit',month:'2026-08',rev:sheet.rev,date:'2026-08-01',periods:[],note:'abc'}),/justificativa/);
  sheet=(await direct({op:'frequency_month',month:'2026-10'})).sheet;await assert.rejects(()=>direct({op:'frequency_submit',month:'2026-10',rev:sheet.rev,consent:true}),/encerramento/);
 });
-test('backup mestre inclui frequência e backup de coordenação remove esse escopo',async()=>{
- const backup=await ok({op:'backup_now'},master),full=JSON.parse((await ok({op:'backup_download',id:backup.id},master)).data),reduced=JSON.parse((await ok({op:'backup_download',id:backup.id},coordCookie)).data);
- assert.ok(full.frequencySheets.length>=2);assert.equal(reduced.frequencySheets,undefined);
+test('backup mestre inclui frequência e coordenação não pode baixar o backup',async()=>{
+ const backup=await ok({op:'backup_now'},master),full=JSON.parse((await ok({op:'backup_download',id:backup.id},master)).data);
+ assert.ok(full.frequencySheets.length>=2);assert.equal((await call({op:'backup_download',id:backup.id},coordCookie)).status,403);
 });
 test('virada de dia e de mês divide horas sem perder o registro de origem',async()=>{
  const existing=JSON.parse((await q('SELECT data FROM key_control WHERE id=1')).rows[0].data);

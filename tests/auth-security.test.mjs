@@ -43,3 +43,28 @@ test('CSRF accepts Vercel authoritative production domain without PUBLIC_URL',as
   assert.equal((await request('https://external.test')).status,403);
  }finally{delete process.env.VERCEL_PROJECT_PRODUCTION_URL;if(previous!==undefined)process.env.PUBLIC_URL=previous}
 });
+
+ test('histórico, restauração e backups exigem master na API sem efeitos colaterais',async()=>{
+ const masterResponse=await call({op:'login',password:process.env.ADMIN_PASSWORD});const master={cookie:masterResponse.headers.get('set-cookie').split(';')[0]};
+ const state=course=>({state:{cfg:{turma:'SEG',curso:course,turno:'Matutino',aulasDia:4},ucs:[],days:{},reg:{}}});
+ assert.equal((await call({op:'set',id:'turma-security',data:state('Antes'),base:0},master)).status,200);
+ assert.equal((await call({op:'set',id:'turma-security',data:state('Depois'),base:1},master)).status,200);
+ const history=await(await call({op:'history'},master)).json(),hid=history.items.find(h=>h.doc==='turma-security'&&h.rev===1).id;
+ assert.equal((await call({op:'history_detail',hid},master)).status,200);
+ const backup=await(await call({op:'backup_now'},master)).json();assert.ok(backup.id);
+ assert.equal((await call({op:'backup_download',id:backup.id},master)).status,200);
+ const before=await(await handle(new Request('https://agenda.test/api',{headers:master}))).json();
+ const backups=await(await call({op:'backup_list'},master)).json();
+ for(const role of ['coord','docente','ambientes']){
+ const login='security-'+role;assert.equal((await call({op:'user_add',login,password:'senha-security-123',role},master)).status,200);
+ const response=await call({op:'login',login,password:'senha-security-123'}),headers={cookie:response.headers.get('set-cookie').split(';')[0]};
+ for(const op of ['history','history_detail','restore','backup_status','backup_list','backup_now','backup_download','backup_restore']){
+ const denied=await call({op,hid,id:backup.id},headers);assert.equal(denied.status,403,role+': '+op);const body=await denied.json();assert.deepEqual(Object.keys(body),['error']);
+ assert.equal((await call({op,hid,id:backup.id})).status,401,'visitante: '+op);
+ }
+ }
+ const after=await(await handle(new Request('https://agenda.test/api',{headers:master}))).json();assert.deepEqual(after.docs,before.docs);
+ assert.deepEqual(await(await call({op:'history'},master)).json(),history);assert.deepEqual(await(await call({op:'backup_list'},master)).json(),backups);
+ assert.equal((await call({op:'restore',hid},master)).status,200);
+ assert.equal((await call({op:'backup_restore',id:backup.id},master)).status,200);
+ });
