@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {mkdtempSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {createHash} from 'node:crypto';
+import {createHash,createHmac} from 'node:crypto';
 process.env.TURSO_DATABASE_URL='file:'+join(mkdtempSync(join(tmpdir(),'auth-security-')),'test.db');
 process.env.ADMIN_PASSWORD='master-security-test';process.env.SESSION_SECRET='session-security-test';
 const {handle}=await import('../lib/core.js');
@@ -67,4 +67,14 @@ test('CSRF accepts Vercel authoritative production domain without PUBLIC_URL',as
  assert.deepEqual(await(await call({op:'history'},master)).json(),history);assert.deepEqual(await(await call({op:'backup_list'},master)).json(),backups);
  assert.equal((await call({op:'restore',hid},master)).status,200);
  assert.equal((await call({op:'backup_restore',id:backup.id},master)).status,200);
+ });
+
+ test('sessão master expira em uma hora e rejeita tokens antigos de 12 horas',async()=>{
+ const response=await call({op:'login',password:process.env.ADMIN_PASSWORD});const header=response.headers.get('set-cookie'),cookie=header.split(';')[0];assert.match(header,/Max-Age=3600(?:;|$)/);assert.match(header,/HttpOnly/);assert.match(header,/Secure/);
+ const payload=JSON.parse(Buffer.from(decodeURIComponent(cookie.split('=')[1]).split('.')[0],'base64url'));assert.equal(payload.e-payload.i,3600000);
+ const signed=o=>{const p=Buffer.from(JSON.stringify(o)).toString('base64url');return 'plan_sess='+p+'.'+createHmac('sha256',process.env.SESSION_SECRET).update(p).digest('hex')};
+ assert.equal((await call({op:'history'},{cookie})).status,200);
+ const legacy={...payload,e:Date.now()+43200000};delete legacy.i;
+ for(const value of [legacy,{...payload,e:payload.i+43200000},{...payload,i:Date.now()-3600001,e:Date.now()-1}])assert.equal((await call({op:'history'},{cookie:signed(value)})).status,401);
+ await call({op:'user_add',login:'coord-session',password:'senha-session-123'}, {cookie});const regular=await call({op:'login',login:'coord-session',password:'senha-session-123'});assert.match(regular.headers.get('set-cookie'),/Max-Age=43200(?:;|$)/);
  });
