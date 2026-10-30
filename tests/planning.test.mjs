@@ -34,7 +34,23 @@ test('NEM converte carga para aulas e mantém o intervalo; cancelamentos não co
 test('rejeita período, quantidade, docente, ambiente e configuração inválidos',()=>{
  for(const change of [{from:'2027-12-31'},{to:'2028-02-01'},{quantity:0},{quantity:1.5},{weekdays:[]},{from:'2028-02-30'}])assert.throws(()=>suggestPlanning(fixture(),'turma-plan',{...options,...change}));
  const docs=fixture();docs.ambientes.items[0].ativo=false;assert.throws(()=>suggestPlanning(docs,'turma-plan',options),/ativo/);
- docs.ambientes.items[0].ativo=true;docs['turma-plan'].state.ucs[0].docente='';assert.throws(()=>suggestPlanning(docs,'turma-plan',options),/docente/);
+ docs.ambientes.items[0].ativo=true;docs['turma-plan'].state.ucs[0].docente='Não cadastrado';assert.throws(()=>suggestPlanning(docs,'turma-plan',options),/docente/);
+});
+test('permite planejar sem docente, sem sala ou sem ambos, sem inventar alocações',()=>{
+ for(const [docente,sala] of [['','Lab 1'],['Ana',''],['','']]){
+  const docs=fixture(),uc=docs['turma-plan'].state.ucs[0];Object.assign(uc,{docente,sala});
+  if(!sala)delete docs.ambientes;if(!docente)delete docs.geral;
+  docs.reservas={items:[{status:'aprovada',data:options.from,docente:'',ambienteId:null,inicio:0,fim:1440}]};
+  const before=structuredClone(docs),plan=suggestPlanning(docs,'turma-plan',options);
+  assert.equal(plan.added,6);assert.equal(plan.pendingTeacher,!docente);assert.equal(plan.pendingRoom,!sala);assert.equal(plan.docente,docente);assert.equal(plan.ambiente,sala);assert.deepEqual(docs,before);
+ }
+});
+test('alocação parcial continua respeitando conflitos do recurso já informado',()=>{
+ for(const resource of ['docente','sala']){
+  const docs=fixture(),uc=docs['turma-plan'].state.ucs[0];uc[resource==='docente'?'sala':'docente']='';
+  const other=structuredClone(docs['turma-plan']);other.state.days[options.from]={s:['LOG'],grade:['LOG','LOG','LOG','LOG']};docs['turma-other']=other;
+  const plan=suggestPlanning(docs,'turma-plan',{...options,to:options.from});assert.equal(plan.added,0);assert.ok(plan.skipped.length);
+ }
 });
 process.env.TURSO_DATABASE_URL='file:'+join(mkdtempSync(join(tmpdir(),'senai-planning-')),'test.db');process.env.ADMIN_PASSWORD='senha-planning-teste';process.env.SESSION_SECRET='segredo-planning-teste';
 const {handle}=await import('../lib/core.js');
@@ -65,4 +81,17 @@ test('mudança de ambiente após prévia impede aplicação e não grava aulas',
  await api({op:'environment_save',items:[{...fixture().ambientes.items[0],capacidade:31}],base:1},master);
  assert.equal((await call({op:'planning_apply',...request,token:p.token},master)).status,409);
  const after=await api({op:'planning_preview',...request},master);assert.equal(after.plan.pending,6);
+});
+test('calendário pode ser salvo sem alocação e preenchido depois com verificação de conflitos',async()=>{
+ const records=(await(await handle(new Request('http://local/api',{headers:{cookie:master}}))).json()).docs;const g=records.find(d=>d.id==='geral'),a=records.find(d=>d.id==='ambientes');
+ await api({op:'set',id:g.id,data:{...g.data,docentes:[...g.data.docentes,{nome:'Bia'}]},base:g.rev},master);await api({op:'environment_save',items:[...a.data.items,{id:'lab2',nome:'Lab 2',tipo:'laboratorio',capacidade:30,ativo:true}],base:a.rev},master);
+ const draft=structuredClone(state);draft.cfg.turma='RASCUNHO';Object.assign(draft.ucs[0],{docente:'',sala:''});
+ await api({op:'set',id:'turma-draft',data:{state:draft},base:0},master);
+ const request={turmaId:'turma-draft',options},p=await api({op:'planning_preview',...request},master);assert.equal(p.plan.added,6);
+ await api({op:'planning_apply',...request,token:p.token},master);
+ const load=async()=>(await(await handle(new Request('http://local/api',{headers:{cookie:master}}))).json()).docs;
+ const row=(await load()).find(d=>d.id==='turma-draft');assert.equal(row.data.state.ucs[0].docente,'');assert.equal(row.data.state.ucs[0].sala,'');
+ for(const change of [{docente:'Ana'},{sala:'Lab 1'}]){const data=structuredClone(row.data);Object.assign(data.state.ucs[0],change);assert.equal((await call({op:'set',id:row.id,data,base:row.rev},master)).status,422)}
+ const data=structuredClone(row.data);Object.assign(data.state.ucs[0],{docente:'Bia',sala:'Lab 2'});assert.equal((await call({op:'set',id:row.id,data,base:row.rev},master)).status,200);
+ const updated=(await load()).find(d=>d.id===row.id);assert.deepEqual(updated.data.state.days,row.data.state.days);assert.equal(updated.data.state.ucs[0].docente,'Bia');assert.equal(updated.data.state.ucs[0].sala,'Lab 2');
 });

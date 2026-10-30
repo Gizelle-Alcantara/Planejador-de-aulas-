@@ -35,7 +35,8 @@
     "test:ui:kiosk": "npm run build && node tests/key-kiosk.ui.mjs",
     "test:ui:courses": "npm run build && node tests/courses.ui.mjs",
     "test:ui:mfa": "npm run build && node tests/master-mfa.ui.mjs",
-    "test:ui:holidays": "npm run build && node tests/shared-holidays.ui.mjs"
+    "test:ui:holidays": "npm run build && node tests/shared-holidays.ui.mjs",
+    "test:ui:deferred-allocation": "npm run build && node tests/deferred-allocation.ui.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",

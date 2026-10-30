@@ -34,7 +34,7 @@ test('Excel do docente EAD conserva atividades simultâneas sem rotulá-las como
 });
 
 test('planejamento EAD dispensa ambiente e mantém a contagem exata de aulas',()=>{
- const st=state();st.cfg.local='';st.ucs[2].ch=6;const all=docs(st);all.ambientes.items=[];const options={sigla:'E',from:'2099-03-12',to:'2099-03-13',quantity:6,weekdays:[0,1,2,3,4,5,6]},plan=suggestPlanning(all,'turma-edu',options);assert.equal(plan.added,6);assert.equal(plan.ambiente,'EAD (sem ambiente físico)');assert.deepEqual(plan.changes.map(d=>d.quantity),[4,2]);assert.throws(()=>suggestPlanning(all,'turma-edu',{...options,sigla:'P'}),/sala ou laboratório/);
+ const st=state();st.cfg.local='';st.ucs[2].ch=6;const all=docs(st);all.ambientes.items=[];const options={sigla:'E',from:'2099-03-12',to:'2099-03-13',quantity:6,weekdays:[0,1,2,3,4,5,6]},plan=suggestPlanning(all,'turma-edu',options);assert.equal(plan.added,6);assert.equal(plan.ambiente,'EAD (sem ambiente físico)');assert.deepEqual(plan.changes.map(d=>d.quantity),[4,2]);const presencial=suggestPlanning(all,'turma-edu',{...options,sigla:'P'});assert.equal(presencial.added,4);assert.equal(presencial.pendingRoom,true);
 });
 test('exclusão de ambiente protege usos atuais e futuros, preservando históricos e ignorando EAD',()=>{
  const st=state(),all=docs(st),date='2099-03-12';assert.equal(environmentRemovalError(all,[],'2099-03-01'),'');st.days[date]={s:['P'],grade:['P','P','P','P']};assert.match(environmentRemovalError(all,[],'2099-03-01'),/aulas presenciais/);st.days[date]={s:['E'],grade:['E','E','E','E']};assert.equal(environmentRemovalError(all,[],'2099-03-01'),'');

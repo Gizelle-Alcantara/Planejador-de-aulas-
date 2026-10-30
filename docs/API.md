@@ -232,3 +232,9 @@ login aceita code para o master. Com senha correta e MFA ativo, a ausência ou i
 POST holiday_preview exige master e recebe date (AAAA-MM-DD) e name (1 a 160 caracteres). Retorna token, items (turmas elegíveis) e skipped (outsidePeriod, completed, unchanged). A consulta não altera os calendários.
 
 POST holiday_apply recebe date, name e o token da prévia. Exige master e confere as revisões de todas as turmas; divergência retorna 409 para gerar nova prévia. Aplica em transação única, registra histórico por turma e sincroniza reservas. Substitui as aulas previstas da data por feriado, preservando registros existentes. Turmas fora do período, com aula confirmada como realizada ou com o mesmo feriado são preservadas. Não cria regra recorrente nem feriados automáticos para turmas futuras. Coordenadores comuns, docentes, ambientes e alunos não podem executar as operações gerais.
+
+### Planejamento com alocação posterior
+
+planning_preview e planning_apply permitem docente e sala vazios. A prévia retorna pendingTeacher e pendingRoom, além de docente/ambiente vazios quando ainda não definidos. As datas e aulas podem ser gravadas sem inventar nomes ou ambientes. Se somente um recurso estiver informado, seus conflitos continuam sendo considerados. Valores preenchidos devem ser válidos: docente cadastrado e ambiente ativo; cfg.local continua funcionando como ambiente padrão quando a sala da disciplina está vazia.
+
+Os campos podem ser ajustados depois em Cursos > Ajustes por turma. A atualização de uma alocação em calendário com grade verifica conflitos antes de salvar; a pendência não autoriza reservar ambientes ou alocar chaves sem cumprir as regras próprias desses módulos.
