@@ -226,3 +226,9 @@ POST key_terminal_prepare com id da alocação exige sessão plan_key_kiosk de d
 Todas as operações master_mfa_* exigem sessão master. master_mfa_status retorna enabled e recoveryRemaining, sem chaves ou códigos. master_mfa_begin exige password e retorna secret/uri temporários. master_mfa_confirm exige password e code; ativa e retorna recoveryCodes uma única vez. master_mfa_disable exige password e code, autenticador ou recuperação. Confirmação e desativação renovam o cookie atual e revogam as outras sessões master. As operações de escrita usam o limite persistente de tentativas do administrador.
 
 login aceita code para o master. Com senha correta e MFA ativo, a ausência ou invalidade do segundo fator retorna 401 com mfaRequired:true, sem criar sessão. Os códigos TOTP e de recuperação são consumidos atomicamente. A configuração usa uma tabela separada das exportações/restaurações da aplicação.
+
+### Feriado em todos os calendários
+
+POST holiday_preview exige master e recebe date (AAAA-MM-DD) e name (1 a 160 caracteres). Retorna token, items (turmas elegíveis) e skipped (outsidePeriod, completed, unchanged). A consulta não altera os calendários.
+
+POST holiday_apply recebe date, name e o token da prévia. Exige master e confere as revisões de todas as turmas; divergência retorna 409 para gerar nova prévia. Aplica em transação única, registra histórico por turma e sincroniza reservas. Substitui as aulas previstas da data por feriado, preservando registros existentes. Turmas fora do período, com aula confirmada como realizada ou com o mesmo feriado são preservadas. Não cria regra recorrente nem feriados automáticos para turmas futuras. Coordenadores comuns, docentes, ambientes e alunos não podem executar as operações gerais.
