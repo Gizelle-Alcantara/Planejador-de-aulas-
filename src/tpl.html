@@ -1360,8 +1360,14 @@ function paginateTeachers(reset = false) {
   const controls = view.querySelector('.teacher-pages');
   if (!list || !controls) { teacherPage = 0; return; }
   const rows = [...list.querySelectorAll('.teacher-card:not([hidden])')];
-  const available = Math.max(0, innerHeight - (list.getBoundingClientRect().top + scrollY) - 100);
-  const perPage = Math.min(8, Math.max(1, Math.floor(available / (innerWidth <= 960 ? 135 : 72))));
+  const sidebar = document.getElementById('tabs');
+  const bottom = innerWidth > 620
+    ? Math.max(innerHeight - scrollY, sidebar.getBoundingClientRect().bottom)
+    : innerHeight - scrollY;
+  const available = Math.max(0, bottom - list.getBoundingClientRect().top - 96);
+  const visibleRow = rows.find(row => !row.classList.contains('teacher-off-page'));
+  const rowHeight = Math.max(72, (visibleRow?.getBoundingClientRect().height || 0) + 6);
+  const perPage = Math.max(1, Math.floor(available / rowHeight));
   const pages = Math.max(1, Math.ceil(rows.length / perPage));
   teacherPage = reset ? 0 : Math.min(teacherPage, pages - 1);
   rows.forEach((row, i) => row.classList.toggle('teacher-off-page', Math.floor(i / perPage) !== teacherPage));
@@ -1384,7 +1390,7 @@ view.addEventListener('click', e => {
   if (e.target.closest('[data-quick-search=docentes] [data-search-clear]')) paginateTeachers(true);
 });
 window.addEventListener('resize', () => paginateTeachers());
-
+new ResizeObserver(() => paginateTeachers()).observe(document.getElementById('tabs'));
 document.addEventListener("submit",async e=>{
  if(e.target.id!=="account-form")return;e.preventDefault();const form=e.target,feedback=form.querySelector('#account-feedback'),button=form.querySelector('[type=submit]');
  if(button.disabled)return;button.disabled=true;feedback.className='form-feedback';feedback.textContent='Criando conta…';
