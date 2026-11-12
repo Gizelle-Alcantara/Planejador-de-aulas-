@@ -37,6 +37,8 @@ header.top{padding-top:26px;gap:22px}
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    width: 100%;
+    max-width: 1680px;
   }
   .system-layout:has(> #tabs:not(:empty)) {
     flex: 1;
