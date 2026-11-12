@@ -148,7 +148,15 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 </header>
 <div class="system-layout">
   <nav class="tabs" id="tabs" aria-label="Áreas do sistema"></nav>
-<a class="skip-link" href="#main-content">Pular para o conteúdo</a><main id="main-content" tabindex="-1"><div id="view"></div></main>
+<a class="skip-link" href="#main-content">Pular para o conteúdo</a>
+<main id="main-content" tabindex="-1">
+  <div class="workspace-page" id="workspace-page"><div id="view"></div></div>
+  <nav class="workspace-pages" aria-label="Páginas do conteúdo" hidden>
+    <button class="btn sm" type="button" data-page-step="-1" aria-controls="workspace-page">Anterior</button>
+    <span role="status"></span>
+    <button class="btn sm" type="button" data-page-step="1" aria-controls="workspace-page">Próxima</button>
+  </nav>
+</main>
 </div>
 </div>
 <div id="modalRoot"></div>
@@ -385,7 +393,6 @@ function renderHead(){
   setStatus(UI.status);
   const available=TABS.filter(x=>x[0]!=="disciplinas"&&(!UI.me?.courseRestricted||!['docentes','ambientes','frequencia','avisos','enviar'].includes(x[0]))&&(!["dados","publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
   const menu = document.getElementById("tabs");
-  const expanded = new Map([...menu.querySelectorAll("details")].map(group => [group.dataset.group, group.open]));
   const adminTabs = ["acesso", "frequencia", "dados", "publicacao", "diagnostico"];
   const groups = [
     ["academico", "Acadêmico", available.filter(([key]) => key !== "ambientes" && !adminTabs.includes(key))],
@@ -393,8 +400,8 @@ function renderHead(){
     ["administracao", "Administração", available.filter(([key]) => adminTabs.includes(key))]
   ];
   menu.innerHTML = groups.filter(([, , tabs]) => tabs.length).map(([id, label, tabs]) => {
-    const open = tabs.some(([key]) => key === UI.tab) || (expanded.get(id) ?? true);
-    return `<details class="nav-group" data-group="${id}" ${open ? "open" : ""}>
+    const open = tabs.some(([key]) => key === UI.tab);
+    return `<details class="nav-group" name="system-menu" data-group="${id}" ${open ? "open" : ""}>
       <summary class="nav-group-title">${label}</summary>
       <div role="tablist" aria-label="${label}" aria-orientation="vertical">${tabs.map(([key, text]) =>
         `<button type="button" role="tab" data-act="tab" data-k="${key}" aria-selected="${UI.tab === key}">${text}</button>`
@@ -1568,5 +1575,6 @@ renderView();
 <script src="/quick-search.js" defer></script>
 <script src="/notification-badge.js" defer></script>
 <script src="/mobile.js" defer></script>
+<script src="/workspace-pages.js" defer></script>
 <script src="/mobile-app.js" defer></script>
 </body></html>
