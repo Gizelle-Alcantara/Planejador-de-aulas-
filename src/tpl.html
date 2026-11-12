@@ -1332,7 +1332,7 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   if(!S&&UI.me?.courseRestricted&&!Object.keys(T).length){
     document.getElementById('hdr').innerHTML='<h1>Cursos</h1><span class="meta">Organização acadêmica por curso</span>';
-    document.getElementById('tabs').innerHTML='<details class="nav-group" data-group="academico" open><summary class="nav-group-title">Acadêmico</summary><div role="tablist" aria-label="Acadêmico" aria-orientation="vertical"><button type="button" role="tab" aria-selected="true" data-act="tab" data-k="cursos">Cursos</button></div></details>';';
+    document.getElementById('tabs').innerHTML='<details class="nav-group" data-group="academico" open><summary class="nav-group-title">Acadêmico</summary><div role="tablist" aria-label="Acadêmico" aria-orientation="vertical"><button type="button" role="tab" aria-selected="true" data-act="tab" data-k="cursos">Cursos</button></div></details>';
     document.getElementById('view').innerHTML=SENAI_COURSE_UI.render();afterRender();return;
   }
   if(UI.tab==="disciplinas"&&UI.loaded&&S){UI.courseId=SENAI_COURSES.courseOf(S);UI.coursePage="detail";UI.courseDetail="class-units";UI.tab="cursos";}
