@@ -145,9 +145,11 @@ details>summary{cursor:pointer;font-weight:600;font-family:var(--f-display);font
 <div class="wrap">
 <header class="top">
   <div class="brand"><img id="logo" class="logo" alt="SENAI" width="142" height="38"><div class="id" id="hdr"></div><a href="/notificacoes.html" class="btn sm notification-shortcut" data-notification-shortcut hidden>Notificações</a><button id="themeBtn" class="btn sm" type="button"></button></div>
-  <nav class="tabs" id="tabs" aria-label="Áreas do sistema"></nav>
 </header>
+<div class="system-layout">
+  <nav class="tabs" id="tabs" aria-label="Áreas do sistema"></nav>
 <a class="skip-link" href="#main-content">Pular para o conteúdo</a><main id="main-content" tabindex="-1"><div id="view"></div></main>
+</div>
 </div>
 <div id="modalRoot"></div>
 <div id="toastRoot"></div>
@@ -382,7 +384,23 @@ function renderHead(){
     <div class="class-views"><div><button class="btn sm header-back" data-act="back">${icon('m12 5-7 7 7 7M5 12h14')}Voltar</button><button class="btn sm class-new" data-act="turmanew">${icon('M12 5v14M5 12h14')}Nova turma</button>${S?`<a class="btn sm" href="#aluno-${esc(CUR)}">Ver como aluno</a>`:""}<a class="btn sm" href="#docente">Ver como docente</a></div><span id="stat" class="stat" role="status" aria-live="polite"></span></div>`;
   setStatus(UI.status);
   const available=TABS.filter(x=>x[0]!=="disciplinas"&&(!UI.me?.courseRestricted||!['docentes','ambientes','frequencia','avisos','enviar'].includes(x[0]))&&(!["dados","publicacao","diagnostico"].includes(x[0])||UI.me?.master)&&(UI.role==="ambientes"?x[0]==="ambientes":UI.role!=="docente"||DOCTABS.includes(x[0])));
-  document.getElementById("tabs").innerHTML=[['Acadêmico',available.filter(([k])=>!['ambientes','acesso','frequencia','dados','publicacao','diagnostico'].includes(k))],['Ambientes',available.filter(([k])=>k==='ambientes')],['Administração',available.filter(([k])=>['acesso','frequencia','dados','publicacao','diagnostico'].includes(k))]].filter(([,tabs])=>tabs.length).map(([label,tabs])=>`<div class="nav-group"><span class="nav-group-title" aria-hidden="true">${label}</span><div role="tablist" aria-label="${label}">${tabs.map(([k,l])=>`<button role="tab" data-act="tab" data-k="${k}" aria-selected="${UI.tab===k}">${l}</button>`).join('')}</div></div>`).join('');
+  const menu = document.getElementById("tabs");
+  const expanded = new Map([...menu.querySelectorAll("details")].map(group => [group.dataset.group, group.open]));
+  const adminTabs = ["acesso", "frequencia", "dados", "publicacao", "diagnostico"];
+  const groups = [
+    ["academico", "Acadêmico", available.filter(([key]) => key !== "ambientes" && !adminTabs.includes(key))],
+    ["ambientes", "Ambientes", available.filter(([key]) => key === "ambientes")],
+    ["administracao", "Administração", available.filter(([key]) => adminTabs.includes(key))]
+  ];
+  menu.innerHTML = groups.filter(([, , tabs]) => tabs.length).map(([id, label, tabs]) => {
+    const open = tabs.some(([key]) => key === UI.tab) || (expanded.get(id) ?? true);
+    return `<details class="nav-group" data-group="${id}" ${open ? "open" : ""}>
+      <summary class="nav-group-title">${label}</summary>
+      <div role="tablist" aria-label="${label}" aria-orientation="vertical">${tabs.map(([key, text]) =>
+        `<button type="button" role="tab" data-act="tab" data-k="${key}" aria-selected="${UI.tab === key}">${text}</button>`
+      ).join("")}</div>
+    </details>`;
+  }).join("");
 }
 
 /* ---------- PAINEL ---------- */
@@ -1314,7 +1332,7 @@ function renderView(){
   if(MODE==="landing"){renderLanding();return}
   if(!S&&UI.me?.courseRestricted&&!Object.keys(T).length){
     document.getElementById('hdr').innerHTML='<h1>Cursos</h1><span class="meta">Organização acadêmica por curso</span>';
-    document.getElementById('tabs').innerHTML='<div class="nav-group"><div role="tablist" aria-label="Acadêmico"><button role="tab" aria-selected="true" data-act="tab" data-k="cursos">Cursos</button></div></div>';
+    document.getElementById('tabs').innerHTML='<details class="nav-group" data-group="academico" open><summary class="nav-group-title">Acadêmico</summary><div role="tablist" aria-label="Acadêmico" aria-orientation="vertical"><button type="button" role="tab" aria-selected="true" data-act="tab" data-k="cursos">Cursos</button></div></details>';';
     document.getElementById('view').innerHTML=SENAI_COURSE_UI.render();afterRender();return;
   }
   if(UI.tab==="disciplinas"&&UI.loaded&&S){UI.courseId=SENAI_COURSES.courseOf(S);UI.coursePage="detail";UI.courseDetail="class-units";UI.tab="cursos";}

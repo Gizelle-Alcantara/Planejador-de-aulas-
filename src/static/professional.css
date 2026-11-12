@@ -29,16 +29,32 @@ header.top{padding-top:26px;gap:22px}
 .brand .logo{height:42px;padding:4px 0;border-radius:4px}
 .id h1{font-size:1.5rem;letter-spacing:-.035em}
 .id .meta{line-height:1.6}
-nav.tabs{gap:6px;padding:0 0 8px;border:0}
-nav.tabs button{border:0;border-radius:8px;padding:10px 16px}
-nav.tabs button:hover{background:var(--surface)}
-nav.tabs button[aria-selected=true]{background:var(--accent);color:var(--accent-ink)}
-nav.tabs{flex-wrap:wrap;align-items:flex-start;overflow:visible;gap:18px}
-.nav-group{min-width:0;flex:0 1 auto}
-.nav-group:first-child{flex:1 1 640px}
-.nav-group-title{display:block;color:var(--muted);font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;margin:0 0 8px 10px}
-.nav-group [role=tablist]{display:flex;flex-wrap:wrap;gap:4px}
-nav.tabs button{padding:9px 11px}
+.system-layout > main { min-width: 0; }
+.system-layout > #tabs:empty { display: none; }
+@media (min-width: 621px) {
+  .system-layout:has(> #tabs:not(:empty)) {
+    display: grid;
+    grid-template-columns: clamp(156px, 17vw, 208px) minmax(0, 1fr);
+    align-items: start;
+    gap: 20px;
+  }
+}
+.system-layout > nav.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  overflow: visible;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface2);
+}
+.nav-group + .nav-group { border-top: 1px solid var(--line); padding-top: 8px; }
+.nav-group-title { padding: 9px 8px; color: var(--muted); font-size: .76rem; font-weight: 700; cursor: pointer; }
+.nav-group [role=tablist] { display: grid; gap: 4px; padding-left: 12px; }
+.system-layout > nav.tabs button { min-height: 40px; padding: 8px 10px; border: 0; border-radius: 8px; text-align: left; white-space: normal; }
+.system-layout > nav.tabs button:hover { background: var(--surface); }
+.system-layout > nav.tabs button[aria-selected=true] { background: var(--accent); color: var(--accent-ink); }
 .required-marker{color:var(--bad);font-weight:700;display:inline}
 .required-marker::after{content:' *'}
 .field-error{font-size:.78rem;color:var(--bad,#a52222);line-height:1.5;font-weight:500}
@@ -60,7 +76,6 @@ nav.tabs button{padding:9px 11px}
 .duplicate-options strong{font-weight:600;font-size:.85rem}
 .duplicate-options small{display:block;color:var(--muted);line-height:1.6;margin-top:4px}
 .duplicate-options label:has(input:disabled){opacity:.6}
-@media(max-width:620px){nav.tabs{gap:14px}.nav-group,.nav-group:first-child{flex:1 1 100%}.nav-group [role=tablist]{flex-wrap:nowrap;overflow-x:auto;max-width:100%;padding:3px 0 6px}.nav-group-title{margin-left:0}}
 main{padding-block:24px}
 .panel,.tile,.card{border-radius:12px;box-shadow:0 3px 12px rgb(12 35 64 / 3%)}
 .panel{padding:22px}
