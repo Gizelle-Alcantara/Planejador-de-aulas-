@@ -31,48 +31,6 @@ header.top{padding-top:26px;gap:22px}
 .id .meta{line-height:1.6}
 .system-layout > main { min-width: 0; }
 .system-layout > #tabs:empty { display: none; }
-.workspace-pages { display: none; }
-@media (min-width: 900px) and (min-height: 600px) {
-  .wrap:has(.system-layout > #tabs:not(:empty)) {
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    width: 100%;
-    max-width: 1680px;
-  }
-  .system-layout:has(> #tabs:not(:empty)) {
-    flex: 1;
-    min-height: 0;
-    grid-template-rows: minmax(0, 1fr);
-    align-items: stretch;
-  }
-  .system-layout:has(> #tabs:not(:empty)) > #tabs {
-    align-self: start;
-    max-height: 100%;
-    overflow-y: auto;
-  }
-  .system-layout:has(> #tabs:not(:empty)) > main {
-    align-self: stretch;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
-  }
-  .system-layout:has(> #tabs:not(:empty)) .workspace-page {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    scrollbar-width: none;
-  }
-  .system-layout:has(> #tabs:not(:empty)) .workspace-pages:not([hidden]) {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    padding: 8px 0;
-    border-top: 1px solid var(--line);
-  }
-}
-.system-layout > #tabs:empty { display: none; }
 @media (min-width: 621px) {
   .system-layout:has(> #tabs:not(:empty)) {
     display: grid;
@@ -94,7 +52,7 @@ header.top{padding-top:26px;gap:22px}
 .nav-group + .nav-group { border-top: 1px solid var(--line); padding-top: 8px; }
 .nav-group-title { padding: 9px 8px; color: var(--muted); font-size: .76rem; font-weight: 700; cursor: pointer; }
 .nav-group [role=tablist] { display: grid; gap: 4px; padding-left: 12px; }
-.system-layout > nav.tabs button { min-height: 30px; padding: 4px 9px; border: 0; border-radius: 8px; text-align: left; white-space: normal; }
+.system-layout > nav.tabs button { min-height: 40px; padding: 8px 10px; border: 0; border-radius: 8px; text-align: left; white-space: normal; }
 .system-layout > nav.tabs button:hover { background: var(--surface); }
 .system-layout > nav.tabs button[aria-selected=true] { background: var(--accent); color: var(--accent-ink); }
 .required-marker{color:var(--bad);font-weight:700;display:inline}
