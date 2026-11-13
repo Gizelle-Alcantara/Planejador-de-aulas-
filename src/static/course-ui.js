@@ -62,10 +62,11 @@ window.SENAI_COURSE_UI=(()=>{
   controls.querySelector('span').textContent='Página '+(page+1)+' de '+total;
  }
  window.addEventListener('resize',()=>paginateUnits());
- new ResizeObserver(()=>paginateUnits()).observe(document.getElementById('tabs'));
- new MutationObserver(records=>{
-  if(records.some(record=>record.target.id==='view'))paginateUnits();
- }).observe(document.getElementById('view'),{childList:true});
+ document.addEventListener('DOMContentLoaded',()=>{
+  new ResizeObserver(()=>paginateUnits()).observe(document.getElementById('tabs'));
+  new MutationObserver(()=>paginateUnits()).observe(document.getElementById('view'),{childList:true});
+  paginateUnits();
+ },{once:true});
  document.addEventListener('invalid',e=>{
   const row=e.target.closest('#course-editor .course-unit');
   if(!row||revealingInvalid)return;
