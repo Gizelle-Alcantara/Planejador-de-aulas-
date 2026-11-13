@@ -26,9 +26,58 @@ window.SENAI_COURSE_UI=(()=>{
   G.cursos=r.items;G.coursesEnabled=r.enabled;UI.courseRev=r.rev;UI.courseLoaded=true;
   if(UI.tab==='cursos')renderView();return r;
  }
+
+ let page=0, moduleFilter='', editorKey, revealingInvalid=false;
+ function paginateUnits(reset=false,target){
+  const form=document.getElementById('course-editor');
+  if(!form){editorKey=undefined;return}
+  const key=form.dataset.courseId;
+  if(key!==editorKey){editorKey=key;moduleFilter='';reset=true}
+  const rows=[...form.querySelectorAll('.course-unit')];
+  const filter=form.querySelector('[data-module-filter]');
+  const moduleOf=row=>row.querySelector('[name=modulo]').value.trim();
+  const modules=[...new Set(rows.map(moduleOf))].sort((a,b)=>a.localeCompare(b,'pt-BR',{numeric:true}));
+  const options=[['','Todos os módulos'],...modules.map(m=>['module:'+m,m||'Sem módulo'])];
+  if(!options.some(([value])=>value===moduleFilter)){moduleFilter='';reset=true}
+  if(JSON.stringify(options)!==filter.dataset.options){
+   filter.replaceChildren(...options.map(([value,label])=>new Option(label,value)));
+   filter.dataset.options=JSON.stringify(options);
+  }
+  filter.value=moduleFilter;
+  const matches=rows.filter(row=>!moduleFilter||'module:'+moduleOf(row)===moduleFilter);
+  const list=form.querySelector('#course-unit-rows'),sidebar=document.getElementById('tabs');
+  const bottom=innerWidth>620?Math.max(innerHeight-scrollY,sidebar.getBoundingClientRect().bottom):innerHeight-scrollY;
+  const available=bottom-list.getBoundingClientRect().top-(canEdit()?150:78);
+  const sample=rows.find(row=>!row.hidden);
+  const height=Math.max(200,(sample?.getBoundingClientRect().height||0)+18);
+  const perPage=Math.max(1,Math.floor(available/height));
+  const total=Math.max(1,Math.ceil(matches.length/perPage));
+  page=target?Math.floor(Math.max(0,matches.indexOf(target))/perPage):reset?0:Math.min(page,total-1);
+  const visible=new Set(matches.slice(page*perPage,(page+1)*perPage));
+  rows.forEach(row=>{row.hidden=!visible.has(row)});
+  const controls=form.querySelector('[data-unit-pages]');
+  controls.hidden=total===1;
+  controls.querySelector('[data-unit-step="-1"]').disabled=page===0;
+  controls.querySelector('[data-unit-step="1"]').disabled=page===total-1;
+  controls.querySelector('span').textContent='Página '+(page+1)+' de '+total;
+ }
+ window.addEventListener('resize',()=>paginateUnits());
+ new ResizeObserver(()=>paginateUnits()).observe(document.getElementById('tabs'));
+ new MutationObserver(records=>{
+  if(records.some(record=>record.target.id==='view'))paginateUnits();
+ }).observe(document.getElementById('view'),{childList:true});
+ document.addEventListener('invalid',e=>{
+  const row=e.target.closest('#course-editor .course-unit');
+  if(!row||revealingInvalid)return;
+  revealingInvalid=true;
+  queueMicrotask(()=>{revealingInvalid=false});
+  if(!row.hidden)return;
+  moduleFilter='';
+  paginateUnits(false,row);
+ },true);
  function editor(c){
   const editable=canEdit(),draft=UI.courseDrafts?.[draftKey(c)],value=draft||c,options=classes(c);
-  return `<form id="course-editor" data-course-id="${esc(c.id||'')}"><div class="course-section-heading"><div><h3>Modelo de unidades curriculares</h3><p class="small muted">Adicione, edite ou remova unidades aqui, mesmo sem turmas cadastradas. Novas turmas podem usar este modelo.</p></div><span class="course-badge" data-course-unit-count>${value.ucs.length} unidade(s)</span></div>${!editable?'<p class="course-notice">Consulta do modelo. A edição exige acesso de administrador ou vínculo ao curso após a ativação das restrições. Os ajustes das suas turmas continuam na opção Ajustes por turma.</p>':''}<div class="form course-metadata"><label class="f">Nome do curso<input type="text" name="nome" value="${esc(value.nome||'')}" maxlength="160" required ${c.id||!editable?'readonly':''}></label><label class="f">Tipo<select aria-label="Tipo" name="tipo" ${!UI.me?.master?'disabled':''}><option value="tecnico" ${value.tipo==='tecnico'?'selected':''}>Curso técnico</option><option value="rapido" ${value.tipo==='rapido'?'selected':''}>Curso rápido</option></select></label></div>${editable&&options.length?`<div class="course-import"><div><strong>Começar a partir de uma turma</strong><p class="small muted">Importe somente unidades e professores. O calendário da turma permanece como está.</p></div><label class="f">Turma de origem<select id="course-import-source" aria-label="Turma de origem">${options.map(([id,s])=>`<option value="${esc(id)}" ${id===CUR?'selected':''}>${esc(s.cfg.turma)} · ${esc(s.cfg.turno)}</option>`).join('')}</select></label>${button('Importar unidades da turma','import-template')}</div>`:''}<div id="course-unit-rows">${value.ucs.length?value.ucs.map((u,i)=>unitRow(u,i,!editable)).join(''):`<div class="course-empty" data-course-empty><strong>O modelo ainda não tem unidades curriculares</strong><p>Adicione a primeira unidade${options.length?' ou importe a estrutura de uma turma deste curso':''}.</p></div>`}</div>${editable?`<div class="course-actions row">${button('Adicionar unidade curricular','add-unit')}<button class="btn pri" type="submit">${saveLabel(c)}</button>${button('Descartar alterações','discard')}</div>`:''}<p id="course-feedback" role="status" aria-live="polite">${draft?draftMessage(c):''}</p></form>`;
+  return `<form id="course-editor" data-course-id="${esc(c.id||'')}"><div class="course-section-heading"><div><h3>Modelo de unidades curriculares</h3><p class="small muted">Adicione, edite ou remova unidades aqui, mesmo sem turmas cadastradas. Novas turmas podem usar este modelo.</p></div><span class="course-badge" data-course-unit-count>${value.ucs.length} unidade(s)</span></div>${!editable?'<p class="course-notice">Consulta do modelo. A edição exige acesso de administrador ou vínculo ao curso após a ativação das restrições. Os ajustes das suas turmas continuam na opção Ajustes por turma.</p>':''}<div class="form course-metadata"><label class="f">Nome do curso<input type="text" name="nome" value="${esc(value.nome||'')}" maxlength="160" required ${c.id||!editable?'readonly':''}></label><label class="f">Tipo<select aria-label="Tipo" name="tipo" ${!UI.me?.master?'disabled':''}><option value="tecnico" ${value.tipo==='tecnico'?'selected':''}>Curso técnico</option><option value="rapido" ${value.tipo==='rapido'?'selected':''}>Curso rápido</option></select></label></div>${editable&&options.length?`<div class="course-import"><div><strong>Começar a partir de uma turma</strong><p class="small muted">Importe somente unidades e professores. O calendário da turma permanece como está.</p></div><label class="f">Turma de origem<select id="course-import-source" aria-label="Turma de origem">${options.map(([id,s])=>`<option value="${esc(id)}" ${id===CUR?'selected':''}>${esc(s.cfg.turma)} · ${esc(s.cfg.turno)}</option>`).join('')}</select></label>${button('Importar unidades da turma','import-template')}</div>`:''}<label class="f course-module-filter">Filtrar por módulo<select data-module-filter><option value="">Todos os módulos</option></select></label><div id="course-unit-rows">${value.ucs.length?value.ucs.map((u,i)=>unitRow(u,i,!editable)).join(''):`<div class="course-empty" data-course-empty><strong>O modelo ainda não tem unidades curriculares</strong><p>Adicione a primeira unidade${options.length?' ou importe a estrutura de uma turma deste curso':''}.</p></div>`}</div><nav class="course-unit-pages" data-unit-pages aria-label="Páginas das unidades curriculares" hidden><button class="btn sm" type="button" data-unit-step="-1">Anterior</button><span role="status"></span><button class="btn sm" type="button" data-unit-step="1">Próxima</button></nav>${editable?`<div class="course-actions row">${button('Adicionar unidade curricular','add-unit')}<button class="btn pri" type="submit">${saveLabel(c)}</button>${button('Descartar alterações','discard')}</div>`:''}<p id="course-feedback" role="status" aria-live="polite">${draft?draftMessage(c):''}</p></form>`;
  }
  function unitRow(u={},i=0,readonly=false){return `<fieldset class="course-unit" ${readonly?'disabled':''}><legend>Unidade curricular ${i+1}</legend><div class="form"><label class="f">Sigla<input type="text" name="sigla" value="${esc(u.sigla||'')}" maxlength="15" pattern="[A-Z0-9_-]{1,15}" required></label><label class="f">Unidade curricular<input type="text" name="unidade" value="${esc(u.nome||'')}" maxlength="200" required></label><label class="f">Carga horária<input name="ch" type="number" min="0.01" max="10000" step="any" value="${esc(u.ch||'')}" required></label><label class="f">Módulo<input type="text" name="modulo" value="${esc(u.modulo||'')}" maxlength="40" placeholder="Opcional"></label><label class="f">Professor sugerido<select aria-label="Professor sugerido" name="docenteId"><option value="">Definir na turma</option>${u.docenteId&&!teachers().some(t=>t.id===u.docenteId)?`<option value="${esc(u.docenteId)}" selected disabled>Professor removido — selecione outro</option>`:""}${teachers().map(t=>`<option value="${esc(t.id||'')}" ${u.docenteId===t.id?'selected':''}>${esc(t.nome)}</option>`).join('')}</select></label></div>${readonly?'':button('Remover unidade','remove-unit','sm bad')}</fieldset>`}
  function teacherView(c){
@@ -68,14 +117,14 @@ window.SENAI_COURSE_UI=(()=>{
   if(action==='back'){UI.coursePage='';UI.courseId='';renderView();return}
   if(['units','class-units','teachers','classes'].includes(action)){if(action==='class-units'){const options=classes(course());if(options.length&&!options.some(([id])=>id===CUR)){CUR=options[0][0];normalize();persistLocal()}}UI.courseDetail=action;renderView();return}
   if(action==='new-class'){UI.newCourseId=course().id;openTurmaModal();return}
-  if(action==='add-unit'){if(!canEdit())return;const box=document.getElementById('course-unit-rows');if(box.querySelectorAll('.course-unit').length>=200){toast('O modelo permite até 200 unidades.');return}box.querySelector('[data-course-empty]')?.remove();box.insertAdjacentHTML('beforeend',unitRow({},box.querySelectorAll('.course-unit').length));stash();box.lastElementChild.querySelector('input')?.focus();return}
+  if(action==='add-unit'){if(!canEdit())return;const box=document.getElementById('course-unit-rows');if(box.querySelectorAll('.course-unit').length>=200){toast('O modelo permite até 200 unidades.');return}box.querySelector('[data-course-empty]')?.remove();box.insertAdjacentHTML('beforeend',unitRow({},box.querySelectorAll('.course-unit').length));stash();moduleFilter='';paginateUnits(false,box.lastElementChild);box.lastElementChild.querySelector('input')?.focus();return}
   if(action==='discard'){delete UI.courseDrafts?.[course()?.id||'_new'];renderView();return}
   if(action==='import-template'){
    if(!canEdit())return;const sourceId=document.getElementById('course-import-source')?.value,source=classes(course()).find(([id])=>id===sourceId)?.[1];
    if(!source){toast('Selecione uma turma deste curso.');return}
    if(!source.ucs.length){toast('A turma selecionada não possui unidades curriculares.');return}
    const box=document.getElementById('course-unit-rows');if(box.querySelector('.course-unit')&&!confirm('Substituir as unidades deste rascunho pelas unidades da turma selecionada? O modelo só muda depois de salvar.'))return;
-   box.innerHTML=source.ucs.map((u,i)=>unitRow({...u,docenteId:u.docenteId||teachers().find(t=>t.nome===u.docente)?.id||'',modulo:u.modulo||source.cfg.modulo||''},i)).join('');stash();return;
+   box.innerHTML=source.ucs.map((u,i)=>unitRow({...u,docenteId:u.docenteId||teachers().find(t=>t.nome===u.docente)?.id||'',modulo:u.modulo||source.cfg.modulo||''},i)).join('');stash();moduleFilter='';paginateUnits(true);return;
   }
   if(action==='enable'){
    if(!confirm('Ativar restrições por curso? Coordenadores sem vínculo não poderão acessar turmas.'))return;
@@ -83,6 +132,7 @@ window.SENAI_COURSE_UI=(()=>{
   }
  }
  document.addEventListener('click',e=>{
+  const step=e.target.closest('[data-unit-step]');if(step){page+=Number(step.dataset.unitStep);paginateUnits();return}
   const open=e.target.closest('[data-course-open]');if(open){UI.courseClassQuery='';UI.courseId=open.dataset.courseOpen;UI.coursePage='detail';UI.courseDetail='units';renderView();return}
   const adjust=e.target.closest('[data-course-adjust]');if(adjust&&classes(course()).some(([id])=>id===adjust.dataset.courseAdjust)){CUR=adjust.dataset.courseAdjust;normalize();persistLocal();UI.courseDetail='class-units';renderView();return}
   const turma=e.target.closest('[data-course-turma]');if(turma){CUR=turma.dataset.courseTurma;normalize();UI.tab='calendario';UI.month=null;persistLocal();renderView();return}
@@ -92,7 +142,7 @@ window.SENAI_COURSE_UI=(()=>{
  });
  document.addEventListener('input',e=>{if(e.target.closest('#course-editor')){if(e.target.name==='sigla')e.target.value=e.target.value.toUpperCase();stash()}if(e.target.id==='course-class-search'){UI.courseClassQuery=e.target.value;const query=e.target.value.trim().toLocaleLowerCase('pt-BR');let found=0;document.querySelectorAll('[data-course-class-text]').forEach(row=>{row.hidden=!row.dataset.courseClassText.includes(query);if(!row.hidden)found++});document.getElementById('course-class-results').textContent=found?found+' turma(s) encontrada(s).':'Nenhuma turma corresponde à busca.'}});
  window.addEventListener('beforeunload',e=>{if(Object.keys(UI.courseDrafts||{}).length){e.preventDefault();e.returnValue=''}});
- document.addEventListener('change',e=>{if(e.target.closest('#course-editor'))stash();if(e.target.id==='course-unit-class'){if(dirty||UI.status==='saving'){e.target.value=CUR;toast('Aguarde a confirmação de gravação antes de trocar de turma.');return}const target=classes(course()).find(([id])=>id===e.target.value);if(target){CUR=target[0];normalize();persistLocal();renderView()}return}if(e.target.id==='course-type-filter'){UI.courseType=e.target.value;renderView()}if(e.target.id==='ntCourseCatalog'){const c=catalog().find(c=>c.id===e.target.value);document.getElementById('ntCurso').value=c?.nome||'';}});
+ document.addEventListener('change',e=>{if(e.target.matches('[data-module-filter]')){moduleFilter=e.target.value;paginateUnits(true);return}if(e.target.closest('#course-editor')){stash();if(e.target.name==='modulo')paginateUnits()}if(e.target.id==='course-unit-class'){if(dirty||UI.status==='saving'){e.target.value=CUR;toast('Aguarde a confirmação de gravação antes de trocar de turma.');return}const target=classes(course()).find(([id])=>id===e.target.value);if(target){CUR=target[0];normalize();persistLocal();renderView()}return}if(e.target.id==='course-type-filter'){UI.courseType=e.target.value;renderView()}if(e.target.id==='ntCourseCatalog'){const c=catalog().find(c=>c.id===e.target.value);document.getElementById('ntCurso').value=c?.nome||'';}});
  document.addEventListener('submit',async e=>{
   const form=e.target;if(form.id!=='course-editor'&&!form.matches('.course-access-form'))return;e.preventDefault();
   const feedback=form.querySelector('[role=status]'),b=form.querySelector('[type=submit]');b.disabled=true;feedback.textContent='Salvando…';
