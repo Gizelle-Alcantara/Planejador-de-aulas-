@@ -1439,7 +1439,7 @@ document.addEventListener("click",async e=>{
   if(a==="mclose"){if(e.target===b)closeModal();return}
   if(a==="docdetails"){b.closest(".teacher-card").querySelector("dialog").showModal();return}
   if(a==="docclose"){b.closest("dialog").close();return}
-  if(a==="tab"){if(UI.tab!==b.dataset.k)UI.backTabs.push(UI.tab);UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
+  if(a==="tab"){if(UI.tab!==b.dataset.k)UI.backTabs.push(UI.tab);UI.tab=b.dataset.k;UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(x){}renderView();document.getElementById("main-content").scrollTop=0;window.scrollTo(0,0);if(UI.tab==="acesso")loadAcc()}
   else if(a==="day")dayClick(b.dataset.iso);
   else if(a==='managementcsv'){const data=UI.management;if(data?.csv&&!data.loading&&!data.error)DL.save({filename:'relatorio-gerencial-'+data.report.from+'-'+data.report.to+'.csv',data:data.csv}).then(()=>toast('Relatório exportado.'),()=>toast('Não foi possível salvar o CSV.'))}
   else if(a==='managementprint')printManagementReport();
@@ -1448,7 +1448,7 @@ document.addEventListener("click",async e=>{
   else if(a==='publicationbackup'){b.disabled=true;PLAN.api({op:'backup_now'}).then(async result=>{if(!result.ok){toast(result.error||'Não foi possível criar o backup.');return}UI.bk=null;toast(result.skipped?'Nenhum dado disponível para backup.':'Backup completo criado. Baixe e guarde uma cópia externa.');await loadPublication()}).catch(()=>toast('Não foi possível conectar. Tente novamente.')).finally(()=>b.disabled=false)}
   else if(a==='overviewopen'){
     if(!T[b.dataset.id]){toast('Turma não disponível. Atualize a visão geral.');return}
-    UI.backTabs.push('geral');CUR=b.dataset.id;normalize();UI.tab=['painel','calendario','disciplinas'].includes(b.dataset.tab)?b.dataset.tab:'painel';UI.month=null;UI.ucFilter='';UI.fUc='';Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');persistLocal();renderView();window.scrollTo(0,0);
+    UI.backTabs.push('geral');CUR=b.dataset.id;normalize();UI.tab=['painel','calendario','disciplinas'].includes(b.dataset.tab)?b.dataset.tab:'painel';UI.month=null;UI.ucFilter='';UI.fUc='';Object.keys(UI.calFilters).forEach(k=>UI.calFilters[k]='');persistLocal();renderView();document.getElementById("main-content").scrollTop=0;window.scrollTo(0,0);
   }
   else if(a==="conflictreview"){
     const id=b.dataset.turma,iso=b.dataset.iso;if(!T[id]?.days?.[iso]){toast('Este lançamento não está mais disponível. Atualize o painel.');return}
@@ -1477,7 +1477,7 @@ document.addEventListener("click",async e=>{
   else if(a==="docdel"){const i=+b.dataset.i;if(UI.confirm==="doc"+i){const nm=S.docentes[i].nome;S.docentes.splice(i,1);Object.values(T).forEach(st=>st.ucs.forEach(u=>{if(u.docente===nm)u.docente=""}));UI.confirm=null;save()}else UI.confirm="doc"+i;renderView()}
   else if(a==="envopt"){UI.env[b.dataset.k]=b.dataset.v;UI.env.msg=null;renderView()}
   else if(a==="envlog"){S.envios.push({em:new Date().toISOString(),canal:UI.env.canal,periodo:UI.env.periodo,sig:sigHash()});save();toast("Envio registrado");renderView()}
-  else if(a==="back"){UI.tab=UI.backTabs.pop()||(UI.role==="docente"?"ambientes":"painel");UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(e){}renderView();window.scrollTo(0,0)}
+  else if(a==="back"){UI.tab=UI.backTabs.pop()||(UI.role==="docente"?"ambientes":"painel");UI.confirm=null;try{localStorage.setItem(KEY+"-tab",UI.tab)}catch(e){}renderView();document.getElementById("main-content").scrollTop=0;window.scrollTo(0,0)}
   else if(a==="export")openExportModal();
   else if(a==="prevxlsx")openExcelPreview(b,"turma");
   else if(a==="prevdocxlsx")openExcelPreview(b,"docente");
@@ -1495,7 +1495,7 @@ document.addEventListener("click",async e=>{
   else if(a==="turmanew")openTurmaModal();
   else if(a==="turmaduplicate")openDuplicateModal(b.dataset.id||CUR);
   else if(a==="turmasave")saveTurma();
-  else if(a==="turmago"){CUR=b.dataset.id;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView();window.scrollTo(0,0)}
+  else if(a==="turmago"){CUR=b.dataset.id;normalize();UI.month=null;UI.ucFilter="";persistLocal();renderView();document.getElementById("main-content").scrollTop=0;window.scrollTo(0,0)}
   else if(a==="turmadel"){if(UI.confirm==="turmadel"){delete T[CUR];CUR=Object.keys(T)[0];normalize();UI.confirm=null;UI.month=null;UI.tab="painel";save();toast("Turma excluída")}else UI.confirm="turmadel";renderView()}
   else if(a==="print"){const w=window.open("","_blank");if(!w){toast("Libere os pop-ups do navegador para imprimir.");return}w.document.write(htmlCalendario());w.document.close();setTimeout(()=>{try{w.focus();w.print()}catch(e){}},400)}
   else if(a==="bkfull"){const o=JSON.stringify({geral:G,turmas:strippedT()},null,1);DL.save({filename:`backup-planejador-${todayISO()}.json`,data:o}).then(()=>toast("Backup salvo"),er=>{if(!er||er.code!=="declined")toast("Não foi possível salvar o arquivo.")})}
