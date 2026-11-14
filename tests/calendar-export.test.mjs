@@ -18,21 +18,21 @@ test('modelos incorporados funcionam sem arquivos externos ou localização do m
  }
  assert.throws(()=>excelTemplate('inexistente'),/desconhecido/);
 });
-test('exportação Excel mantém o modelo original e preenche cabeçalho, datas, salas e fórmulas',()=>{
+test('exportação Excel mantém o modelo original e preenche cabeçalho, datas, quebra de nomes e fórmulas',()=>{
  const namedState={...state,ucs:[{...state.ucs[0],docente:'Ana Maria dos Santos'}]};
  const result=unzipSync(calendarXlsx(namedState,[{status:'aprovada',data:'2028-02-29',sigla:'LOG',ambienteNome:'Maker'}]));
  const template=unzipSync(new Uint8Array(readFileSync(new URL('../lib/assets/calendario-senai-modelo.xlsx',import.meta.url))));
- assert.deepEqual(result['xl/styles.xml'],template['xl/styles.xml']);assert.deepEqual(result['xl/drawings/drawing1.xml'],template['xl/drawings/drawing1.xml']);
+ assert.match(strFromU8(result['xl/styles.xml']),/wrapText="1"/);assert.deepEqual(result['xl/drawings/drawing1.xml'],template['xl/drawings/drawing1.xml']);
  const sheet=strFromU8(result['xl/worksheets/sheet1.xml']);
  assert.match(sheet,/<row(?![^>]*hidden="1")[^>]*r="17"/);assert.match(getCell(sheet,'C1'),/T-EXPORT/);assert.match(getCell(sheet,'C3'),/Desenvolvimento de Sistemas/);
  assert.match(getCell(sheet,'AD20'),/LOG/); // Fevereiro: linha 20, dia 29 = coluna AD.
- assert.match(getCell(sheet,'AD22'),/>Ana Santos</);
- assert.match(getCell(sheet,'AD23'),/Maker/);assert.match(getCell(sheet,'B28'),/LOG/);
+ assert.match(getCell(sheet,'AD22'),/>Ana\nSantos</);
+ assert.doesNotMatch(sheet,/Maker|Sala 1/);assert.match(getCell(sheet,'B28'),/LOG/);
  assert.ok(!getCell(sheet,'AE18').includes('<v>')); // Fevereiro não tem dia 30.
  assert.match(getCell(sheet,'AD124'),/SUMIFS/);assert.match(getCell(sheet,'AD124'),/<v>2<\/v>/);
  assert.ok(!sheet.includes('#REF!'));assert.match(strFromU8(result['xl/workbook.xml']),/Encontros/);
  assert.ok(!result['xl/calcChain.xml']);
- const details=strFromU8(result['xl/worksheets/sheet2.xml']);assert.match(details,/Maker/);assert.match(details,/Atividade prática/);
+ const details=strFromU8(result['xl/worksheets/sheet2.xml']);assert.doesNotMatch(details,/Maker|Sala 1/);assert.match(details,/Atividade prática/);
  if(process.env.EXPORT_EVIDENCE_DIR){mkdirSync(process.env.EXPORT_EVIDENCE_DIR,{recursive:true});writeFileSync(process.env.EXPORT_EVIDENCE_DIR+'/calendario.xlsx',calendarXlsx(state));}
 });
 test('exportação cobre vários blocos de meses e mais de 18 disciplinas sem truncar dados',()=>{
