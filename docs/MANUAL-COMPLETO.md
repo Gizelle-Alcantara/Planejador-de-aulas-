@@ -28,7 +28,7 @@ Após ativar as restrições por curso, coordenadores sem curso vinculado não r
 3. Vincule cada conta docente ao seu cadastro. Login e nome profissional são informações diferentes.
 4. Cadastre ambientes e confira disponibilidade.
 5. Em **Cursos**, cadastre cursos técnicos/rápidos e seus modelos de unidades e professores. Importe de uma turma de origem quando necessário e salve o modelo.
-6. Configure as turmas e seus calendários; ajuste unidades de uma turma em **Cursos → Abrir curso → Unidades curriculares → Ajustes por turma**.
+6. Configure as turmas e seus calendários; ajuste unidades de uma turma em **Cursos → Abrir curso → Turmas → Ajustar unidades**.
 7. Em **Acessos por curso**, atribua e salve os cursos de cada coordenador. Confira os vínculos antes de **Ativar restrições por curso**. O administrador permanece com acesso completo.
 8. Revise pendências/conflitos antes de compartilhar códigos ou exportações.
 
@@ -36,9 +36,15 @@ Preserve os cadastros existentes ao corrigir nomes; não duplique pessoas para r
 
 ## 3. Turmas, disciplinas e programação
 
-As unidades curriculares ficam em **Cursos → Abrir curso → Unidades curriculares**. Escolha **Modelo do curso** para definir a estrutura das novas turmas ou **Ajustes por turma** para editar uma turma existente. Essa área substitui a antiga aba principal Disciplinas; alterar uma turma preserva o modelo e as demais turmas.
+Em **Cursos → Abrir curso**, as abas aparecem na ordem **Modelo do curso**, **Unidades curriculares**, **Professores** e **Turmas**. A primeira abre o editor do modelo. **Unidades curriculares** lista as unidades do modelo para consulta. Dentro de **Turmas**, clique em **Ajustar unidades** na turma desejada. Os ajustes são salvos automaticamente na turma.
 
-O modelo é gravado com **Salvar modelo do curso**. Rascunhos são preservados durante a navegação entre seções da aba, mas precisam ser salvos antes de fechar/recarregar. **Descartar alterações** restaura a versão salva. Em **Importar unidades da turma**, selecione uma turma do próprio curso: a importação preenche o rascunho e não modifica a origem. A substituição de unidades já preenchidas pede confirmação.
+O administrador master pode criar cursos em **Novo curso** e editar nome, tipo e unidades em **Modelo do curso → Salvar curso**. Para excluir, abra o curso, clique em **Excluir curso** e confirme. Se houver turmas vinculadas, transfira-as antes de excluir.
+
+Coordenadores com permissão para editar o modelo usam **Salvar unidades do curso**. Os rascunhos são preservados ao alternar entre as abas do curso. Salve antes de fechar ou recarregar a página. **Descartar alterações** restaura a versão salva.
+
+Em **Adicionar unidade curricular**, selecione o módulo e revise as disciplinas marcadas. O módulo da turma vem selecionado quando há disciplinas disponíveis nele. Clique em **Adicionar selecionadas** para preencher nome, sigla, carga horária, módulo e docente sugerido, quando cadastrado. As unidades que já estão na turma ficam fora da seleção. Use **Adicionar manualmente** para cadastrar outra unidade.
+
+No computador, a área de conteúdo acompanha a altura total do menu lateral. O menu fica totalmente visível e o conteúdo mais longo rola dentro da própria área. No celular, a rolagem ocorre na página.
 
 **Professores** reúne sugestões do modelo e vínculos das turmas, sem duplicar pessoas. **Turmas** oferece busca por código, turno ou módulo, resumo de carga horária e atalhos para calendário e ajustes de unidades. Campos de consulta identificam a falta de permissão para editar modelos. Os ajustes de turma continuam com salvamento automático e confirmação de gravação.
 
