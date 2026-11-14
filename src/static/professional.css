@@ -41,28 +41,15 @@ header.top{padding-top:26px;gap:22px}
 .system-layout > main { min-width: 0; }
 .system-layout > #tabs:empty { display: none; }
 @media screen and (min-width: 621px) {
-  body:has(.system-layout > #tabs:not(:empty)) > .wrap {
-    display: flex;
-    flex-direction: column;
-    height: calc(100dvh - 40px);
-  }
-  body:has(.system-layout > #tabs:not(:empty)) > .wrap > header {
-    flex: none;
-  }
   .system-layout:has(> #tabs:not(:empty)) {
     display: grid;
     grid-template-columns: clamp(156px, 17vw, 208px) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-    flex: 1;
-    min-height: 0;
     gap: 20px;
   }
-  .system-layout:has(> #tabs:not(:empty)) > :is(nav.tabs, main) {
-    min-height: 0;
+  .system-layout:has(> #tabs:not(:empty)) > main {
+    contain: size;
     overflow-y: auto;
     scrollbar-gutter: stable;
-  }
-  .system-layout:has(> #tabs:not(:empty)) > main {
     padding-block: 0;
   }
   .system-layout:has(> #tabs:not(:empty)) #view {
