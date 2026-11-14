@@ -8,7 +8,7 @@ Na aba **Cursos**, cada curso técnico ou rápido tem sua própria tela com unid
 
 1. Cadastre os professores na aba **Docentes**. Os modelos usam esse cadastro; não criam professores duplicados.
 2. Abra **Cursos**. Cursos das turmas existentes já aparecem. Abra um deles para cadastrar seu modelo ou clique em **Novo curso**.
-3. Cadastre sigla, nome, carga horária, módulo opcional e professor sugerido de cada unidade. Salve o modelo. Em **Começar a partir de uma turma**, selecione uma turma de origem do próprio curso e clique em **Importar unidades da turma** para usar sua estrutura como ponto de partida. A importação preenche um rascunho e só altera o modelo depois de salvar.
+3. Abra **Modelo do curso**, cadastre sigla, nome, carga horária, módulo opcional e professor sugerido de cada unidade e salve.
 4. Em **Acesso**, crie as contas de coordenação, se necessário.
 5. Em **Cursos → Acessos por curso**, marque e salve os cursos de cada coordenador. Um coordenador pode atender vários cursos.
 6. Confira os vínculos e clique em **Ativar restrições por curso**. Coordenadores sem vínculo deixam de acessar turmas. O administrador continua com acesso completo.
@@ -17,7 +17,11 @@ Os acessos atuais são mantidos até essa ativação explícita. Não há exclus
 
 ## Uso diário
 
-A antiga aba principal **Disciplinas** agora fica em **Cursos → Abrir curso → Unidades curriculares**. Use **Modelo do curso** para preparar as próximas turmas e **Ajustes por turma** para selecionar uma turma e editar suas unidades, professores, cargas horárias e ambientes. Os ajustes da turma são salvos automaticamente. Atalhos antigos de disciplinas levam a essa mesma área dentro do curso.
+As abas do curso são **Modelo do curso**, **Unidades curriculares**, **Professores** e **Turmas**. Abra **Turmas → Ajustar unidades** para editar as unidades, docentes, cargas horárias e ambientes de uma turma. Os ajustes são salvos automaticamente. Atalhos antigos de disciplinas levam a essa área.
+
+Em **Adicionar unidade curricular**, selecione o módulo e revise as disciplinas marcadas. O módulo da turma vem selecionado quando há disciplinas disponíveis nele. Clique em **Adicionar selecionadas** para preencher nome, sigla, carga horária, módulo e docente sugerido, quando cadastrado. As unidades que já estão na turma ficam fora da seleção. Use **Adicionar manualmente** para cadastrar outra unidade.
+
+O administrador master pode criar cursos em **Novo curso** e editar nome, tipo e unidades em **Modelo do curso → Salvar curso**. Para excluir, abra o curso, clique em **Excluir curso** e confirme. Se houver turmas vinculadas, transfira-as antes de excluir.
 
 Abra um curso e escolha **Nova turma deste curso**. A opção **Usar modelo do curso selecionado** copia suas unidades, cargas horárias e professores sugeridos. Cada turma pode ajustar essa cópia, inclusive trocar professores; mudanças não se propagam para o modelo nem para outras turmas. O calendário começa vazio.
 
