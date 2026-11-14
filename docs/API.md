@@ -91,10 +91,11 @@ Logins: 3 a 40 letras minúsculas, números, ponto, traço ou underscore; admin 
 |---|---|---|
 | course_list | M/C | items, enabled e rev; após ativação, C recebe apenas seus cursos |
 | course_save | M; C vinculado após ativação | course {id?,nome,tipo,ucs}, base; tipo tecnico/rapido; ucs [{sigla,nome,ch,docenteId,modulo}]; C edita somente o modelo do próprio curso |
+| course_delete | M | id, base; exclui o curso sem turmas vinculadas. Retorna 404 para curso inexistente e 409 se houver turmas vinculadas ou conflito de revisão. |
 | user_courses | M | login de coordenador, courseIds; substitui vínculos; [] remove acesso após ativação |
 | course_enable | M | base; ativa restrições depois de configurar vínculos; não altera turmas |
 
-O documento cursos é gerenciado por estas operações; set, delete e restore de histórico não podem alterar esse documento. A revisão do catálogo é global; conflito de course_save retorna apenas rev, sem modelos de outros cursos. Contas e backup completo incluem users.course_ids. Novas contas têm lista vazia.
+O documento cursos é gerenciado por estas operações; set, delete e restore de histórico não podem alterar esse documento. A revisão do catálogo é global; conflitos de revisão em course_save e course_delete retornam a revisão atual, sem modelos de outros cursos. Contas e backup completo incluem users.course_ids. Novas contas têm lista vazia.
 
 Com as restrições ativas, coordenadores recebem somente seus cursos e turmas, nomes/identificadores/disponibilidade dos docentes e reservas das próprias turmas. Escrita em lote, exclusão, códigos de alunos, planejamento, histórico, restauração e exportação de turma verificam o vínculo no servidor a cada requisição. Relatórios recebem apenas as turmas autorizadas. A troca dos vínculos vale também para sessões existentes. Coordenador sem vínculo não recebe turmas. As exportações globais por docente e os módulos globais de ambientes, frequência, avisos, contas e backups ficam com o administrador ou seus perfis específicos. Perfis de aluno, docente e ambientes preservam suas regras próprias.
 
@@ -237,4 +238,4 @@ POST holiday_apply recebe date, name e o token da prévia. Exige master e confer
 
 planning_preview e planning_apply permitem docente e sala vazios. A prévia retorna pendingTeacher e pendingRoom, além de docente/ambiente vazios quando ainda não definidos. As datas e aulas podem ser gravadas sem inventar nomes ou ambientes. Se somente um recurso estiver informado, seus conflitos continuam sendo considerados. Valores preenchidos devem ser válidos: docente cadastrado e ambiente ativo; cfg.local continua funcionando como ambiente padrão quando a sala da disciplina está vazia.
 
-Os campos podem ser ajustados depois em Cursos > Ajustes por turma. A atualização de uma alocação em calendário com grade verifica conflitos antes de salvar; a pendência não autoriza reservar ambientes ou alocar chaves sem cumprir as regras próprias desses módulos.
+Os campos podem ser ajustados depois em Cursos > Abrir curso > Turmas > Ajustar unidades. A atualização de uma alocação em calendário com grade verifica conflitos antes de salvar; a pendência não autoriza reservar ambientes ou alocar chaves sem cumprir as regras próprias desses módulos.
