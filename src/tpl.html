@@ -1421,7 +1421,11 @@ function renderView(){
   }
   if(UI.tab==="disciplinas"&&UI.loaded&&S){UI.courseId=SENAI_COURSES.courseOf(S);UI.coursePage="detail";UI.courseDetail="class-units";UI.tab="cursos";}
   renderHead();
-  if(!S&&!["cursos","ambientes","frequencia","acesso","docentes","geral","dados","publicacao","diagnostico"].includes(UI.tab)){document.getElementById("view").innerHTML='<section class="panel"><h2>Escolha uma turma</h2><p class="muted">Selecione uma turma acima para visualizar seus dados e o planejamento de aulas.</p></section>';return}
+  if(!S&&!["cursos","ambientes","frequencia","acesso","docentes","geral","dados","publicacao","diagnostico"].includes(UI.tab)){
+    const model=UI.tab==="calendario"&&UI.me?.master?'<button class="btn" data-act="modelopen">Calendário modelo</button>':'';
+    document.getElementById("view").innerHTML=`<section class="panel"><h2>Escolha uma turma</h2><p class="muted">Selecione uma turma acima para visualizar seus dados e o planejamento de aulas.</p>${model}</section>`;
+    return;
+  }
   const v=document.getElementById("view");
   // A refresh can happen before the asynchronous details toggle event is delivered.
   v.querySelectorAll('[data-doc-details]').forEach(el=>{UI.docDetails??={};UI.docDetails[el.dataset.docDetails]=el.open});
