@@ -97,3 +97,26 @@ test('cursos: atribuição, ativação, isolamento em leitura, escrita, exporta�
  assert.ok((await(await get(restoredA)).json()).docs.some(d=>d.id==='turma-a'));
  assert.deepEqual((await json({op:'course_list'},await login({login:'coord-b',password:'senha-cursos-123'}))).items.map(c=>c.id),[courseB.id]);
 });
+
+test('coordenador cadastra professor em seu curso e preserva o vínculo ao editar o modelo',async()=>{
+ const admin=await login({password:process.env.ADMIN_PASSWORD});
+ const saved=await json({op:'course_save',course:{nome:'Curso para cadastro de professores',tipo:'rapido',ucs:[]}},admin);
+ const id=saved.course.id;
+ await json({op:'user_add',login:'coord-professores',password:'senha-professores',role:'coord'},admin);
+ await json({op:'user_courses',login:'coord-professores',courseIds:[id]},admin);
+ await json({op:'course_enable'},admin);
+ const coord=await login({login:'coord-professores',password:'senha-professores'});
+ const teacher={nome:'Professora cadastrada pelo curso',matricula:'NOVO-123',email:'nova@example.test'};
+ const added=await json({op:'course_teacher_add',courseId:id,teacher},coord);
+ assert.equal(added.teacher.nome,teacher.nome);
+ assert.deepEqual(added.course.teacherIds,[added.teacher.id]);
+ const read=await (await get(coord)).json();
+ assert.ok(read.docs.find(d=>d.id==='geral').data.docentes.some(d=>d.id===added.teacher.id));
+ await json({op:'course_teacher_add',courseId:id,teacher},coord,400);
+ const other=await json({op:'course_save',course:{nome:'Outro curso cadastro professores',tipo:'rapido',ucs:[]}},admin);
+ await json({op:'course_teacher_add',courseId:other.course.id,teacher:{nome:'Sem acesso'}},coord,403);
+ const updated=await json({op:'course_save',course:{...added.course,teacherIds:[],ucs:[{sigla:'UC',nome:'Unidade',ch:20,docenteId:added.teacher.id}]}},coord);
+ assert.deepEqual(updated.course.teacherIds,[added.teacher.id]);
+ await json({op:'course_teacher_add',courseId:id,teacher:{nome:'Dados inválidos',email:'errado'}},coord,400);
+ await json({op:'course_teacher_add',courseId:id,teacher:{nome:'Visitante'}},'',401);
+});
