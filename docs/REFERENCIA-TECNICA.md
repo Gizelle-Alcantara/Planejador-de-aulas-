@@ -67,7 +67,7 @@ Documentos: geral (docentes/configuração), turma-CODIGO (state), cursos (items
 
 ### Cursos, modelos e autorização
 
-cursos.items contém id, nome, tipo (tecnico/rapido) e ucs; cada unidade do modelo tem sigla, nome, ch, docenteId opcional e modulo opcional. Turmas novas guardam cfg.cursoId e uma cópia independente do modelo; não há propagação automática para turmas existentes. Cursos das turmas antigas são reconhecidos por identificador determinístico derivado do nome normalizado. O nome de curso existente é preservado para manter esses vínculos.
+cursos.items contém id, nome, tipo (tecnico/rapido) e ucs; cada unidade do modelo tem sigla, nome, ch, docenteId opcional e modulo opcional. Ao criar uma turma, use **Filtrar disciplinas por módulo** para incluir somente as disciplinas do módulo escolhido, tanto do modelo do curso quanto de uma turma copiada. A opção **Todos os módulos** inclui todas; **Sem módulo** reúne as disciplinas sem módulo cadastrado. O formulário informa a quantidade que será incluída. Turmas novas guardam cfg.cursoId e uma cópia independente do modelo; não há propagação automática para turmas existentes. Cursos das turmas antigas são reconhecidos por identificador determinístico derivado do nome normalizado. O nome de curso existente é preservado para manter esses vínculos.
 
 users.course_ids guarda uma lista JSON, com [] como padrão. Quando cursos.enabled é true, makeCourseScope restringe coordenadores não administradores aos cursos atribuídos. Cada requisição reconsulta a conta e o catálogo; escrita, histórico, restauração e exportações também validam o curso. Operações globais fora da lista permitida são recusadas. O administrador não recebe esse recorte. As quatro operações de cursos estão na [API](API.md).
 
@@ -119,3 +119,8 @@ Minhas chaves usa key_list com upcoming=true para próprias futuras pendentes e 
 Rotina diária executa backup e avisos. Vercel: 23:00 UTC; Node verifica horário com processo ativo; Netlify tem adaptador agendado. Partes do domínio usam UTC-3 fixo, sem suporte completo a múltiplos fusos por unidade.
 
 Histórico: até 60 versões/documento e consulta global até 80. Backups: últimas 30 cópias e primeira de cada um dos 12 meses distintos mais recentes com cópias; listagem até 60. Diagnóstico: retenção declarada 30 dias, até 500 grupos e consulta até 100. Essas retenções não substituem política institucional de dados.
+
+
+### Edição do calendário exportado
+
+No Excel da turma, apagar ou restaurar uma sigla já exportada no calendário recalcula os encontros alocados, as pendências, as datas inicial/final e a situação da disciplina. A aba Encontros mantém as quantidades originais de aulas e calcula separadamente as aulas ainda presentes no calendário, preservando dias parciais e EAD. Novas aulas, mudanças de sigla ou de quantidade devem ser planejadas no sistema e exportadas novamente. Alterações no arquivo não voltam automaticamente para o sistema.

@@ -89,3 +89,25 @@ test('células do calendário com grade exibem disciplinas sem horários',()=>{
  const cancelled=unzipSync(calendarXlsx({...graded,reg:{'2028-03-01':{dado:'nao'}}}));
  assert.match(getCell(strFromU8(cancelled['xl/worksheets/sheet1.xml']),'B28'),/>LOG ×</);
 });
+
+test('resumo e datas acompanham as células editáveis do calendário, preservando as quantidades originais',()=>{
+ const files=unzipSync(calendarXlsx(state)),main=strFromU8(files['xl/worksheets/sheet1.xml']),details=strFromU8(files['xl/worksheets/sheet2.xml']);
+ assert.match(getCell(details,'H2'),/<v>4<\/v>/);
+ assert.match(getCell(details,'K2'),/&apos;2028&apos;!\$AD\$20/);
+ assert.match(getCell(details,'K3'),/&apos;2028&apos;!\$B\$28/);
+ assert.match(getCell(details,'K2'),/FIND\(/);
+ assert.match(getCell(main,'AD124'),/SUMIFS\(Encontros!\$K\$2:\$K\$3,/);
+ assert.match(getCell(main,'S124'),/MATCH\(1,INDEX\(/);
+ assert.match(getCell(main,'T124'),/LOOKUP\(2,/);
+ assert.match(getCell(main,'N124'),/IF\(AD124=0,/);
+ assert.match(getCell(main,'AE124'),/MAX\(0,P124-AD124\)/);
+});
+
+test('vínculos das aulas seguem a planilha correta em calendários de vários anos e ignoram canceladas',()=>{
+ const data={...state,cfg:{...state.cfg,inicio:'2028-01-01',termino:'2029-06-30'},days:{'2028-02-29':{s:['LOG']},'2029-06-30':{s:['LOG']}},reg:{'2028-02-29':{dado:'nao'}}};
+ const files=unzipSync(calendarXlsx(data)),details=strFromU8(files['xl/worksheets/sheet3.xml']);
+ assert.match(getCell(details,'K2'),/&apos;2028&apos;!\$AD\$20/);
+ assert.match(getCell(details,'K2'),/<v>0<\/v>/);
+ assert.match(getCell(details,'K3'),/&apos;2029-03&apos;!\$AE\$36/);
+ assert.match(getCell(details,'K3'),/<v>4<\/v>/);
+});

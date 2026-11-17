@@ -92,6 +92,7 @@ ul.av li{display:flex;gap:8px;align-items:baseline}
 .btn.bad{color:var(--bad)}
 .btn.sm{padding:3px 8px;font-size:.8rem}
 label.f{display:flex;flex-direction:column;gap:4px;font-size:.78rem;color:var(--muted);font-weight:600;min-width:0}
+#ntModuleFilterField[hidden]{display:none}
 input[type=text],input[type=date],input[type=number],input[type=email],select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:7px 9px;width:100%;min-width:0;color:var(--ink);font-weight:400}
 textarea{font-family:var(--f-mono);font-size:.8rem;min-height:140px;resize:vertical}
 td input{padding:5px 7px}
@@ -662,9 +663,36 @@ function openTurmaModal(){
       <label class="f">Aulas por dia<input type="number" id="ntAulas" min="1" max="8" value="4" required></label>
       <label class="f">Coordenador<input type="text" id="ntCoord" value="${esc(S?S.cfg.coord:"")}"></label></div>
     <label class="f">${catalog.length?"Estrutura da turma":"Disciplinas e feriados"}<select id="ntCopy">${catalog.length?'<option value="__course__">Usar modelo do curso selecionado</option>':''}<option value="">Começar vazia</option>${Object.entries(T).map(([id,st])=>`<option value="${esc(id)}">Copiar da turma ${esc(st.cfg.turma)}</option>`).join("")}</select></label>
+    <label class="f" id="ntModuleFilterField">Filtrar disciplinas por módulo<select id="ntModuleFilter" aria-label="Filtrar disciplinas por módulo"><option value="">Todos os módulos</option></select></label>
+    <p id="ntModuleSummary" class="small muted" role="status"></p>
     <p class="small muted" style="margin:0">Copiar traz as disciplinas (com docente) e os feriados. As aulas ficam em branco para você lançar.</p>
     <div id="ntErr" class="small" role="alert" style="color:var(--bad)"></div>
     <div class="row"><button class="btn pri" data-act="turmasave">Criar turma</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;
+  document.querySelector('#modalRoot .modal').addEventListener('change',e=>{
+    if(['ntCopy','ntCourseCatalog'].includes(e.target.id))updateNewTurmaModules();
+    if(e.target.id==='ntModuleFilter')updateNewTurmaModuleSummary();
+  });
+  updateNewTurmaModules();
+}
+function newTurmaUnits(){
+  const source=document.getElementById('ntCopy')?.value;
+  if(source==='__course__')return SENAI_COURSES.templateUnits((G.cursos||[]).find(c=>c.id===document.getElementById('ntCourseCatalog')?.value),G.docentes);
+  return T[source]?.ucs||[];
+}
+function updateNewTurmaModules(){
+  const filter=document.getElementById('ntModuleFilter'),previous=filter.value,modules=new Map();
+  for(const unit of newTurmaUnits())modules.set(classUnitModule(unit.modulo),unit.modulo?.trim()||'Sem módulo');
+  filter.innerHTML='<option value="">Todos os módulos</option>'+[...modules].map(([key,label])=>'<option value="module:'+esc(key)+'">'+esc(label)+'</option>').join('');
+  if([...filter.options].some(o=>o.value===previous))filter.value=previous;
+  document.getElementById('ntModuleFilterField').hidden=!document.getElementById('ntCopy').value;
+  updateNewTurmaModuleSummary();
+}
+function filteredNewTurmaUnits(){
+  const filter=document.getElementById('ntModuleFilter').value;
+  return newTurmaUnits().filter(unit=>!filter||classUnitModule(unit.modulo)===filter.slice(7));
+}
+function updateNewTurmaModuleSummary(){
+  document.getElementById('ntModuleSummary').textContent=filteredNewTurmaUnits().length+' disciplina(s) serão incluídas na nova turma.';
 }
 function saveTurma(){
   const v=id=>document.getElementById(id).value.trim(),err=m=>{document.getElementById("ntErr").textContent=m};
@@ -677,7 +705,7 @@ function saveTurma(){
   if(v("ntFim")<v("ntIni"))return err("O término precisa ser depois do início.");
   const src=T[v("ntCopy")],selectedCourse=(G.cursos||[]).find(c=>c.id===document.getElementById('ntCourseCatalog')?.value);
   const st={cfg:{turma:cod,curso:v("ntCurso"),turno:v("ntTurno"),modulo:v("ntMod"),coord:v("ntCoord"),email:"",local:"",inicio:v("ntIni"),termino:v("ntFim"),aulasDia:Math.max(1,+v("ntAulas")||4),destinatarios:""},
-    ucs:src?clone(src.ucs):v('ntCopy')==='__course__'?SENAI_COURSES.templateUnits(selectedCourse,G.docentes):[],days:{},envios:[]};
+    ucs:clone(filteredNewTurmaUnits()),days:{},envios:[]};
   if(selectedCourse)st.cfg.cursoId=selectedCourse.id;
   if(src)for(const [k,d] of Object.entries(src.days))if(d.t==="feriado"||d.t==="sem")st.days[k]={s:[],t:d.t,h:d.h};
   T[id]=st;CUR=id;normalize();UI.month=null;UI.ucFilter="";UI.tab=src?"calendario":"disciplinas";
@@ -930,7 +958,7 @@ section{break-inside:avoid}.export-tools{display:flex;gap:10px;margin-bottom:16p
 </style>
 </head><body><nav class="export-tools"><button type="button" data-return="${esc(location.origin+"/?aba=calendario")}" onclick="if(window.opener&&!window.opener.closed){window.opener.focus();window.close()}else{location.href=this.dataset.return}">Voltar</button><button type="button" onclick="window.print()">Imprimir / salvar PDF</button></nav><img src="${LOGO}" alt="SENAI" style="height:40px;margin-bottom:8px"><h1>${esc(c.curso)}</h1><p class="m">Turma ${esc(c.turma)} · Módulo ${esc(c.modulo)} · ${esc(c.turno)} · ${rowHorario()}<br>Período: ${br(c.inicio)} a ${br(c.termino)}${c.coord?" · Coordenação: "+esc(c.coord):""}</p>
 <table><thead><tr><th>Sigla</th><th>Disciplina</th><th>Docente</th><th>CH</th><th>Aulas</th><th>Limite de faltas</th><th>Início</th><th>Fim</th></tr></thead><tbody>${ucs}</tbody></table>${months}
-<p class="m">O número ao lado da sigla é o aula. Gerado em ${br(todayISO())}.</p></body></html>`;
+<p class="m">Gerado em ${br(todayISO())}.</p></body></html>`;
 }
 function vEnviar(){
   const e=UI.env,last=S.envios[S.envios.length-1],cur=sigHash();
@@ -1096,7 +1124,7 @@ function renderLanding(){
   document.getElementById("hdr").innerHTML='<span class="home-eyebrow">Planejador de turmas · Gestão acadêmica</span><h1>Agenda SENAI</h1><span class="meta">Organize aulas, acompanhe a programação e gerencie os ambientes.</span>';
   document.getElementById("view").innerHTML=`<section class="welcome home-portal" aria-labelledby="welcome-title"><div><span class="eyebrow">AGENDA SENAI · GESTÃO ACADÊMICA</span><h2 id="welcome-title">Seu próximo passo<br>começa aqui.</h2><p>Calendários, aulas e ambientes em um só lugar. Selecione seu perfil para acessar as ferramentas do seu dia a dia.</p></div><div class="welcome-note"><span class="welcome-mark" aria-hidden="true">↗</span><strong>Mais organização.<br>Mais tempo para ensinar e aprender.</strong><span>Acompanhe a programação da sua instituição.</span></div></section>
     <section class="access-section" aria-labelledby="access-title"><div class="access-heading"><h2 id="access-title">Como você deseja acessar?</h2><span class="muted small">Escolha seu perfil</span></div><div class="access-grid"><a class="card access-card" href="#login-aluno"><span class="profile-icon" aria-hidden="true">01</span><h3>Sou aluno</h3><p class="muted">Consulte as aulas, os horários e o calendário da sua turma.</p><span class="access-detail">Tenha em mãos o código fornecido pela coordenação.</span><span class="access-link">Acessar minha turma <span aria-hidden="true">→</span></span></a><a class="card access-card" href="#login-docente"><span class="profile-icon" aria-hidden="true">02</span><h3>Sou docente</h3><p class="muted">Consulte a ocupação diária e solicite reservas de laboratórios.</p><span class="access-detail">Entre com seu usuário e senha.</span><span class="access-link">Acessar minha agenda <span aria-hidden="true">→</span></span></a><a class="card access-card" href="#login"><span class="profile-icon" aria-hidden="true">03</span><h3>Coordenação</h3><p class="muted">Organize turmas, planeje aulas e gerencie calendários.</p><span class="access-detail">Acesso de gestão com credenciais da coordenação.</span><span class="access-link">Acessar gestão <span aria-hidden="true">→</span></span></a></div></section>
-    <footer class="portal-footer"><span>Agenda SENAI · Planejamento e organização acadêmica</span><span>Precisa de acesso? Procure a coordenação.</span></footer>`;
+    <footer class="portal-footer"><span>Agenda SENAI · Planejamento e organização acadêmica<br>Desenvolvido por Gizelle Alcantara</span><span>Precisa de acesso? Procure a coordenação.</span></footer>`;
 }
 const spanStr=c=>{const s=spanOf(c);return hm(s[0])+" às "+hm(s[1])};
 function docAgg(d){
