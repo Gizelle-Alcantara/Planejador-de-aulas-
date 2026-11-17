@@ -70,7 +70,8 @@ test('cursos: atribuição, ativação, isolamento em leitura, escrita, exporta�
  const newClass=turma('Técnico A');newClass.state.cfg.cursoId=courseA.id;newClass.state.ucs=templateUnits(model,[{id:'t1',nome:'Ana'}]);newClass.state.ucs[0].ch=60;
  const batch=await json({op:'set_many',items:[{id:'turma-nova',data:newClass,base:0}]},a);assert.equal(batch.revs['turma-b'],undefined);
  assert.equal((await json({op:'course_list'},a)).items[0].ucs[0].ch,40);
- for(const qs of ['?ics=turma-b','?export=xlsx&turma=turma-b','?export=turma-preview&turma=turma-b','?ics=docente-ana','?ics=turma-a&export=docente-xlsx&docente=Ana'])assert.equal((await get(a,qs)).status,403,qs);
+ for(const qs of ['?ics=turma-b','?export=xlsx&turma=turma-b','?export=turma-preview&turma=turma-b','?export=docente-xlsx&docente=Ana&ano=2099','?export=docente-preview&docente=Ana&ano=2099'])assert.equal((await get(a,qs)).status,200,qs);
+ assert.equal((await get(a,'?ics=turma-a&export=docente-xlsx&docente=Ana')).status,403);
  assert.equal((await get(a,'?ics=turma-a')).status,200);
  const history=await json({op:'history'},admin),foreign=history.items.find(h=>h.doc==='turma-b');
  for(const op of ['history_detail','restore'])await json({op,hid:foreign.id},a,403);

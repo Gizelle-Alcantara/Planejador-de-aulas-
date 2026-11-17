@@ -78,3 +78,14 @@ test('caracteres inválidos no XML e datas importadas inválidas não corrompem 
  assert.match(main,/Curso &amp; &lt;teste&gt;/);assert.ok(!main.includes('\u0001'));assert.ok(!details.includes('NaN'));
  assert.equal((details.match(/Programada/g)||[]).length,2);
 });
+
+test('células do calendário com grade exibem disciplinas sem horários',()=>{
+ const graded={...state,days:{'2028-03-01':{s:['LOG'],grade:['LOG','LOG','LOG','LOG']}}};
+ const files=unzipSync(calendarXlsx(graded));
+ const sheet=strFromU8(files['xl/worksheets/sheet1.xml']);
+ const label=getCell(sheet,'B28');
+ assert.match(label,/>LOG</);
+ assert.doesNotMatch(label,/\d{2}:\d{2}|–/);
+ const cancelled=unzipSync(calendarXlsx({...graded,reg:{'2028-03-01':{dado:'nao'}}}));
+ assert.match(getCell(strFromU8(cancelled['xl/worksheets/sheet1.xml']),'B28'),/>LOG ×</);
+});

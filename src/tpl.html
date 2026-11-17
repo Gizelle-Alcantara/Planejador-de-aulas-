@@ -918,7 +918,7 @@ function htmlCalendario(){
     let cells="";for(let i=0;i<first;i++)cells+="<td></td>";
     for(let d=1;d<=dim;d++){const iso=`${ym}-${String(d).padStart(2,"0")}`,e=S.days[iso]||{},w=dow(iso);
       if((first+d-1)%7===0&&d>1)cells+="</tr><tr>";
-      cells+=`<td class="${w===0||w===6?"w":""} ${e.t==="feriado"?"h":""}"><b>${d}</b>${e.h?`<i>${esc(e.h)}</i>`:""}${(e.s||[]).map((sg,j)=>`<span>${esc(sg)} ${C.enc[iso][j]}<small>${esc(ucHours(S,iso,sg))}</small>${(()=>{const u=ucOf(sg)||{},r=EXPORT_RESERVAS.find(r=>r.turmaId==="turma-"+CUR&&r.status==="aprovada"&&r.data===iso&&r.sigla===sg);return (u.docente?"<small>"+esc(u.docente)+"</small>":"")+((r&&r.ambienteNome)||u.sala?"<small>"+esc((r&&r.ambienteNome)||u.sala)+"</small>":"")})()}</span>`).join("")}</td>`}
+      cells+=`<td class="${w===0||w===6?"w":""} ${e.t==="feriado"?"h":""}"><b>${d}</b>${e.h?`<i>${esc(e.h)}</i>`:""}${(e.s||[]).map((sg,j)=>`<span>${esc(sg)} ${C.enc[iso][j]}${(()=>{const u=ucOf(sg)||{},r=EXPORT_RESERVAS.find(r=>r.turmaId==="turma-"+CUR&&r.status==="aprovada"&&r.data===iso&&r.sigla===sg);return (u.docente?"<small>"+esc(u.docente)+"</small>":"")+((r&&r.ambienteNome)||u.sala?"<small>"+esc((r&&r.ambienteNome)||u.sala)+"</small>":"")})()}</span>`).join("")}</td>`}
     for(let i=0;i<(7-(first+dim)%7)%7;i++)cells+="<td></td>";
     return `<section><h2>${MESES[m-1]} de ${y}</h2><table class="cal"><thead><tr>${WD.map(x=>`<th>${x}</th>`).join("")}</tr></thead><tbody><tr>${cells}</tr></tbody></table></section>`}).join("");
   const ucs=C.rows.map(r=>`<tr><td>${esc(r.u.sigla)}</td><td>${esc(r.u.nome)}</td><td>${esc(r.u.docente)}</td><td>${r.u.ch} h</td><td>${r.P}</td><td>${r.R}</td><td>${br(r.ini)}</td><td>${br(r.fim)}</td></tr>`).join("");
