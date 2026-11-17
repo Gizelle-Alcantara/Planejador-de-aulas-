@@ -59,6 +59,7 @@ test('calendário modelo gera feriados e sincroniza criação, alteração e exc
  let model=await op('generate',0,{year:2099});
  assert.equal(Object.keys(model.dates).length,10);
  assert.equal((await get('turma-a')).days['2099-11-20'].t,'feriado');
+ assert.equal((await get('turma-a')).days['2099-11-20'].holidayKind,'national');
  assert.equal((await get('turma-outside')).days['2099-11-20'],undefined);
  const before=await snapshot();
  await db.execute("CREATE TRIGGER model_fail BEFORE UPDATE ON docs WHEN NEW.id='turma-b' BEGIN SELECT RAISE(ABORT,'test rollback'); END");
@@ -67,6 +68,7 @@ test('calendário modelo gera feriados e sincroniza criação, alteração e exc
  await db.execute('DROP TRIGGER model_fail');
  model=await op('save',model.rev,{date,name:'Recesso'});
  assert.equal((await get('turma-a')).days[date].h,'Recesso');
+ assert.equal((await get('turma-a')).days[date].holidayKind,'model');
  assert.equal((await get('turma-completed')).days[date].grade[0],'LOG');
  await api({op:'set',id:'turma-new',base:0,data:{state:state('NOVA','Curso A')}},master);
  assert.equal((await get('turma-new')).days[date].h,'Recesso');
