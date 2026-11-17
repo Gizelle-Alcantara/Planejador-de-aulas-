@@ -518,6 +518,7 @@ function vCal(){
   return `<section class="panel">
     <div class="calbar"><div class="row"><button class="btn" data-act="mprev" aria-label="Mês anterior">‹</button><h2>${MESES[m-1]} de ${y}</h2><button class="btn" data-act="mnext" aria-label="Próximo mês">›</button></div>
     <div class="row"><select id="mjump" aria-label="Ir para o mês" style="width:auto">${ml.map(x=>`<option value="${x}" ${x===ym?"selected":""}>${MESES[+x.slice(5)-1]} ${x.slice(0,4)}</option>`).join("")}</select></div></div>
+    ${UI.me?.master?'<button class="btn" data-act="modelopen">Calendário modelo</button>':''}
     <div class="pal" style="margin-block:12px 4px" role="group" aria-label="Ferramenta">${tools.map(([k,l,v])=>`<button data-act="tool" data-k="${esc(k)}" aria-pressed="${UI.tool===k}"><span class="sw" style="--c:var(${v})"></span>${esc(l)}</button>`).join("")}
       ${UI.tool==="feriado"||UI.tool==="sem"?`<input type="text" id="holName" placeholder="${UI.tool==="feriado"?"Nome do feriado":"Motivo (opcional)"}" value="${esc(UI.holName)}" maxlength="160" style="width:200px">`:""}${UI.me?.master&&UI.tool==="feriado"?`<label><input type="checkbox" id="holidayAll" ${UI.holidayAll?'checked':''}> Aplicar a todos os calendários</label>`:""}</div>
     <p class="small muted" style="margin:0 0 10px">${UI.tool==="edit"?"Clique em um dia para editar detalhes.":UI.tool.startsWith("uc:")?"Clique nos dias para lançar a aula. Clique de novo para remover.":"Clique nos dias para aplicar."}</p>
@@ -584,6 +585,53 @@ function openDayModal(iso){
  document.getElementById("modalRoot").innerHTML=`<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Editar dia" data-iso="${iso}"><h3>${WDL[dow(iso)]}, ${br(iso)}</h3><label class="f">Tipo do dia<select id="mT"><option value="letivo" ${type==="letivo"?"selected":""}>Dia letivo</option><option value="feriado" ${type==="feriado"?"selected":""}>Feriado</option><option value="sem" ${type==="sem"?"selected":""}>Sem aula</option></select></label>${legacy?`<p class="banner warn">Este lançamento antigo contém ${esc(e.s.join(" + "))} no turno inteiro. Confira e distribua todas as disciplinas nos horários antes de salvar.</p>`:""}<label class="f">Preencher todas as aulas<select id="mFill" aria-label="Preencher todas as aulas"><option value="_" selected disabled>Escolha para aplicar</option>${opt("")}</select></label><div class="slot-editor">${slots.map((slot,i)=>`<label class="f">Aula ${i+1} · ${hm(slot.i)} às ${hm(slot.f)}<select data-slot="${i}" aria-label="Disciplina da aula ${i+1}">${opt(grade[i])}</select></label>`).join("")}</div><fieldset class="ead-parallel"><legend>Disciplinas EAD em paralelo</legend><p class="small muted">Docentes identificados com EAD podem acompanhar as aulas presenciais. Cada seleção lança ${slots.length} aulas EAD neste dia, sem ocupar a sala.</p>${S.ucs.filter(u=>SENAI_SCHEDULE.isEAD(u)).map(u=>`<label><input type="checkbox" data-ead="${esc(u.sigla)}" ${parallel.includes(u.sigla)?'checked':''}> ${esc(u.sigla)} · ${esc(u.nome)}</label>`).join('')||'<p class="small muted">Nenhuma disciplina com docente EAD cadastrada.</p>'}</fieldset><p class="small muted">Ambientação pode ser lançada antes do início da turma. Use as setas do calendário para acessar meses anteriores.</p><label class="f">Nome do feriado ou observação<input id="mH" value="${esc(e.h||"")}"></label>${UI.me?.master?`<label id="mHolidayScope" ${type!=="feriado"?'hidden':''}><input type="checkbox" id="mHolidayAll"> Aplicar a todos os calendários</label>`:""}<div id="mInfo" class="small muted" role="status"></div><div class="row"><button class="btn pri" data-act="msave">Salvar</button><button class="btn bad" data-act="mclear">Limpar dia</button><button class="btn" data-act="mclose2">Cancelar</button></div></div></div>`;updModalInfo();
 }
 function modalDay(){const ead=document.getElementById("mT").value==="letivo"?[...document.querySelectorAll("[data-ead]:checked")].map(x=>x.dataset.ead):[];const t=document.getElementById("mT").value,h=document.getElementById("mH").value.trim(),grade=[...document.querySelectorAll("[data-slot]")].map(x=>t==="letivo"&&!ead.includes(x.value)?x.value:"");const old=S.days[document.querySelector('.modal').dataset.iso]||{},eadHours=Object.fromEntries(ead.filter(sg=>old.eadHours?.[sg]).map(sg=>[sg,old.eadHours[sg]]));return {s:[...new Set([...grade.filter(Boolean),...ead])],grade,...(ead.length?{ead}:{}),...(Object.keys(eadHours).length?{eadHours}:{}),...(t!=="letivo"?{t,h:h||(t==="sem"?"SEM AULA":"FERIADO")}:h?{t:"nota",h}:{})}}
+async function openCalendarModel(){
+ if(!UI.me?.master)return;
+ const root=document.getElementById('modalRoot');
+ root.innerHTML='<div class="ov" data-act="mclose"><div class="modal" role="dialog" aria-label="Calendário modelo"><p role="status">Carregando calendário modelo…</p><button class="btn" data-act="mclose2">Fechar</button></div></div>';
+ const modal=root.querySelector('.modal');
+ try{
+  const model=await PLAN.api({op:'calendar_model_list'});
+  if(!model.ok)throw Error(model.error);
+  if(modal.isConnected)renderCalendarModel(modal,model,new Date().getFullYear());
+ }catch(error){if(modal.isConnected)modal.querySelector('p').textContent=error.message||'Não foi possível carregar o calendário modelo.'}
+}
+function renderCalendarModel(modal,model,year){
+ modal.innerHTML=`<h2>Calendário modelo</h2><p>As datas suspendem aulas previstas nas turmas que estiverem em período letivo. Aulas já registradas como realizadas são preservadas.</p>
+ <form id="model-generate"><label class="f">Ano<input name="year" type="number" min="2000" max="2199" value="${year}" required></label><button class="btn">Gerar feriados nacionais</button></form>
+ <form id="model-date"><input type="hidden" name="previous"><div class="row"><label class="f">Data<input name="date" type="date" required></label><label class="f">Nome da data<input name="name" maxlength="160" required></label><button class="btn pri">Salvar data</button><button type="reset" class="btn">Limpar campos</button></div></form>
+ <p role="status"></p>
+ <ul>${Object.entries(model.dates).sort(([a],[b])=>a.localeCompare(b)).map(([date,name])=>`<li><div class="row"><span>${br(date)} · ${esc(name)}</span><button class="btn sm" data-model-edit="${esc(date)}">Editar</button><button class="btn sm bad" data-model-delete="${esc(date)}">Excluir</button></div></li>`).join('')||'<li>Nenhuma data cadastrada.</li>'}</ul><button class="btn" data-act="mclose2">Fechar</button>`;
+ const generator=modal.querySelector('#model-generate'),form=modal.querySelector('#model-date');
+ async function update(op,fields){
+  const status=modal.querySelector('[role=status]');
+  const controls=[...modal.querySelectorAll('button,input')].filter(element=>!element.disabled);
+  controls.forEach(element=>element.disabled=true);
+  try{
+   const result=await PLAN.api({op,base:model.rev,...fields});
+   if(!result.ok)throw Error(result.error);
+   if(modal.isConnected){
+    renderCalendarModel(modal,result,Number(generator.elements.year.value));
+    modal.querySelector('[role=status]').textContent=result.updated+' calendário(s) atualizado(s).';
+   }
+   await PLAN.refresh();
+  }catch(error){if(modal.isConnected)modal.querySelector('[role=status]').textContent=error.message||'Não foi possível atualizar o calendário modelo.'}
+  finally{controls.forEach(element=>element.disabled=false)}
+ }
+ generator.onsubmit=event=>{event.preventDefault();update('calendar_model_generate',{year:generator.elements.year.value})};
+ form.onsubmit=event=>{event.preventDefault();update('calendar_model_save',Object.fromEntries(new FormData(form)))};
+ for(const button of modal.querySelectorAll('[data-model-edit]'))button.onclick=()=>{
+  const date=button.dataset.modelEdit;
+  form.elements.previous.value=date;
+  form.elements.date.value=date;
+  form.elements.name.value=model.dates[date];
+  form.elements.date.focus();
+ };
+ for(const button of modal.querySelectorAll('[data-model-delete]'))button.onclick=()=>{
+  const date=button.dataset.modelDelete;
+  if(confirm('Excluir '+model.dates[date]+' em '+br(date)+' de todos os calendários?'))update('calendar_model_delete',{date});
+ };
+}
 function updModalInfo(){const scope=document.getElementById("mHolidayScope");if(scope)scope.hidden=document.getElementById("mT").value!=="feriado";const info=document.getElementById("mInfo");if(!info)return;const iso=document.querySelector(".modal").dataset.iso,day=modalDay(),candidate={...S,days:{...S.days,[iso]:day}},bad=[SENAI_SCHEDULE.validateSchedule(candidate),...SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,candidate,iso)].filter(Boolean);document.querySelectorAll("[data-slot],[data-ead],#mFill").forEach(x=>x.disabled=document.getElementById("mT").value!=="letivo");const list=dayBlocks(candidate,iso).map(b=>`${b.sigla}: ${b.quantidade} aula(s), ${b.ead?"online, sem horário fixo":hm(b.inicio)+" às "+hm(b.fim)}`);info.textContent=list.join(" · ")+(bad.length?" · Conflito: "+bad.join(" "):"");document.querySelector("[data-act=msave]").disabled=bad.length>0}
 function saveModal(){const iso=document.querySelector(".modal").dataset.iso,day=modalDay();if(day.t==="feriado"&&UI.me?.master&&document.getElementById("mHolidayAll")?.checked){previewSharedHoliday(iso,day.h||"FERIADO");return}const candidate={...S,days:{...S.days,[iso]:day}},bad=[SENAI_SCHEDULE.validateSchedule(candidate),...SENAI_SCHEDULE.scheduleConflicts(uiDocs(),"turma-"+CUR,candidate,iso)].filter(Boolean);if(bad.length){toast(bad.join(" "));return}if(day.s.length||day.h)S.days[iso]=day;else delete S.days[iso];save();closeModal();renderView()}
 
@@ -1459,6 +1507,7 @@ document.addEventListener("click",async e=>{
   else if(a==="mprev"){UI.month=shiftMonth(UI.month,-1);renderView()}
   else if(a==="mnext"){UI.month=shiftMonth(UI.month,1);renderView()}
   else if(a==="msave")saveModal();
+  else if(a==="modelopen")openCalendarModel();
   else if(a==="holidayapply")applySharedHoliday(b);
   else if(a==="holidayrefresh")previewSharedHoliday(UI.sharedHolidayPreview.date,UI.sharedHolidayPreview.name);
   else if(a==="mclear"){delete S.days[document.querySelector(".modal").dataset.iso];save();closeModal();renderView()}

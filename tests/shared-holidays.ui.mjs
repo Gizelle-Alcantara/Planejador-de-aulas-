@@ -16,5 +16,24 @@ try{
  await dialog.getByRole('button',{name:'Confirmar feriado em todos'}).click();await dialog.waitFor({state:'hidden'});for(const id of ['a','b'])assert.equal(day(id,'2099-01-05',await snapshot()).h,'Feriado <institucional>');
  await page.getByRole('button',{name:'Editar dia',exact:true}).click();await page.locator('[data-act="day"][data-iso="2099-01-06"]').click();const editor=page.getByRole('dialog',{name:'Editar dia',exact:true});await editor.getByLabel('Tipo do dia').selectOption('feriado');await editor.getByLabel('Aplicar a todos os calendários',{exact:true}).check();await editor.getByLabel('Nome do feriado ou observação').fill('Feriado pelo editor');await editor.getByRole('button',{name:'Salvar',exact:true}).click();await dialog.getByRole('button',{name:'Confirmar feriado em todos'}).click();await dialog.waitFor({state:'hidden'});assert.equal(day('b','2099-01-06',await snapshot()).h,'Feriado pelo editor');
  await api({op:'user_add',login:'coord-holiday-ui',password:'coord-holiday-password',role:'coord'});const coord=await browser.newContext({serviceWorkers:'block'});await coord.route(/https:\/\//,r=>r.abort());await coord.request.post(base+'/api',{data:{op:'login',login:'coord-holiday-ui',password:'coord-holiday-password'}});const other=await coord.newPage();await other.goto(base+'/?aba=calendario&turma=b');await other.getByText('Todos os lançamentos salvos',{exact:true}).waitFor();await other.locator('#mjump').selectOption('2099-01');await other.locator('[data-act="day"][data-iso="2099-01-05"]').filter({hasText:'Feriado <institucional>'}).waitFor();await other.getByRole('button',{name:'Feriado',exact:true}).click();assert.equal(await other.getByLabel('Aplicar a todos os calendários',{exact:true}).count(),0);await other.locator('#holName').fill('Feriado local');await other.locator('[data-act="day"][data-iso="2099-01-07"]').click();await other.getByText('Todos os lançamentos salvos',{exact:true}).waitFor();assert.equal(day('b','2099-01-07',await snapshot()).h,'Feriado local');assert.equal(day('a','2099-01-07',await snapshot()),undefined);
- assert.deepEqual(errors,[]);console.log('Feriado geral validado: prévia, cancelamento, concorrência, confirmação, editor, visualização por coordenador e feriado local preservado.');
+ assert.equal(await other.getByRole('button',{name:'Calendário modelo',exact:true}).count(),0);
+ await page.getByRole('button',{name:'Calendário modelo',exact:true}).click();
+ const model=page.getByRole('dialog',{name:'Calendário modelo',exact:true});
+ await model.getByLabel('Ano',{exact:true}).fill('2099');
+ await model.getByRole('button',{name:'Gerar feriados nacionais'}).click();
+ await model.getByText('Confraternização Universal').waitFor();
+ await model.getByLabel('Data',{exact:true}).fill('2099-01-07');
+ await model.getByLabel('Nome da data').fill('Data do modelo');
+ await model.getByRole('button',{name:'Salvar data'}).click();
+ const entry=model.getByRole('listitem').filter({hasText:'Data do modelo'});
+ await entry.getByRole('button',{name:'Editar'}).click();
+ await model.getByLabel('Data',{exact:true}).fill('2099-01-08');
+ await model.getByRole('button',{name:'Salvar data'}).click();
+ await entry.getByText('08/01/2099 · Data do modelo').waitFor();
+ assert.equal(day('b','2099-01-07',await snapshot()).h,'Feriado local');
+ page.once('dialog',dialog=>dialog.accept());
+ await entry.getByRole('button',{name:'Excluir'}).click();
+ await entry.waitFor({state:'detached'});
+ assert.equal(day('a','2099-01-08',await snapshot()),undefined);
+ assert.deepEqual(errors,[]);console.log('Feriado geral e calendário modelo validados no navegador.');
 }finally{if(browser)await browser.close();if(server.exitCode===null){const done=new Promise(r=>server.once('exit',r));server.kill();await done}if(dirname(resolve(temp))!==resolve(tmpdir())||!basename(temp).startsWith('shared-holidays-ui-'))throw Error('Diretório temporário inesperado');rmSync(temp,{recursive:true,force:true})}

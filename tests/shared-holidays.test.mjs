@@ -1,6 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdtempSync} from 'node:fs';import {tmpdir} from 'node:os';import {join} from 'node:path';import {createClient} from '@libsql/client';
 import {sharedHolidayPlan} from '../lib/shared-holidays.js';
+import {nationalDates} from '../lib/calendar-model.js';
 process.env.TURSO_DATABASE_URL='file:'+join(mkdtempSync(join(tmpdir(),'shared-holidays-')),'test.db');process.env.ADMIN_PASSWORD='master-holiday-test';process.env.SESSION_SECRET='holiday-session-secret';
 const {handle}=await import('../lib/core.js'),db=createClient({url:process.env.TURSO_DATABASE_URL});
 const call=(data,cookie='')=>handle(new Request('https://agenda.test/api',{method:'POST',headers:{'content-type':'application/json',cookie},body:JSON.stringify(data)}));
@@ -45,4 +46,40 @@ test('feriado geral coloca em revisão a reserva da aula retirada',async()=>{
  const booking=await api({op:'reservation_book',docente:'Ana',turmaId:'turma-reserva',data:date,sigla:'LOG',ambienteId:'sala-r',finalidade:'Aula prática'},master);assert.equal(booking.item.status,'aprovada');
  const p=await api({op:'holiday_preview',date,name:'Feriado de reservas'},master);await api({op:'holiday_apply',date,name:p.name,token:p.token},master);
  const updated=(await api({op:'reservation_list'},master)).items.find(r=>r.id===booking.item.id);assert.equal(updated.status,'revisao');assert.match(updated.motivo,/removida|cancelada/);assert.equal(updated.historico.at(-1).status,'revisao');
+});
+
+test('calendário modelo gera feriados e sincroniza criação, alteração e exclusão',async()=>{
+ const op=(action,base,fields={})=>api({op:'calendar_model_'+action,base,...fields},master);
+ const get=async id=>JSON.parse(String((await db.execute({sql:'SELECT data FROM docs WHERE id=?',args:[id]})).rows[0].data)).state;
+ const original=(await get('turma-a')).days[date];
+ assert.equal(Object.keys(nationalDates(2026)).length,10);
+ assert.equal(nationalDates(2026)['2026-04-03'],'Paixão de Cristo');
+ assert.equal(nationalDates(2027)['2027-03-26'],'Paixão de Cristo');
+ await api({op:'calendar_model_generate',base:0,year:2099},await login({login:'holiday-coord',password:'senha-holiday-test'}),403);
+ let model=await op('generate',0,{year:2099});
+ assert.equal(Object.keys(model.dates).length,10);
+ assert.equal((await get('turma-a')).days['2099-11-20'].t,'feriado');
+ assert.equal((await get('turma-outside')).days['2099-11-20'],undefined);
+ const before=await snapshot();
+ await db.execute("CREATE TRIGGER model_fail BEFORE UPDATE ON docs WHEN NEW.id='turma-b' BEGIN SELECT RAISE(ABORT,'test rollback'); END");
+ await api({op:'calendar_model_save',base:model.rev,date,name:'Recesso'},master,500);
+ assert.equal(await snapshot(),before);
+ await db.execute('DROP TRIGGER model_fail');
+ model=await op('save',model.rev,{date,name:'Recesso'});
+ assert.equal((await get('turma-a')).days[date].h,'Recesso');
+ assert.equal((await get('turma-completed')).days[date].grade[0],'LOG');
+ await api({op:'set',id:'turma-new',base:0,data:{state:state('NOVA','Curso A')}},master);
+ assert.equal((await get('turma-new')).days[date].h,'Recesso');
+ const moved='2099-01-06';
+ await api({op:'calendar_model_delete',base:model.rev-1,date},master,409);
+ model=await op('save',model.rev,{previous:date,date:moved,name:'Recesso alterado'});
+ assert.deepEqual((await get('turma-a')).days[date],original);
+ assert.equal((await get('turma-new')).days[date].grade[0],'LOG');
+ assert.equal((await get('turma-new')).days[moved].h,'Recesso alterado');
+ model=await op('delete',model.rev,{date:moved});
+ assert.equal((await get('turma-new')).days[moved].h,'Nota preservada');
+ model=await op('delete',model.rev,{date:'2099-11-20'});
+ model=await op('generate',model.rev,{year:2099});
+ assert.equal(model.dates['2099-11-20'],undefined);
+ assert.equal((await get('turma-new')).days['2099-11-20'],undefined);
 });
